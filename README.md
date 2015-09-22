@@ -1,2 +1,2 @@
-# glint
-Glint: High performance parameter server for Apache Spark
+# Glint
+Glint is a high performance parameter server for [Apache Spark](http://spark.apache.org/).
