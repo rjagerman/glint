@@ -5,12 +5,9 @@ version := "0.1"
 scalaVersion := "2.10.5"
 
 
-// Spark
+// Akka
 
-libraryDependencies += "org.apache.spark" % "spark-core_2.10" % "1.5.0" % "provided"
-
-libraryDependencies += "org.apache.spark" % "spark-mllib_2.10" % "1.5.0" % "provided"
-
+libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.4-SNAPSHOT"
 
 // Breeze native BLAS support
 
@@ -18,11 +15,9 @@ libraryDependencies += "org.scalanlp" %% "breeze" % "0.11.2"
 
 libraryDependencies += "org.scalanlp" %% "breeze-natives" % "0.11.2"
 
-
 // Apache Commons IO
 
 libraryDependencies += "commons-io" % "commons-io" % "2.4"
-
 
 // Unit tests
 
