@@ -1,4 +1,4 @@
-package ch.ethz.inf.da.glint.messages
+package glint.messages
 
 /**
  * A basic pull message requesting the values of given list of keys

@@ -1,4 +1,4 @@
-package ch.ethz.inf.da.glint.messages
+package glint.messages
 
 /**
  * A basic push message providing some values for a list of keys
