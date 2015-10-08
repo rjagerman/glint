@@ -26,7 +26,7 @@ import scala.reflect.ClassTag
 /**
  * A parameter server
  */
-class ParameterServer extends Actor with StrictLogging {
+class Server extends Actor with StrictLogging {
 
   /**
    * The data
@@ -50,7 +50,7 @@ class ParameterServer extends Actor with StrictLogging {
 /**
  * Parameter server object
  */
-object ParameterServer extends StrictLogging {
+object Server extends StrictLogging {
 
   /**
    * Starts a parameter server ready to receive commands
@@ -83,8 +83,8 @@ object ParameterServer extends StrictLogging {
       """.stripMargin)
     val system = ActorSystem(name, akkaConfig)
 
-    logger.info("Starting parameter server actor")
-    val ps = system.actorOf(Props(new ParameterServer()))
+    logger.info("Starting server actor")
+    val ps = system.actorOf(Props(new Server()))
 
     logger.debug("Reading master information from config")
     val masterHost = config.getString("glint.master.host")
@@ -92,7 +92,7 @@ object ParameterServer extends StrictLogging {
     val masterName = config.getString("glint.master.name")
     val masterSystem = config.getString("glint.master.system")
 
-    logger.info(s"Registering with parameter manager ${masterHost}:${masterPort}")
+    logger.info(s"Registering with master ${masterHost}:${masterPort}")
     val master = system.actorSelection(s"akka.tcp://${masterSystem}@${masterHost}:${masterPort}/user/${masterName}")
     master.tell(Register(host, port, name), ps)
 

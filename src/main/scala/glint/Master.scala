@@ -12,7 +12,7 @@ import com.typesafe.scalalogging.StrictLogging
  *
  * @param config The configuration
  */
-class ParameterManager(config: Config, system: ActorSystem) extends Actor with StrictLogging {
+class Master(config: Config, system: ActorSystem) extends Actor with StrictLogging {
 
   /**
    * Collection of servers available
@@ -30,7 +30,7 @@ class ParameterManager(config: Config, system: ActorSystem) extends Actor with S
   private def spawnParameterServer(host: String, port: Int, systemName: String): ActorRef = {
     logger.info(s"Starting parameter server ${systemName}@${host}:${port}")
     val address = Address("akka.tcp", systemName, host, port)
-    system.actorOf(Props[ParameterServer].withDeploy(Deploy(scope = RemoteScope(address))))
+    system.actorOf(Props[Server].withDeploy(Deploy(scope = RemoteScope(address))))
   }
 
   override def receive: Actor.Receive = {
@@ -48,7 +48,7 @@ class ParameterManager(config: Config, system: ActorSystem) extends Actor with S
 /**
  * Parameter manager object
  */
-object ParameterManager extends StrictLogging {
+object Master extends StrictLogging {
 
   /**
    * Starts a parameter server ready to receive commands
@@ -76,11 +76,11 @@ object ParameterManager extends StrictLogging {
       }
       """.stripMargin)
 
-    logger.debug("Starting parameter manager actor system")
+    logger.debug("Starting master actor system")
     val system = ActorSystem(config.getString("glint.master.system"), akkaConfig)
 
-    logger.info("Starting parameter manager")
-    val pm = system.actorOf(Props(new ParameterManager(config, system)), config.getString("glint.master.name"))
+    logger.info("Starting master")
+    val pm = system.actorOf(Props(new Master(config, system)), config.getString("glint.master.name"))
 
   }
 }

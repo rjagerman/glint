@@ -34,14 +34,14 @@ object Glint extends StrictLogging {
       head("glint", "0.1")
       opt[File]('c', "config") valueName("<file>") action { (x, c) =>
         c.copy(config = x) } text("The .conf file for glint")
-      cmd("manager") action { (_, c) =>
-        c.copy(mode = "manager") } text("Starts a manager.")
+      cmd("master") action { (_, c) =>
+        c.copy(mode = "master") } text("Starts a master node.")
       cmd("server") action { (_, c) =>
-        c.copy(mode = "server") } text("Starts a parameter server.") children(
+        c.copy(mode = "server") } text("Starts a server node.") children(
           opt[String]('h', "host") required() valueName("<host>") action { (x, c) =>
-            c.copy(host = x) } text("The hostname of the parameter server"),
+            c.copy(host = x) } text("The hostname of the server"),
           opt[Int]('p', "port") valueName("<port>") action { (x, c) =>
-            c.copy(port = x) } text("The port of the parameter server")
+            c.copy(port = x) } text("The port of the server")
         )
     }
 
@@ -54,8 +54,8 @@ object Glint extends StrictLogging {
 
         // Start specified mode of operation
         options.mode match {
-          case "server" => ParameterServer.run(config, options.host, options.port)
-          case "manager" => ParameterManager.run(config)
+          case "server" => Server.run(config, options.host, options.port)
+          case "master" => Master.run(config)
           case _ =>
             parser.showUsageAsError
             System.exit(1)
