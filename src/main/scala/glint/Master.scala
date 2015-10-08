@@ -3,9 +3,13 @@ package glint
 import akka.actor.Actor.Receive
 import akka.actor._
 import akka.remote.RemoteScope
-import glint.messages.Register
+import glint.messages.{CreateModel, Register}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
+import glint.models.PartialModel
+import glint.partitioning.ContiguousPartioner
+
+import scala.reflect.ClassTag
 
 /**
  * The manager that handles the setup of parameter server actors
@@ -42,6 +46,35 @@ class Master(config: Config, system: ActorSystem) extends Actor with StrictLoggi
       logger.info(sender().toString())
       servers(s"${host}${port}") = sender()
 
+    case CreateModel(modelClass, size) =>
+      logger.info(s"Creating a model with key space size ${size}")
+      servers.values.zipWithIndex.foreach {
+        case (server, i) =>
+          // Spawn partial model at server i that takes key space from start - end
+          val start = Math.floor(i * (size.toDouble / servers.size.toDouble)).toLong
+          val end = Math.floor((i+1) * (size.toDouble / servers.size.toDouble)).toLong - 1
+          val address = server.path.address
+
+          system.actorOf(Props(modelClass, start, end))
+
+      }
+
+
+    /*case c:CreateModel[K : ClassTag, V : ClassTag] =>
+      logger.info(s"Creating a model with key space size ${size}")
+
+      servers.values.zipWithIndex.foreach {
+        case (server, i) =>
+          // Spawn partial model at server i that takes key space from start - end
+          val start = Math.floor(i * (size.toDouble / servers.size.toDouble)).toLong
+          val end = Math.floor((i+1) * (size.toDouble / servers.size.toDouble)).toLong - 1
+          val address = server.path.address
+
+          //system.actorOf(Props[PartialModel], start, end, model)
+
+      }*/
+
+
   }
 }
 
@@ -69,8 +102,8 @@ object Master extends StrictLogging {
         remote {
           enable-transports = ["akka.remote.netty.tcp"]
           netty.tcp {
-            port = ${config.getInt("glint.master.port")}
             hostname = ${config.getString("glint.master.host")}
+            port = ${config.getInt("glint.master.port")}
           }
         }
       }
@@ -80,7 +113,7 @@ object Master extends StrictLogging {
     val system = ActorSystem(config.getString("glint.master.system"), akkaConfig)
 
     logger.info("Starting master")
-    val pm = system.actorOf(Props(new Master(config, system)), config.getString("glint.master.name"))
+    val pm = system.actorOf(Props(classOf[Master], config, system), config.getString("glint.master.name"))
 
   }
 }

@@ -5,4 +5,4 @@ package glint.messages
  *
  * @param keys The requested keys
  */
-case class Pull(keys: Array[Long])
+case class Pull[K](keys: Array[K])

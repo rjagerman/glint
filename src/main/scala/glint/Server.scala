@@ -1,10 +1,10 @@
 package glint
 
-import akka.actor.{Props, ActorSystem, Actor}
+import akka.actor.{Actor, Props, ActorSystem}
 import akka.actor.Actor.Receive
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
-import glint.messages.{Pull, Push, Register}
+import glint.messages.{Pull, Push, Register, Response}
 
 import scala.reflect.ClassTag
 
@@ -27,25 +27,13 @@ import scala.reflect.ClassTag
  * A parameter server
  */
 class Server extends Actor with StrictLogging {
-
-  /**
-   * The data
-   */
-  //val data = Array.fill[V](size)(construct)
-
   override def receive: Receive = {
-
-    /**
-     * Pull operation
-     * This method will send communication back to the original sender with the requested information
-     */
-    case Pull(keys) =>
-      logger.debug(s"Received key pull request from ${sender().path}")
-      sender ! "'some pulled data...'"
-
+    case x =>
+      logger.warn(s"Received unknown message of type ${x.getClass}")
   }
-
 }
+
+
 
 /**
  * Parameter server object
@@ -60,10 +48,8 @@ object Server extends StrictLogging {
    */
   def run(config: Config, host: String, port: Int): Unit = {
 
-    val name = "ParameterServer"
-    logger.info(s"Starting actor system ${name}@${host}:${port}")
-
     logger.debug("Creating akka remote configuration")
+    val name = "ParameterServer"
     val akkaConfig = ConfigFactory.parseString(
       s"""
       akka {
@@ -75,16 +61,18 @@ object Server extends StrictLogging {
         remote {
           enable-transports = ["akka.remote.netty.tcp"]
           netty.tcp {
-            port = ${port}
             hostname = ${host}
+            port = ${port}
           }
         }
       }
       """.stripMargin)
+
+    logger.info(s"Starting actor system ${name}@${host}:${port}")
     val system = ActorSystem(name, akkaConfig)
 
     logger.info("Starting server actor")
-    val ps = system.actorOf(Props(new Server()))
+    val ps = system.actorOf(Props[Server])
 
     logger.debug("Reading master information from config")
     val masterHost = config.getString("glint.master.host")
