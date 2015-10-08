@@ -13,7 +13,7 @@ object Glint extends StrictLogging {
   /**
    * Command-line options
    *
-   * @param mode The mode of operation (either "manager" or "server")
+   * @param mode The mode of operation (either "master" or "server")
    * @param config The configuration file to load (defaults to the included default.conf)
    * @param host The host of the parameter server (only when mode of operation is "server")
    * @param port The port of the parameter server (only when mode of operation is "server")
