@@ -1,17 +1,16 @@
 package glint.partitioning
 
-import glint.models.PartialModelRef
-
 /**
  * Partitioners allocate a server id for each key
  */
-trait Partitioner[K] {
+trait Partitioner[K, P] {
 
   /**
    * Assign a server to the given key
    *
    * @param key The key to partition
-   * @return Reference to the partial model this key belongs to
+   * @return The partition
    */
-  def partition(key: K): PartialModelRef
+  def partition(key: K): P
+
 }

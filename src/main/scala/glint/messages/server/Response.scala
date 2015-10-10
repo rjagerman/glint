@@ -1,4 +1,4 @@
-package glint.messages
+package glint.messages.server
 
 /**
  * The response to a pull request

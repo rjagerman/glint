@@ -3,13 +3,9 @@ package glint
 import akka.actor.Actor.Receive
 import akka.actor._
 import akka.remote.RemoteScope
-import glint.messages.{CreateModel, Register}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
-import glint.models.PartialModel
-import glint.partitioning.ContiguousPartioner
-
-import scala.reflect.ClassTag
+import glint.messages.master.{ServerList, Register}
 
 /**
  * The manager that handles the setup of parameter server actors
@@ -21,7 +17,7 @@ class Master(config: Config, system: ActorSystem) extends Actor with StrictLoggi
   /**
    * Collection of servers available
    */
-  var servers = scala.collection.mutable.Map[String, ActorRef]()
+  var servers = Set.empty[ActorRef]
 
   /**
    * Spawns a parameter server
@@ -39,41 +35,14 @@ class Master(config: Config, system: ActorSystem) extends Actor with StrictLoggi
 
   override def receive: Actor.Receive = {
 
-    /**
-     * When a worker registers itself we store it
-     */
-    case Register(host, port, systemName) =>
-      logger.info(sender().toString())
-      servers(s"${host}${port}") = sender()
+    case Register() =>
+      logger.info(s"Registering server ${sender.path.toString}")
+      servers = servers + sender
+      sender ! true
 
-    case CreateModel(modelClass, size) =>
-      logger.info(s"Creating a model with key space size ${size}")
-      servers.values.zipWithIndex.foreach {
-        case (server, i) =>
-          // Spawn partial model at server i that takes key space from start - end
-          val start = Math.floor(i * (size.toDouble / servers.size.toDouble)).toLong
-          val end = Math.floor((i+1) * (size.toDouble / servers.size.toDouble)).toLong - 1
-          val address = server.path.address
-
-          system.actorOf(Props(modelClass, start, end))
-
-      }
-
-
-    /*case c:CreateModel[K : ClassTag, V : ClassTag] =>
-      logger.info(s"Creating a model with key space size ${size}")
-
-      servers.values.zipWithIndex.foreach {
-        case (server, i) =>
-          // Spawn partial model at server i that takes key space from start - end
-          val start = Math.floor(i * (size.toDouble / servers.size.toDouble)).toLong
-          val end = Math.floor((i+1) * (size.toDouble / servers.size.toDouble)).toLong - 1
-          val address = server.path.address
-
-          //system.actorOf(Props[PartialModel], start, end, model)
-
-      }*/
-
+    case ServerList() =>
+      logger.info(s"Sending current server list")
+      sender ! servers.toArray
 
   }
 }
@@ -112,8 +81,10 @@ object Master extends StrictLogging {
     logger.debug("Starting master actor system")
     val system = ActorSystem(config.getString("glint.master.system"), akkaConfig)
 
-    logger.info("Starting master")
+    logger.debug("Starting master")
     val pm = system.actorOf(Props(classOf[Master], config, system), config.getString("glint.master.name"))
+
+    logger.info("Master successfully started")
 
   }
 }

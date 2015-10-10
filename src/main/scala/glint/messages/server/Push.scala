@@ -1,4 +1,4 @@
-package glint.messages
+package glint.messages.server
 
 /**
  * A basic push message providing some values for a list of keys

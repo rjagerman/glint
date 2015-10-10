@@ -1,27 +1,15 @@
 package glint
 
-import akka.actor.{Actor, Props, ActorSystem}
+import akka.actor.{ActorRef, Actor, Props, ActorSystem}
 import akka.actor.Actor.Receive
+import akka.pattern.ask
+import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
-import glint.messages.{Pull, Push, Register, Response}
+import glint.messages.master.Register
 
-import scala.reflect.ClassTag
-
-/**
- * A parameter server which stores the parameters and handles pull and push requests
- *
- * @param size The number of keys to store on this parameter server
- * @param startIndex Starting index of keys stored on this parameter server
- * @param construct A constructor that builds the initial values
- * @param push Handler for push events
- * @param pull Handler for pull events
- */
-/*class ParameterServer[V: ClassTag, P](size: Int,
-                                  startIndex: Long,
-                                  construct: => V,
-                                  push: P => V,
-                                  pull: Long => V) extends Actor {*/
+import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
 /**
  * A parameter server
@@ -32,8 +20,6 @@ class Server extends Actor with StrictLogging {
       logger.warn(s"Received unknown message of type ${x.getClass}")
   }
 }
-
-
 
 /**
  * Parameter server object
@@ -49,7 +35,6 @@ object Server extends StrictLogging {
   def run(config: Config, host: String, port: Int): Unit = {
 
     logger.debug("Creating akka remote configuration")
-    val name = "ParameterServer"
     val akkaConfig = ConfigFactory.parseString(
       s"""
       akka {
@@ -68,10 +53,10 @@ object Server extends StrictLogging {
       }
       """.stripMargin)
 
-    logger.info(s"Starting actor system ${name}@${host}:${port}")
-    val system = ActorSystem(name, akkaConfig)
+    logger.debug(s"Starting actor system ${config.getString("glint.worker.system")}@${host}:${port}")
+    val system = ActorSystem(config.getString("glint.worker.system"), akkaConfig)
 
-    logger.info("Starting server actor")
+    logger.debug("Starting server actor")
     val ps = system.actorOf(Props[Server])
 
     logger.debug("Reading master information from config")
@@ -80,9 +65,25 @@ object Server extends StrictLogging {
     val masterName = config.getString("glint.master.name")
     val masterSystem = config.getString("glint.master.system")
 
-    logger.info(s"Registering with master ${masterHost}:${masterPort}")
+    logger.info(s"Registering with master ${masterSystem}@${masterHost}:${masterPort}/user/${masterName}")
     val master = system.actorSelection(s"akka.tcp://${masterSystem}@${masterHost}:${masterPort}/user/${masterName}")
-    master.tell(Register(host, port, name), ps)
+
+    implicit val ec = ExecutionContext.Implicits.global
+    implicit val timeout = Timeout(10 seconds)
+    val registration = ask(master, Register())
+    registration.onSuccess {
+      case true =>
+        logger.info(s"Succesfully registered with master")
+      case _ =>
+        logger.error(s"Unknown response from master")
+        system.terminate()
+    }
+    registration.onFailure {
+      case e: Exception =>
+        logger.error(s"Unable to register with master")
+        logger.error(e.getMessage)
+        system.terminate()
+    }
 
   }
 }
