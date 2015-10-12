@@ -1,13 +1,11 @@
 package glint
 
-import akka.actor.{ActorRef, Actor, Props, ActorSystem}
-import akka.actor.Actor.Receive
+import akka.actor.{Actor, Props, ActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
 import glint.messages.master.Register
-
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 

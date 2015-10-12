@@ -6,13 +6,12 @@ import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.scalalogging.StrictLogging
 import glint.messages.server.{Push, Response, Pull}
-import scala.concurrent.duration._
-import glint.{Client, Server}
+import glint.Client
 import glint.messages.master.ServerList
 import glint.models.BigModel
 import glint.partitioning.{Partitioner, UniformPartitioner}
-
 import scala.concurrent.{Await, ExecutionContext, Future}
+import scala.concurrent.duration._
 import scala.reflect.ClassTag
 
 /**

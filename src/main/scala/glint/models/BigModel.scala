@@ -1,7 +1,5 @@
 package glint.models
 
-import glint.messages.server.Response
-
 import scala.concurrent.Future
 
 /**

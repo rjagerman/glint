@@ -2,12 +2,9 @@ package glint
 
 import java.io.File
 
-import akka.actor.{ActorSystem, Actor}
-import akka.actor.Actor.Receive
+import akka.actor.ActorSystem
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
-import glint.Glint._
-import glint.messages.server.Response
 
 /**
  * A client interface that facilitates easy communication with the master

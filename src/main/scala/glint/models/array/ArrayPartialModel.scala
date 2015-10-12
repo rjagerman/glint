@@ -1,8 +1,6 @@
 package glint.models.array
 
 import akka.actor.{ActorLogging, Actor}
-import akka.actor.Actor.Receive
-import com.typesafe.scalalogging.StrictLogging
 import glint.messages.server.{Response, Push, Pull}
 
 import scala.reflect.ClassTag

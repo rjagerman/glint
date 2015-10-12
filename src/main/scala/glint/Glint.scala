@@ -1,9 +1,8 @@
 package glint
 
-import java.io.File
-
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.StrictLogging
+import java.io.File
 
 /**
  * Main application

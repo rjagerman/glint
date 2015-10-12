@@ -1,7 +1,6 @@
 package glint
 
-import akka.actor.Actor.Receive
-import akka.actor._
+import akka.actor.{Actor, ActorSystem, ActorRef, Address, Props, Deploy}
 import akka.remote.RemoteScope
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
@@ -33,7 +32,7 @@ class Master(config: Config, system: ActorSystem) extends Actor with StrictLoggi
     system.actorOf(Props[Server].withDeploy(Deploy(scope = RemoteScope(address))))
   }
 
-  override def receive: Actor.Receive = {
+  override def receive: Receive = {
 
     case Register() =>
       logger.info(s"Registering server ${sender.path.toString}")
