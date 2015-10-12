@@ -1,5 +1,7 @@
 package glint.models
 
+import glint.messages.server.Response
+
 import scala.concurrent.Future
 
 /**
@@ -13,7 +15,7 @@ trait BigModel[K, V] {
    * @param keys The array of keys
    * @return A future for the array of returned values
    */
-  def pull(keys: Array[K]): Unit
+  def pull(keys: Array[K]): Future[Array[V]]
 
   /**
    * Asynchronous function to push values to the big model
@@ -22,6 +24,6 @@ trait BigModel[K, V] {
    * @param values The array of values
    * @return A future for the completion of the operation
    */
-  def push(keys: Array[K], values: Array[V]): Unit
+  def push(keys: Array[K], values: Array[V]): Future[Unit]
 
 }

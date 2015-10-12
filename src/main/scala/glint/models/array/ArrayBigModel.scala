@@ -4,7 +4,8 @@ import akka.actor._
 import akka.remote.RemoteScope
 import akka.pattern.ask
 import akka.util.Timeout
-import glint.messages.server.Pull
+import com.typesafe.scalalogging.StrictLogging
+import glint.messages.server.{Push, Response, Pull}
 import scala.concurrent.duration._
 import glint.{Client, Server}
 import glint.messages.master.ServerList
@@ -22,7 +23,8 @@ import scala.reflect.ClassTag
  * @tparam V The type of values to store
  */
 class ArrayBigModel[V : ClassTag](val default: V,
-                                  val partitioner: Partitioner[Long, ActorRef]) extends BigModel[Long, V] {
+                                  val partitioner: Partitioner[Long, ActorRef])
+  extends BigModel[Long, V] with StrictLogging {
 
   /**
    * Asynchronous function to pull values from the big model
@@ -30,17 +32,36 @@ class ArrayBigModel[V : ClassTag](val default: V,
    * @param keys The array of keys
    * @return A future for the array of returned values
    */
-  override def pull(keys: Array[Long]): Unit = {
+  override def pull(keys: Array[Long]): Future[Array[V]] = {
     implicit val ec = ExecutionContext.Implicits.global
 
+    // Send pull request of the list of keys
     val pulls = keys.groupBy(partitioner.partition).map {
       case (partition, partitionKeys) =>
-        ask(partition, Pull(partitionKeys))(Timeout(30 seconds))
+        ask(partition, Pull(partitionKeys))(Timeout(30 seconds)).mapTo[Response[V]]
     }
 
-    Future.sequence(pulls).onSuccess {
-      case l => println(l)
+    // Obtain key indices after partitioning so we can place the results in a correctly ordered array
+    val indices = keys.zipWithIndex.groupBy {
+      case (k, i) => partitioner.partition(k)
+    }.map {
+      case (_, arr) => arr.map(_._2)
     }
+
+    // Define aggregator for successfull responses
+    def aggregateSuccess(responses: Iterable[Response[V]]): Array[V] = {
+      val result = Array.fill[V](keys.length)(default)
+      responses.zip(indices).foreach {
+        case (response, idx) => idx.zip(response.values).foreach {
+          case (k, v) => result(k) = v
+        }
+      }
+      result
+    }
+
+    // Combine and aggregate futures
+    Future.sequence(pulls).transform(aggregateSuccess, err => err)
+
   }
 
   /**
@@ -50,13 +71,24 @@ class ArrayBigModel[V : ClassTag](val default: V,
    * @param values The array of values
    * @return A future for the completion of the operation
    */
-  override def push(keys: Array[Long], values: Array[V]): Unit = {
+  override def push(keys: Array[Long], values: Array[V]): Future[Unit] = {
+    implicit val ec = ExecutionContext.Implicits.global
 
+    // Send push request
+    val pushes = keys.zip(values).groupBy{
+      case (k,v) => partitioner.partition(k)
+    }.map {
+      case (partition, keyValuePairs) =>
+        ask(partition, Push(keyValuePairs.map(_._1), keyValuePairs.map(_._2)))(Timeout(30 seconds))
+    }
+
+    // Combine and aggregate futures
+    Future.sequence(pushes).transform(results => Unit, err => err)
   }
 }
 
 
-object ArrayBigModel {
+object ArrayBigModel extends StrictLogging {
 
   /**
    * Creates a big model
@@ -80,13 +112,11 @@ object ArrayBigModel {
     // Spawn partial models on each of the servers
     val models = servers.map(x => x.path.address).zipWithIndex.map {
       case (address, index) =>
-        servers.foreach(println)
         val start = Math.floor(size.toDouble * (index.toDouble / servers.length.toDouble)).toLong
         val end = Math.floor(size.toDouble * ((index.toDouble + 1) / servers.length.toDouble)).toLong
 
-        println(address)
-
-        val prop = Props(classOf[ArrayPartialModel[V]], start, end, default)
+        logger.info(s"Starting ArrayPartialModel at ${address} for range (${start}, ${end})")
+        val prop = Props(classOf[ArrayPartialModel[V]], start, end, default, implicitly[ClassTag[V]])
         client.system.actorOf(prop.withDeploy(Deploy(scope = RemoteScope(address))))
     }
 
