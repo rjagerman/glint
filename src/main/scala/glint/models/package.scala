@@ -26,7 +26,7 @@ package object models {
    * @tparam V The type of values to store in the array
    * @return A BigModel capable of referring to the array
    */
-  def array[V : ClassTag](size: Long, default: V, client: Client): BigModel[Long, V] = {
+  private[glint] def array[V : ClassTag](size: Long, default: V, client: Client): BigModel[Long, V] = {
     create[Long, V](size,
                     default,
                     client,
@@ -46,11 +46,11 @@ package object models {
    * @tparam V The value type to store
    * @return A BigModel capable of referring to the machines storing the data
    */
-  def create[K : ClassTag, V : ClassTag](size: Long,
-                                         default: V,
-                                         client: Client,
-                                         partitioner: (Array[ActorRef]) => Partitioner[K, ActorRef],
-                                         props: (Long, Long, V) => Props) : BigModel[K, V] = {
+  private[glint] def create[K : ClassTag, V : ClassTag](size: Long,
+                                                        default: V,
+                                                        client: Client,
+                                                        partitioner: (Array[ActorRef]) => Partitioner[K, ActorRef],
+                                                        props: (Long, Long, V) => Props) : BigModel[K, V] = {
 
     // Get list of servers from the master
     implicit val ec = ExecutionContext.Implicits.global

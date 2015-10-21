@@ -5,6 +5,9 @@ import java.io.File
 import akka.actor.ActorSystem
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.StrictLogging
+import glint.models.BigModel
+
+import scala.reflect.ClassTag
 
 /**
  * A client interface that facilitates easy communication with the master
@@ -41,5 +44,15 @@ class Client(config: Config = ConfigFactory.parseFile(new File(getClass.getClass
 
   @transient
   lazy val master = system.actorSelection(s"akka.tcp://${masterSystem}@${masterHost}:${masterPort}/user/${masterName}")
+
+  /**
+   * Constructs a distributed dense array (indexed by Long) over the parameter servers
+   *
+   * @param size The total size
+   * @param default The default value to populate the array with
+   * @tparam V The type of values to store
+   * @return A reference BigModel
+   */
+  def dense[V : ClassTag](size: Long, default: V): BigModel[Long, V] = models.array[V](size, default, this)
 
 }
