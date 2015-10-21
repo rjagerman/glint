@@ -1,4 +1,4 @@
-package glint.models.array
+package glint.models.impl
 
 import akka.actor.{ActorLogging, Actor}
 import glint.messages.server.{Response, Push, Pull}
@@ -17,6 +17,7 @@ class ArrayPartialModel[V : ClassTag](val start: Long,
                                       val end: Long,
                                       val default: V) extends Actor with ActorLogging {
 
+  log.info(s"Created ArrayPartialModel[${implicitly[ClassTag[V]]}] for range [${start}, ${end}) with default value ${default}")
   val data: Array[V] = Array.fill[V]((end - start).toInt)(default)
 
   override def receive: Receive = {
