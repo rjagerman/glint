@@ -1,9 +1,12 @@
 name := "Glint"
 
-version := "0.1"
+version := "0.1-SNAPSHOT"
+
+organization := "ch.ethz.inf.da"
 
 scalaVersion := "2.11.7"
 
+crossScalaVersions := Seq("2.10.5", "2.11.7")
 
 // Akka
 
