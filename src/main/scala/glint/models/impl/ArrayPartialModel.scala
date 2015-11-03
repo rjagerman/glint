@@ -1,6 +1,7 @@
 package glint.models.impl
 
 import akka.actor.{ActorLogging, Actor}
+import akka.remote.DisassociatedEvent
 import glint.messages.server.{Response, Push, Pull}
 
 import scala.reflect.ClassTag
@@ -30,12 +31,17 @@ class ArrayPartialModel[V : ClassTag](val start: Long,
       p.keys.zip(p.values).foreach {
         case (k, v) => data(index(k)) = v
       }
+
   }
 
   def index(key: Long): Int = {
     assert(key >= start)
     assert(key < end)
     (key - start).toInt
+  }
+
+  override def postStop(): Unit = {
+    log.info(s"Destroyed ArrayPartialModel[${implicitly[ClassTag[V]]}] for range [${start}, ${end})")
   }
 
 }

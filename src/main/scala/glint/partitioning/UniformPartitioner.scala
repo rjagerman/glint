@@ -11,3 +11,4 @@ class UniformPartitioner[P](val partitions: Array[P], val keys: Long) extends Pa
     partitions(Math.floor( (key.toDouble / keys.toDouble) * partitions.length.toDouble ).toInt)
   }
 }
+

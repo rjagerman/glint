@@ -3,7 +3,7 @@ package glint.partitioning
 /**
  * Partitioners allocate a server id for each key
  */
-trait Partitioner[K, P] {
+trait Partitioner[K, P] extends Serializable {
 
   /**
    * Assign a server to the given key
