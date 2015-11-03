@@ -1,7 +1,7 @@
 package glint
 
 import com.typesafe.config.ConfigFactory
-import com.typesafe.scalalogging.StrictLogging
+import com.typesafe.scalalogging.slf4j.StrictLogging
 import java.io.File
 
 /**
@@ -13,12 +13,12 @@ object Glint extends StrictLogging {
    * Command-line options
    *
    * @param mode The mode of operation (either "master" or "server")
-   * @param config The configuration file to load (defaults to the included default.conf)
+   * @param config The configuration file to load (defaults to the included glint.conf)
    * @param host The host of the parameter server (only when mode of operation is "server")
    * @param port The port of the parameter server (only when mode of operation is "server")
    */
   case class Options(mode: String = "",
-                     config: File = new File(getClass.getClassLoader.getResource("default.conf").getFile),
+                     config: File = new File(getClass.getClassLoader.getResource("glint.conf").getFile),
                      host: String = "localhost",
                      port: Int = 0)
 
@@ -49,7 +49,8 @@ object Glint extends StrictLogging {
 
         // Read configuration
         logger.debug("Parsing configuration file")
-        val config = ConfigFactory.parseFile(options.config)
+        val default = ConfigFactory.parseResourcesAnySyntax("glint")
+        val config = ConfigFactory.parseFile(options.config).withFallback(default).resolve()
 
         // Start specified mode of operation
         options.mode match {
