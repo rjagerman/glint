@@ -9,7 +9,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import com.typesafe.config.{Config, ConfigFactory}
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import glint.messages.master.{ClientList, RegisterClient, RegisterModel, ServerList, RegisterServer}
+import glint.messages.master._
 import glint.models.BigModel
 
 /**

@@ -8,7 +8,7 @@ import akka.remote.RemoteScope
 import akka.util.Timeout
 import breeze.linalg.Vector
 import com.typesafe.config.{Config, ConfigFactory}
-import glint.messages.master.{RegisterClient, RegisterModel, ServerList}
+import glint.messages.master.{GetModel, RegisterClient, RegisterModel, ServerList}
 import glint.models.BigModel
 import glint.models.impl.{ScalarArrayPartialModel, VectorArrayPartialModel}
 import glint.partitioning.{Partitioner, UniformPartitioner}
