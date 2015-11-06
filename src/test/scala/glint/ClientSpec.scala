@@ -5,6 +5,8 @@ import akka.pattern.ask
 import akka.util.Timeout
 import breeze.linalg.DenseVector
 import com.typesafe.config.ConfigFactory
+import glint.exceptions.ModelCreationException
+import org.scalatest.Matchers._
 import glint.messages.master.ClientList
 import org.scalatest.FlatSpec
 import org.scalatest.concurrent.ScalaFutures
@@ -162,6 +164,14 @@ class ClientSpec extends FlatSpec with ScalaFutures {
         val bigModel = whenReady(client.denseScalarModel[Double]("test", 100, 0.0)) { case a => a }
         val bigModel2 = whenReady(client.get[Long, Double]("test")) { case a => a }
         assert(bigModel2.nonEmpty)
+      }
+    }
+  }
+
+  it should "fail to register a model when there are no servers" in withMaster { _ =>
+    withClient { client =>
+      whenReady(client.denseScalarModel("test", 100, 0.0).failed) {
+        case e => e shouldBe a[ModelCreationException]
       }
     }
   }

@@ -8,6 +8,7 @@ import akka.remote.RemoteScope
 import akka.util.Timeout
 import breeze.linalg.Vector
 import com.typesafe.config.{Config, ConfigFactory}
+import glint.exceptions.ModelCreationException
 import glint.messages.master.{GetModel, RegisterClient, RegisterModel, ServerList}
 import glint.models.BigModel
 import glint.models.impl.{ScalarArrayPartialModel, VectorArrayPartialModel}
@@ -138,8 +139,11 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
     val listOfServers = master ? new ServerList()
 
     // Spawn models on the servers and get a list of the models
-    val listOfModels = listOfServers.mapTo[Array[ActorRef]].map {
-      case servers => servers.zipWithIndex.map {
+    val listOfModels = listOfServers.mapTo[Array[ActorRef]].map { servers =>
+      if (servers.length <= 0) {
+        throw new ModelCreationException("Cannot create a model with 0 parameter servers")
+      }
+      servers.zipWithIndex.map {
         case (server, index) =>
           val start = Math.floor(size.toDouble * (index.toDouble / servers.length.toDouble)).toLong
           val end = Math.floor(size.toDouble * ((index.toDouble + 1) / servers.length.toDouble)).toLong
