@@ -1,8 +1,10 @@
 package glint.models.impl
 
-import akka.actor.{ActorLogging, Actor}
-import akka.remote.DisassociatedEvent
-import glint.messages.server.{Response, Push, Pull}
+import akka.actor.{Actor, ActorLogging}
+import glint.messages.server.{Pull, Push, Response}
+import spire.algebra._
+import spire.math._
+import spire.implicits._
 
 import scala.reflect.ClassTag
 
@@ -14,26 +16,37 @@ import scala.reflect.ClassTag
  * @param default The default value
  * @tparam V The type of values to store
  */
-class ArrayPartialModel[V : ClassTag](val start: Long,
-                                      val end: Long,
-                                      val default: V) extends Actor with ActorLogging {
+abstract class ArrayPartialModel[V : ClassTag](val start: Long,
+                                               val end: Long,
+                                               val default: V) extends Actor with ActorLogging {
 
-  log.info(s"Created ArrayPartialModel[${implicitly[ClassTag[V]]}] for range [${start}, ${end}) with default value ${default}")
+  log.debug(s"Initializing ArrayPartialModel[${implicitly[ClassTag[V]]}] of size ${end - start} (default: ${default})")
   val data: Array[V] = Array.fill[V]((end - start).toInt)(default)
 
   override def receive: Receive = {
+
+    // Pull request, send back the data for given keys
     case p: Pull[Long] =>
       log.info(s"Received pull request from ${sender.path.address}")
       sender ! new Response[V](p.keys.map(k => data(index(k))).toArray)
 
+    // Push request, update local data based on given key/values using addition to update
     case p: Push[Long, V] =>
       log.info(s"Received push request from ${sender.path.address}")
-      p.keys.zip(p.values).foreach {
-        case (k, v) => data(index(k)) = v
-      }
-
+      p.keys.zip(p.values).foreach { case (k,v) => update(k,v) }
+      sender ! true/* {
+        case (k, v) => update(k, v) data(index(k)) += v
+      }*/
   }
 
+  def update(key: Long, value: V): Unit
+
+  /**
+   * Converts a global key (Long) to a local key (int) that can be used to index data
+   *
+   * @param key The global key
+   * @return The local key
+   */
   def index(key: Long): Int = {
     assert(key >= start)
     assert(key < end)
@@ -43,5 +56,7 @@ class ArrayPartialModel[V : ClassTag](val start: Long,
   override def postStop(): Unit = {
     log.info(s"Destroyed ArrayPartialModel[${implicitly[ClassTag[V]]}] for range [${start}, ${end})")
   }
+
+  log.debug(s"Finished constructing ArrayPartialModel[${implicitly[ClassTag[V]]}]")
 
 }
