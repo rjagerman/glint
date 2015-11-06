@@ -2,20 +2,19 @@ package glint
 
 import java.util.concurrent.TimeUnit
 
-import akka.actor.Actor.Receive
 import akka.actor._
 import akka.pattern.ask
 import akka.remote.RemoteScope
 import akka.util.Timeout
+import breeze.linalg.Vector
 import com.typesafe.config.{Config, ConfigFactory}
-import com.typesafe.scalalogging.slf4j.{LazyLogging, StrictLogging}
-import glint.messages.master.{ServerList, RegisterClient, RegisterModel}
+import glint.messages.master.{RegisterClient, RegisterModel, ServerList}
 import glint.models.BigModel
-import glint.models.impl.ArrayPartialModel
-import glint.partitioning.{UniformPartitioner, Partitioner}
+import glint.models.impl.{ScalarArrayPartialModel, VectorArrayPartialModel}
+import glint.partitioning.{Partitioner, UniformPartitioner}
 
-import scala.concurrent.{Promise, ExecutionContext, Future, Await}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 /**
@@ -25,8 +24,8 @@ import scala.reflect.ClassTag
  * A typical usage scenario (create a distributed dense array with 10000 values initialized to 0.0 and pull/push it):
  *
  * {{{
- *   val client = new Client()
- *   val bigModel = client.dense[Double](10000, 0.0)
+ *   val client = Client()
+ *   val bigModel = client.dense[Double]("somename", 10000, 0.0)
  *
  *   bigModel.pull(Array(1, 2, 5000, 8000)).onSuccess { case values => println(values.mkString(", ")) }
  *   bigModel.push(Array(1, 2, 300, 40), Array(0.1, 0.2, 300.2, 0.001))
@@ -34,21 +33,16 @@ import scala.reflect.ClassTag
  *
  * @constructor Create a new client with optional configuration (see glint.conf for an example)
  * @param config The configuration
+ * @param system The actor system
+ * @param master An actor reference to the master
  */
-class Client(val config: Config) {
+class Client(val config: Config, val system: ActorSystem, val master: ActorRef) {
 
-  private val clientSystem = config.getString("glint.client.system")
-  private val masterHost = config.getString("glint.master.host")
-  private val masterPort = config.getInt("glint.master.port")
-  private val masterName = config.getString("glint.master.name")
-  private val masterSystem = config.getString("glint.master.system")
+  private implicit val timeout = Timeout(config.getDuration("glint.client.default-timeout", TimeUnit.MILLISECONDS) milliseconds)
+  private implicit val ec = ExecutionContext.Implicits.global
 
-  implicit val timeout = Timeout(config.getDuration("glint.client.default-timeout", TimeUnit.MILLISECONDS) milliseconds)
-  implicit val ec = ExecutionContext.Implicits.global
-
-  val system = ActorSystem(clientSystem, config.getConfig("glint.client"))
-  val master = system.actorSelection(s"akka.tcp://${masterSystem}@${masterHost}:${masterPort}/user/${masterName}")
-  val client = system.actorOf(Props[ClientActor])
+  private[glint] val actor = system.actorOf(Props[ClientActor])
+  private[glint] val registration = master ? RegisterClient(actor)
 
   /**
    * Gets a model with given identifier from the master
@@ -63,12 +57,11 @@ class Client(val config: Config) {
   }
 
   /**
-   * Constructs a distributed dense array (indexed by Long) over the parameter servers
-   * The returned model is serializable and safe to be used across machines (e.g. in Spark workers)
+   * Constructs a distributed dense array (indexed by Long) containing algebraic semiring values (e.g. Double, Int, ...)
    *
    * Typical usage:
    * {{{
-   *   client.dense[Double]("name", 10000, 0.0)
+   *   client.denseScalarModel[Double]("name", 10000, 0.0)
    *   val model = client.get[Long, Double]("name")
    * }}}
    *
@@ -78,12 +71,49 @@ class Client(val config: Config) {
    * @tparam V The type of values to store
    * @return A future reference BigModel
    */
-  def dense[V : ClassTag](id: String, size: Long, default: V): Future[BigModel[Long, V]] = {
+  def denseScalarModel[V: spire.algebra.Semiring : ClassTag](id: String,
+                                                             size: Long,
+                                                             default: V): Future[BigModel[Long, V]] = {
     create[Long, V](id,
       size,
       default,
       (models) => new UniformPartitioner[ActorRef](models, size),
-      (start, end, default) => Props(classOf[ArrayPartialModel[V]], start, end, default, implicitly[ClassTag[V]]))
+      (start, end, default) => Props(classOf[ScalarArrayPartialModel[V]],
+                                     start,
+                                     end,
+                                     default,
+                                     implicitly[spire.algebra.Semiring[V]],
+                                     implicitly[ClassTag[V]]))
+  }
+
+  /**
+   * Constructs a distributed dense array (indexed by Long) containing breeze vectors
+   *
+   * Typical usage:
+   * {{{
+   *   client.denseVectorModel[DenseVector[Double]]("name", 10000, DenseVector.zeros[Double](20))
+   *   val model = client.get[Long, DenseVector[Double]]("name")
+   * }}}
+   *
+   * @param id
+   * @param size
+   * @param default
+   * @tparam V
+   * @return
+   */
+  def denseVectorModel[V: breeze.math.Semiring : ClassTag](id: String,
+                                                           size: Long,
+                                                           default: Vector[V]): Future[BigModel[Long, Vector[V]]] = {
+    create[Long, Vector[V]](id,
+      size,
+      default,
+      (models) => new UniformPartitioner[ActorRef](models, size),
+      (start, end, default) => Props(classOf[VectorArrayPartialModel[V]],
+                                     start,
+                                     end,
+                                     default,
+                                     implicitly[breeze.math.Semiring[V]],
+                                     implicitly[ClassTag[V]]))
   }
 
   /**
@@ -98,26 +128,24 @@ class Client(val config: Config) {
    * @tparam V The value type to store
    * @return A future BigModel capable of referring to the machines storing the data
    */
-  private def create[K : ClassTag, V : ClassTag](id: String,
-                                                 size: Long,
-                                                 default: V,
-                                                 partitioner: (Array[ActorRef]) => Partitioner[K, ActorRef],
-                                                 props: (Long, Long, V) => Props) : Future[BigModel[K, V]] = {
+  private def create[K: ClassTag, V: ClassTag](id: String,
+                                               size: Long,
+                                               default: V,
+                                               partitioner: (Array[ActorRef]) => Partitioner[K, ActorRef],
+                                               props: (Long, Long, V) => Props): Future[BigModel[K, V]] = {
 
     // Get a list of servers
     val listOfServers = master ? new ServerList()
 
     // Spawn models on the servers and get a list of the models
-    val listOfModels = listOfServers.map {
-      case servers: Array[ActorRef] =>
-        servers.zipWithIndex.map {
-          case (server, index) =>
-            val start = Math.floor(size.toDouble * (index.toDouble / servers.length.toDouble)).toLong
-            val end = Math.floor(size.toDouble * ((index.toDouble + 1) / servers.length.toDouble)).toLong
-            val propsToDeploy = props(start, end, default)
-            system.actorOf(propsToDeploy.withDeploy(Deploy(scope = RemoteScope(server.path.address))))
-            //(server ? propsToDeploy).mapTo[ActorRef]
-        }
+    val listOfModels = listOfServers.mapTo[Array[ActorRef]].map {
+      case servers => servers.zipWithIndex.map {
+        case (server, index) =>
+          val start = Math.floor(size.toDouble * (index.toDouble / servers.length.toDouble)).toLong
+          val end = Math.floor(size.toDouble * ((index.toDouble + 1) / servers.length.toDouble)).toLong
+          val propsToDeploy = props(start, end, default)
+          system.actorOf(propsToDeploy.withDeploy(Deploy(scope = RemoteScope(server.path.address))))
+      }
     }
 
     // Map the list of models to a single BigModel reference
@@ -126,7 +154,7 @@ class Client(val config: Config) {
     }
 
     // Register the big model on the master before returning it
-    bigModel.flatMap(m => (master ? RegisterModel(id, m, client)).mapTo[BigModel[K, V]])
+    bigModel.flatMap(m => (master ? RegisterModel(id, m, actor)).mapTo[BigModel[K, V]])
 
   }
 
@@ -140,24 +168,53 @@ class Client(val config: Config) {
 }
 
 object Client {
+
+  /**
+   * Constructs a client asynchronously that succeeds once a client has registered with a master
+   *
+   * @param config The configuration
+   * @return A future Client
+   */
   def apply(config: Config): Future[Client] = {
     val default = ConfigFactory.parseResourcesAnySyntax("glint").resolve()
-    val client = new Client(config.withFallback(default).resolve())
-    implicit val ec = client.ec
+    val conf = config.withFallback(default).resolve()
+    start(conf)
+  }
+
+  /**
+   * Implementation to start a client by constructing an ActorSystem and establishing a connection to a master. It
+   * creates the Client object and checks if its registration actually succeeds
+   *
+   * @param config The configuration
+   * @return The future client
+   */
+  private def start(config: Config): Future[Client] = {
+
+    // Get information from config
+    val masterHost = config.getString("glint.master.host")
+    val masterPort = config.getInt("glint.master.port")
+    val masterName = config.getString("glint.master.name")
+    val masterSystem = config.getString("glint.master.system")
+
+    // Construct system and reference to master
+    val system = ActorSystem(config.getString("glint.client.system"), config.getConfig("glint.client"))
+    val master = system.actorSelection(s"akka.tcp://${masterSystem}@${masterHost}:${masterPort}/user/${masterName}")
+
+    // Set up implicit values for concurrency
+    implicit val ec = ExecutionContext.Implicits.global
     implicit val timeout = Timeout(config.getDuration("glint.client.default-timeout", TimeUnit.MILLISECONDS) milliseconds)
 
-    // Resolve master node
-    val masterFuture = client.master.resolveOne()
+    // Resolve master node asynchronously
+    val masterFuture = master.resolveOne()
 
-    // Register client with master
-    val registrationFuture = masterFuture.flatMap {
-      case master: ActorRef => (master ? RegisterClient(client.client)).mapTo[Boolean]
-    }
-
-    // Check registration success response from master
-    registrationFuture.map {
-      case true => client
-      case _ => throw new RuntimeException("Invalid client registration response from master")
+    // Construct client based on resolved master asynchronously
+    masterFuture.flatMap {
+      case m =>
+        val client = new Client(config, system, m)
+        client.registration.map {
+          case true => client
+          case _ => throw new RuntimeException("Invalid client registration response from master")
+        }
     }
   }
 }

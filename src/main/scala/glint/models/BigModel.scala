@@ -70,7 +70,6 @@ class BigModel[K : ClassTag, V : ClassTag](partitioner: Partitioner[K, ActorRef]
    * Asynchronous function to push values to the big model
    *
    * @param keys The array of keys
-   * @param values The array of values
    * @return A future for the completion of the operation
    */
   def push(keys: Array[K], values: Array[V]): Future[Unit] = {
@@ -78,11 +77,8 @@ class BigModel[K : ClassTag, V : ClassTag](partitioner: Partitioner[K, ActorRef]
     implicit val timeout = Timeout(30 seconds)
 
     // Send push request
-    val pushes = keys.zip(values).groupBy{
-      case (k,v) => partitioner.partition(k)
-    }.map {
-      case (partition, keyValuePairs) =>
-        partition ? Push[K, V](keyValuePairs.map(_._1), keyValuePairs.map(_._2))
+    val pushes = keys.groupBy(k => partitioner.partition(k)).map {
+      case (partition, keys) => partition ? Push[K, V](keys, values)
     }
 
     // Combine and aggregate futures
@@ -93,14 +89,10 @@ class BigModel[K : ClassTag, V : ClassTag](partitioner: Partitioner[K, ActorRef]
    * Asynchronous function to push a single value to the big model
    *
    * @param key The key
-   * @param value The value
    * @return A future for the completion of the operation
    */
   def pushSingle(key: K, value: V): Future[Unit] = {
-    implicit val ec = ExecutionContext.Implicits.global
-    implicit val timeout = Timeout(30 seconds)
-    val server = partitioner.partition(key)
-    (server ? Push[K, V](Array(key), Array(value))).transform(results => Unit, err => err)
+    push(Array(key), Array(value))
   }
 
   /**
