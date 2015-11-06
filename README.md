@@ -1,4 +1,4 @@
-# [ ![Glint](https://github.com/rjagerman/glint/wiki/images/glint-logo-small.png "Glint") ](https://github.com/rjagerman/glint)
+# [![Glint](https://github.com/rjagerman/glint/wiki/images/glint-logo-small.png "Glint")](https://github.com/rjagerman/glint)
 Glint is a high performance [Scala](http://www.scala-lang.org/) parameter server built using [Akka](http://akka.io/).
 The aim is to make it easy to develop performant distributed machine learning algorithms using the parameter server architecture as a consistency model. One of the major goals is compatibility with [Spark](http://spark.apache.org/).
 
