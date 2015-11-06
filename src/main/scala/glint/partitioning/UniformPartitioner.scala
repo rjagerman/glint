@@ -8,7 +8,7 @@ package glint.partitioning
  */
 class UniformPartitioner[P](val partitions: Array[P], val keys: Long) extends Partitioner[Long, P] {
   override def partition(key: Long): P = {
-    partitions(Math.floor( (key.toDouble / keys.toDouble) * partitions.length.toDouble ).toInt)
+    partitions(Math.floor((key.toDouble / keys.toDouble) * partitions.length.toDouble).toInt)
   }
 }
 

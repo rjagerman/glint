@@ -2,9 +2,6 @@ package glint.models.impl
 
 import akka.actor.{Actor, ActorLogging}
 import glint.messages.server.{Pull, Push, Response}
-import spire.algebra._
-import spire.math._
-import spire.implicits._
 
 import scala.reflect.ClassTag
 
@@ -16,11 +13,11 @@ import scala.reflect.ClassTag
  * @param default The default value
  * @tparam V The type of values to store
  */
-abstract class ArrayPartialModel[V : ClassTag](val start: Long,
-                                               val end: Long,
-                                               val default: V) extends Actor with ActorLogging {
+abstract class ArrayPartialModel[V: ClassTag](val start: Long,
+                                              val end: Long,
+                                              val default: V) extends Actor with ActorLogging {
 
-  log.debug(s"Initializing ArrayPartialModel[${implicitly[ClassTag[V]]}] of size ${end - start} (default: ${default})")
+  log.debug(s"Initializing ArrayPartialModel[${implicitly[ClassTag[V]]}] of size ${end - start} (default: $default)")
   val data: Array[V] = Array.fill[V]((end - start).toInt)(default)
 
   override def receive: Receive = {
@@ -33,8 +30,8 @@ abstract class ArrayPartialModel[V : ClassTag](val start: Long,
     // Push request, update local data based on given key/values using addition to update
     case p: Push[Long, V] =>
       log.info(s"Received push request from ${sender.path.address}")
-      p.keys.zip(p.values).foreach { case (k,v) => update(k,v) }
-      sender ! true/* {
+      p.keys.zip(p.values).foreach { case (k, v) => update(k, v) }
+      sender ! true /* {
         case (k, v) => update(k, v) data(index(k)) += v
       }*/
   }

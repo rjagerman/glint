@@ -1,8 +1,9 @@
 package glint
 
+import java.io.File
+
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import java.io.File
 
 /**
  * Main application
@@ -25,22 +26,27 @@ object Glint extends StrictLogging {
   /**
    * Main entry point of the application
    *
-   * @param args
+   * @param args The command-line arguments
    */
   def main(args: Array[String]): Unit = {
 
     val parser = new scopt.OptionParser[Options]("glint") {
       head("glint", "0.1")
-      opt[File]('c', "config") valueName("<file>") action { (x, c) =>
-        c.copy(config = x) } text("The .conf file for glint")
+      opt[File]('c', "config") valueName "<file>" action { (x, c) =>
+        c.copy(config = x)
+      } text "The .conf file for glint"
       cmd("master") action { (_, c) =>
-        c.copy(mode = "master") } text("Starts a master node.")
+        c.copy(mode = "master")
+      } text "Starts a master node."
       cmd("server") action { (_, c) =>
-        c.copy(mode = "server") } text("Starts a server node.") children(
-          opt[String]('h', "host") required() valueName("<host>") action { (x, c) =>
-            c.copy(host = x) } text("The hostname of the server"),
-          opt[Int]('p', "port") valueName("<port>") action { (x, c) =>
-            c.copy(port = x) } text("The port of the server")
+        c.copy(mode = "server")
+      } text "Starts a server node." children(
+        opt[String]('h', "host") required() valueName "<host>" action { (x, c) =>
+          c.copy(host = x)
+        } text "The hostname of the server",
+        opt[Int]('p', "port") valueName "<port>" action { (x, c) =>
+          c.copy(port = x)
+        } text "The port of the server"
         )
     }
 
@@ -59,7 +65,7 @@ object Glint extends StrictLogging {
           case _ =>
             parser.showUsageAsError
             System.exit(1)
-      }
+        }
       case None => System.exit(1)
     }
   }

@@ -20,80 +20,80 @@ class ClientSpec extends FlatSpec with ScalaFutures {
 
   val testConfig = ConfigFactory.parseString(
     """
-    |glint {
-    |
-    |  // Configuration for the master
-    |  master {
-    |    host = "127.0.0.1"
-    |    port = 13370
-    |    name = "master"
-    |    system = "glint-master"
-    |    startup-timeout = 30 seconds
-    |
-    |    akka {
-    |      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
-    |      loglevel = "ERROR"
-    |      actor {
-    |        provider = "akka.remote.RemoteActorRefProvider"
-    |      }
-    |      remote {
-    |        log-remote-lifecycle-events = off
-    |        enable-transports = ["akka.remote.netty.tcp"]
-    |        netty.tcp {
-    |          hostname = ${glint.master.host}
-    |          port = ${glint.master.port}
-    |        }
-    |      }
-    |    }
-    |
-    |  }
-    |
-    |  // Configuration for the parameter servers
-    |  server {
-    |    memory = "2g"
-    |    system = "glint-server"
-    |    name = "server"
-    |    registration-timeout = 10 seconds
-    |
-    |    akka {
-    |      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
-    |      loglevel = "ERROR"
-    |      actor {
-    |        provider = "akka.remote.RemoteActorRefProvider"
-    |      }
-    |      remote {
-    |        log-remote-lifecycle-events = off
-    |        enable-transports = ["akka.remote.netty.tcp"]
-    |      }
-    |    }
-    |  }
-    |
-    |  // Configuration for the clients (e.g. spark workers)
-    |  client {
-    |    host = "127.0.0.1"
-    |    port = 0
-    |    system = "glint-client"
-    |    default-timeout = 5 seconds
-    |
-    |    akka {
-    |      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
-    |      loglevel = "ERROR"
-    |      actor {
-    |        provider = "akka.remote.RemoteActorRefProvider"
-    |      }
-    |      remote {
-    |        log-remote-lifecycle-events = off
-    |        enable-transports = ["akka.remote.netty.tcp"]
-    |        netty.tcp {
-    |          hostname = ${glint.client.host}
-    |          port = ${glint.client.port}
-    |        }
-    |      }
-    |    }
-    |  }
-    |
-    |}
-     """.stripMargin
+      |glint {
+      |
+      |  // Configuration for the master
+      |  master {
+      |    host = "127.0.0.1"
+      |    port = 13370
+      |    name = "master"
+      |    system = "glint-master"
+      |    startup-timeout = 30 seconds
+      |
+      |    akka {
+      |      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
+      |      loglevel = "ERROR"
+      |      actor {
+      |        provider = "akka.remote.RemoteActorRefProvider"
+      |      }
+      |      remote {
+      |        log-remote-lifecycle-events = off
+      |        enable-transports = ["akka.remote.netty.tcp"]
+      |        netty.tcp {
+      |          hostname = ${glint.master.host}
+      |          port = ${glint.master.port}
+      |        }
+      |      }
+      |    }
+      |
+      |  }
+      |
+      |  // Configuration for the parameter servers
+      |  server {
+      |    memory = "2g"
+      |    system = "glint-server"
+      |    name = "server"
+      |    registration-timeout = 10 seconds
+      |
+      |    akka {
+      |      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
+      |      loglevel = "ERROR"
+      |      actor {
+      |        provider = "akka.remote.RemoteActorRefProvider"
+      |      }
+      |      remote {
+      |        log-remote-lifecycle-events = off
+      |        enable-transports = ["akka.remote.netty.tcp"]
+      |      }
+      |    }
+      |  }
+      |
+      |  // Configuration for the clients (e.g. spark workers)
+      |  client {
+      |    host = "127.0.0.1"
+      |    port = 0
+      |    system = "glint-client"
+      |    default-timeout = 5 seconds
+      |
+      |    akka {
+      |      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
+      |      loglevel = "ERROR"
+      |      actor {
+      |        provider = "akka.remote.RemoteActorRefProvider"
+      |      }
+      |      remote {
+      |        log-remote-lifecycle-events = off
+      |        enable-transports = ["akka.remote.netty.tcp"]
+      |        netty.tcp {
+      |          hostname = ${glint.client.host}
+      |          port = ${glint.client.port}
+      |        }
+      |      }
+      |    }
+      |  }
+      |
+      |}
+    """.stripMargin
   ).resolve()
 
   implicit val defaultPatience =
@@ -105,7 +105,7 @@ class ClientSpec extends FlatSpec with ScalaFutures {
    * @param testCode The test code to run
    */
   def withMaster(testCode: ActorRef => Any): Unit = {
-    val (masterSystem: ActorSystem, masterActor: ActorRef) = whenReady(Master.run(testConfig)) { case (s,a) => (s,a) }
+    val (masterSystem: ActorSystem, masterActor: ActorRef) = whenReady(Master.run(testConfig)) { case (s, a) => (s, a) }
     try {
       testCode(masterActor)
     } finally {
@@ -120,7 +120,7 @@ class ClientSpec extends FlatSpec with ScalaFutures {
    * @param testCode The test code to run
    */
   def withServer(testCode: ActorRef => Any): Unit = {
-    val (serverSystem: ActorSystem, serverActor: ActorRef) = whenReady(Server.run(testConfig, "localhost", 0)) { case (s,a) => (s,a) }
+    val (serverSystem: ActorSystem, serverActor: ActorRef) = whenReady(Server.run(testConfig, "localhost", 0)) { case (s, a) => (s, a) }
     try {
       testCode(serverActor)
     } finally {
@@ -182,8 +182,8 @@ class ClientSpec extends FlatSpec with ScalaFutures {
         val bigModel = whenReady(client.denseScalarModel[Int]("test", 100, 5)) { case a => a }
         whenReady(bigModel.pushSingle(20, 3)) { case p => p }
         whenReady(bigModel.pushSingle(76, -100)) { case p => p }
-        assert(whenReady(bigModel.pullSingle(20)) {case a => a} == 8) // 5 + 3 = 8
-        assert(whenReady(bigModel.pullSingle(76)) {case a => a} == -95) // 5 + -100 = -95
+        assert(whenReady(bigModel.pullSingle(20)) { case a => a } == 8) // 5 + 3 = 8
+        assert(whenReady(bigModel.pullSingle(76)) { case a => a } == -95) // 5 + -100 = -95
       }
     }
   }

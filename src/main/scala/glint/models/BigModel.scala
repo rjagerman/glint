@@ -1,18 +1,19 @@
 package glint.models
 
 import akka.actor.ActorRef
-import akka.util.Timeout
 import akka.pattern.ask
-import glint.messages.server.{Push, Response, Pull}
+import akka.util.Timeout
+import glint.messages.server.{Pull, Push, Response}
 import glint.partitioning.Partitioner
-import scala.concurrent.{ExecutionContext, Future}
+
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 /**
  * A big model
  */
-class BigModel[K : ClassTag, V : ClassTag](partitioner: Partitioner[K, ActorRef], chunks: Array[ActorRef], default: V)
+class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[K, ActorRef], chunks: Array[ActorRef], default: V)
   extends Serializable {
 
   /**

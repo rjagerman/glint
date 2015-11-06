@@ -5,12 +5,12 @@ import java.util.concurrent.TimeUnit
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
-import com.typesafe.config.{ConfigValueFactory, Config, ConfigFactory}
+import com.typesafe.config.{Config, ConfigValueFactory}
 import com.typesafe.scalalogging.slf4j.StrictLogging
-import glint.Master._
 import glint.messages.master.RegisterServer
-import scala.concurrent.{Future, ExecutionContext}
+
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * A parameter server

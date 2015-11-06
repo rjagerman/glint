@@ -3,14 +3,14 @@ package glint
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
-import akka.remote.RemoteScope
 import akka.util.Timeout
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.Config
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import glint.messages.master._
 import glint.models.BigModel
+
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
  * The manager that handles the setup of parameter server actors
@@ -53,7 +53,7 @@ class Master() extends Actor with ActorLogging {
 
     case RegisterModel(name, model, client) =>
       log.info(s"Registering model ${name}")
-      models = models + (name -> (model, client))
+      models = models + (name ->(model, client))
       clientModels = clientModels + (client -> (clientModels.getOrElse(client, Set.empty[String]) + name))
       sender ! model
 

@@ -13,9 +13,9 @@ import scala.reflect.ClassTag
  * @param default The default value
  * @tparam V The type of values to store (must be of algebraic type Semiring, e.g. Double, Int, Long, etc.)
  */
-class ScalarArrayPartialModel[V : Semiring : ClassTag](start: Long,
-                                                       end: Long,
-                                                       default: V) extends ArrayPartialModel[V](start, end, default) {
+class ScalarArrayPartialModel[V: Semiring : ClassTag](start: Long,
+                                                      end: Long,
+                                                      default: V) extends ArrayPartialModel[V](start, end, default) {
 
   def update(key: Long, value: V): Unit = {
     data(index(key)) += value
