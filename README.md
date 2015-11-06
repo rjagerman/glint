@@ -1,4 +1,4 @@
-# Glint
+# ![Glint](https://github.com/rjagerman/glint/wiki/images/glint-logo-small.png)
 Glint is a high performance [Scala](http://www.scala-lang.org/) parameter server, currently in development.
 The aim is to make it easy to develop performant distributed machine learning algorithms using the parameter server architecture as a consistency model. One of the major goals is compatibility with Spark.
 
