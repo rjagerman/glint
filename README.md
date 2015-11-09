@@ -2,10 +2,8 @@
 Glint is a high performance [Scala](http://www.scala-lang.org/) parameter server built using [Akka](http://akka.io/).
 The aim is to make it easy to develop performant distributed machine learning algorithms using the parameter server architecture as a consistency model. One of the major goals is compatibility with [Spark](http://spark.apache.org/).
 
-The code is still under heavy development and is not yet published to any available repository. Once the library is more mature and ready to be used it will be published. To use the current version one should compile the system manually, publish it to a local repository and include it in your project through sbt.
-
 ## Compilation
-To compile the code, clone this repository and run:
+To use the current version you should compile the system manually, publish it to a local repository and include it in your project through sbt. Clone this repository and run:
 
     sbt compile assembly package publish-local
 
@@ -32,9 +30,9 @@ The `-c your-conf-file.conf` is optional and you can omit it to use the default 
 
 ## Example usage
 
-With your parameter server up and running you can use the library to connect to the parameter servers, construct distributed models and pull/push data.
+**! As the software is currently under heavy development, this will change considerably over time !**
 
-**!! As the software is currently under heavy development, this will change considerably over time.**
+With your parameter server up and running you can use the library to connect to the parameter servers, construct distributed models and pull/push data.
 
 The parameter server is designed to be highly asynchronous. The code uses common concurrency methods from scala. If you are unfamiliar with the concepts of Futures, ExecutionContext, etc. it is best to read up on those first.
 
