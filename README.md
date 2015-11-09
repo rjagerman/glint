@@ -30,7 +30,7 @@ The `-c your-conf-file.conf` is optional and you can omit it to use the default 
 
 ## Example usage
 
-**! As the software is currently under heavy development, this will change considerably over time !**
+**As the software is currently under heavy development, this will change considerably over time !**
 
 With your parameter server up and running you can use the library to connect to the parameter servers, construct distributed models and pull/push data.
 
