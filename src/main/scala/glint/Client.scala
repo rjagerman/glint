@@ -9,6 +9,7 @@ import akka.util.Timeout
 import breeze.linalg.Vector
 import com.typesafe.config.{Config, ConfigFactory}
 import glint.exceptions.ModelCreationException
+import glint.indexing.{CyclicIndexer, IdentityIndexer, Indexer}
 import glint.messages.master.{GetModel, RegisterClient, RegisterModel, ServerList}
 import glint.models.BigModel
 import glint.models.impl.{ScalarArrayPartialModel, VectorArrayPartialModel}
@@ -68,7 +69,7 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
    *
    * @param id The identifier
    * @param size The total size
-   * @param default The default value to populate the array with
+   * @param default The default value to populate the model with
    * @tparam V The type of values to store
    * @return A future reference BigModel
    */
@@ -78,6 +79,7 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
     create[Long, V](id,
       size,
       default,
+      (models) => new CyclicIndexer(models.length, size),
       (models) => new UniformPartitioner[ActorRef](models, size),
       (start, end, default) => Props(classOf[ScalarArrayPartialModel[V]],
                                      start,
@@ -96,11 +98,11 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
    *   val model = client.get[Long, DenseVector[Double]]("name")
    * }}}
    *
-   * @param id
-   * @param size
-   * @param default
-   * @tparam V
-   * @return
+   * @param id The identifier
+   * @param size The total size
+   * @param default The default value to populate the model with
+   * @tparam V The type of values to store
+   * @return A future reference BigModel
    */
   def denseVectorModel[V: breeze.math.Semiring : ClassTag](id: String,
                                                            size: Long,
@@ -108,6 +110,7 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
     create[Long, Vector[V]](id,
       size,
       default,
+      (models) => new CyclicIndexer(models.length, size),
       (models) => new UniformPartitioner[ActorRef](models, size),
       (start, end, default) => Props(classOf[VectorArrayPartialModel[V]],
                                      start,
@@ -123,6 +126,7 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
    * @param id The identifier
    * @param size The size of the big model (i.e. number of keys)
    * @param default The default value to store
+   * @param indexer A function that creates an indexer based on a list of models
    * @param partitioner A function that creates a partitioner based on a list of models
    * @param props A function that creates an Akka Props object to construct partial models remotely
    * @tparam K The key type to store
@@ -132,7 +136,8 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
   private def create[K: ClassTag, V: ClassTag](id: String,
                                                size: Long,
                                                default: V,
-                                               partitioner: (Array[ActorRef]) => Partitioner[K, ActorRef],
+                                               indexer: (Array[ActorRef]) => Indexer[K],
+                                               partitioner: (Array[ActorRef]) => Partitioner[ActorRef],
                                                props: (Long, Long, V) => Props): Future[BigModel[K, V]] = {
 
     // Get a list of servers
@@ -154,7 +159,7 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
 
     // Map the list of models to a single BigModel reference
     val bigModel = listOfModels.map {
-      case models: Array[ActorRef] => new BigModel[K, V](partitioner(models), models, default)
+      case models: Array[ActorRef] => new BigModel[K, V](partitioner(models), indexer(models), models, default)
     }
 
     // Register the big model on the master before returning it
