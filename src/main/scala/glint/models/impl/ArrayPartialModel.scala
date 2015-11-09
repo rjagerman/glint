@@ -31,9 +31,7 @@ abstract class ArrayPartialModel[V: ClassTag](val start: Long,
     case p: Push[Long, V] =>
       log.info(s"Received push request from ${sender.path.address}")
       p.keys.zip(p.values).foreach { case (k, v) => update(k, v) }
-      sender ! true /* {
-        case (k, v) => update(k, v) data(index(k)) += v
-      }*/
+      sender ! true
   }
 
   def update(key: Long, value: V): Unit

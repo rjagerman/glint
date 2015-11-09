@@ -65,27 +65,5 @@ object Server extends StrictLogging {
         (system, server)
     }
 
-    /*registration.transform {
-      case a: ActorRef =>
-        logger.info(master.path.toSerializationFormatWithAddress(address))
-        logger.info("Master successfully started")
-        (system, server)
-    }
-
-    registration.onSuccess {
-      case true =>
-        logger.info(s"Succesfully registered with master")
-      case _ =>
-        logger.error(s"Unknown response from master")
-        system.shutdown()
-    }
-
-    registration.onFailure {
-      case e: Exception =>
-        logger.error(s"Unable to register with master")
-        logger.error(e.getMessage)
-        system.shutdown()
-    }*/
-
   }
 }
