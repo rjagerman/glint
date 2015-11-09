@@ -8,7 +8,7 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 /**
  * Main application
  */
-object Glint extends StrictLogging {
+object Main extends StrictLogging {
 
   /**
    * Command-line options
