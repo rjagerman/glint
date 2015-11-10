@@ -5,7 +5,7 @@ import org.scalatest.Matchers._
 import org.scalatest.FlatSpec
 
 /**
-  * Client test specification
+  * Partitioning test specification
   */
 class PartitioningSpec extends FlatSpec {
 
