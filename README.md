@@ -2,7 +2,7 @@
 Glint is a high performance [Scala](http://www.scala-lang.org/) parameter server built using [Akka](http://akka.io/).
 The aim is to make it easy to develop performant distributed machine learning algorithms using the parameter server architecture as a consistency model. One of the major goals is compatibility with [Spark](http://spark.apache.org/).
 
-## Compilation
+## Compile
 To use the current version you should compile the system manually, publish it to a local repository and include it in your project through sbt. Clone this repository and run:
 
     sbt compile assembly package publish-local
@@ -11,7 +11,7 @@ This should publish the library jar file to the local ivy2 repository, which mea
 
     libraryDependencies += "ch.ethz.inf.da" %% "glint" % "0.1-SNAPSHOT"
 
-## Running
+## Starting parameter servers
 
 The parameter server is designed to be ran stand alone as a separate java process. Future work includes the integration with proper cluster management tools such as Yarn.
 
@@ -65,10 +65,9 @@ Note that both of the above operations happen asynchronously and return a `Futur
 Current development goals:
 
 1. Improve partitioning schemes
-2. Use the library in our LDA code
-3. Make it easy to batch push/pull requests together
-4. Optimize, optimize and then optimize some more
-5. Finish thesis ;-)
+2. Make it easy to batch push/pull requests together
+3. Optimize, optimize and then optimize some more
+4. Finish thesis ;-)
 
 Future development goals:
 
