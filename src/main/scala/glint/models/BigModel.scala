@@ -33,11 +33,11 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
   private implicit lazy val timeout = Timeout(30 seconds)
 
   /**
-   * Asynchronous function to pull values from the big model
-   *
-   * @param keys The array of keys
-   * @return A future for the array of returned values
-   */
+    * Asynchronous function to pull values from the big model
+    *
+    * @param keys The array of keys
+    * @return A future for the array of returned values
+    */
   def pull(keys: Array[K]): Future[Array[V]] = {
 
     // Reindex keys appropriately
@@ -72,21 +72,21 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
   }
 
   /**
-   * Asynchronous function to pull a single value from the big model
-   *
-   * @param key The key
-   * @return A future for the returned value
-   */
+    * Asynchronous function to pull a single value from the big model
+    *
+    * @param key The key
+    * @return A future for the returned value
+    */
   def pullSingle(key: K): Future[V] = {
     pull(Array(key)).map { case values: Array[V] => values(0) }
   }
 
   /**
-   * Asynchronous function to push values to the big model
-   *
-   * @param keys The array of keys
-   * @return A future for the completion of the operation
-   */
+    * Asynchronous function to push values to the big model
+    *
+    * @param keys The array of keys
+    * @return A future for the completion of the operation
+    */
   def push(keys: Array[K], values: Array[V]): Future[Unit] = {
 
     // Reindex keys appropriately
@@ -102,18 +102,18 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
   }
 
   /**
-   * Asynchronous function to push a single value to the big model
-   *
-   * @param key The key
-   * @return A future for the completion of the operation
-   */
+    * Asynchronous function to push a single value to the big model
+    *
+    * @param key The key
+    * @return A future for the completion of the operation
+    */
   def pushSingle(key: K, value: V): Future[Unit] = {
     push(Array(key), Array(value))
   }
 
   /**
-   * Destroys the model and releases the resources at the parameter servers
-   */
+    * Destroys the model and releases the resources at the parameter servers
+    */
   def destroy(): Unit = {
     chunks.foreach {
       case chunk => chunk ! akka.actor.PoisonPill

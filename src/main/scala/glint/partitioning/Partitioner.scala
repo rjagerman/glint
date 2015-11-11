@@ -1,16 +1,16 @@
 package glint.partitioning
 
 /**
- * Partitioners allocate a server id for each key
- */
+  * Partitioners allocate a server id for each key
+  */
 trait Partitioner[P] extends Serializable {
 
   /**
-   * Assign a server to the given key
-   *
-   * @param key The key to partition
-   * @return The partition
-   */
+    * Assign a server to the given key
+    *
+    * @param key The key to partition
+    * @return The partition
+    */
   def partition(key: Long): P
 
   /**

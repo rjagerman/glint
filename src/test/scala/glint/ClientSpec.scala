@@ -6,9 +6,9 @@ import akka.util.Timeout
 import breeze.linalg.DenseVector
 import com.typesafe.config.ConfigFactory
 import glint.exceptions.ModelCreationException
-import org.scalatest.Matchers._
 import glint.messages.master.ClientList
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers._
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import spire.implicits._
@@ -16,8 +16,8 @@ import spire.implicits._
 import scala.concurrent.duration._
 
 /**
- * Client test specification
- */
+  * Client test specification
+  */
 class ClientSpec extends FlatSpec with ScalaFutures {
 
   val testConfig = ConfigFactory.parseString(
@@ -102,10 +102,10 @@ class ClientSpec extends FlatSpec with ScalaFutures {
     PatienceConfig(timeout = Span(10, Seconds), interval = Span(50, Millis))
 
   /**
-   * Fixture that starts a master when running test code and cleans up where necessary
-   *
-   * @param testCode The test code to run
-   */
+    * Fixture that starts a master when running test code and cleans up where necessary
+    *
+    * @param testCode The test code to run
+    */
   def withMaster(testCode: ActorRef => Any): Unit = {
     val (masterSystem: ActorSystem, masterActor: ActorRef) = whenReady(Master.run(testConfig)) { case (s, a) => (s, a) }
     try {
@@ -117,10 +117,10 @@ class ClientSpec extends FlatSpec with ScalaFutures {
   }
 
   /**
-   * Fixture that starts a parameter server when running test code and cleans up where necessary
-   *
-   * @param testCode The test code to run
-   */
+    * Fixture that starts a parameter server when running test code and cleans up where necessary
+    *
+    * @param testCode The test code to run
+    */
   def withServer(testCode: ActorRef => Any): Unit = {
     val (serverSystem: ActorSystem, serverActor: ActorRef) = whenReady(Server.run(testConfig, "localhost", 0)) { case (s, a) => (s, a) }
     try {
@@ -132,10 +132,10 @@ class ClientSpec extends FlatSpec with ScalaFutures {
   }
 
   /**
-   * Fixture that starts a client when running test code and cleans up afterwards
-   *
-   * @param testCode The test code to run
-   */
+    * Fixture that starts a client when running test code and cleans up afterwards
+    *
+    * @param testCode The test code to run
+    */
   def withClient(testCode: Client => Any): Unit = {
     val client = whenReady(Client(testConfig)) { case c => c }
     try {

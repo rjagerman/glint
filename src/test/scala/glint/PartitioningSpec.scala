@@ -1,8 +1,8 @@
 package glint
 
 import glint.partitioning.UniformPartitioner
-import org.scalatest.Matchers._
 import org.scalatest.FlatSpec
+import org.scalatest.Matchers._
 
 /**
   * Partitioning test specification

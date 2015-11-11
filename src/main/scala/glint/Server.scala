@@ -13,8 +13,8 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * A parameter server
- */
+  * A parameter server
+  */
 class Server extends Actor with ActorLogging {
 
   override def receive: Receive = {
@@ -25,17 +25,17 @@ class Server extends Actor with ActorLogging {
 }
 
 /**
- * Parameter server object
- */
+  * Parameter server object
+  */
 object Server extends StrictLogging {
 
   /**
-   * Starts a parameter server ready to receive commands
-   *
-   * @param config The configuration
-   * @param host The host name
-   * @param port The port
-   */
+    * Starts a parameter server ready to receive commands
+    *
+    * @param config The configuration
+    * @param host The host name
+    * @param port The port
+    */
   def run(config: Config, host: String, port: Int): Future[(ActorSystem, ActorRef)] = {
 
     var modifiedConfig = config.withValue("glint.server.akka.remote.netty.tcp.hostname", ConfigValueFactory.fromAnyRef(host))
