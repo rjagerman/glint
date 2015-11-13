@@ -16,7 +16,7 @@ libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.3.14"
 
 // Spire (generic fast numerics)
 
-libraryDependencies += "org.spire-math" %% "spire" % "0.11.0"
+libraryDependencies += "org.spire-math" %% "spire" % "0.7.4"
 
 // Breeze
 
