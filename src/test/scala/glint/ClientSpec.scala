@@ -198,6 +198,18 @@ class ClientSpec extends FlatSpec with ScalaFutures {
     }
   }
 
+  it should "store Long values in a scalar model" in withMaster { _ =>
+    withServer { _ =>
+      withClient { client =>
+        val bigModel = whenReady(client.denseScalarModel[Long]("test", 100, 8000000000L)) { case a => a }
+        whenReady(bigModel.pushSingle(20, 3)) { case p => p }
+        whenReady(bigModel.pushSingle(76, -100)) { case p => p }
+        assert(whenReady(bigModel.pullSingle(20)) { case a => a } == 8000000003L) // 8000000000 + 3 = 8000000003
+        assert(whenReady(bigModel.pullSingle(76)) { case a => a } == 7999999900L) // 8000000000 + -100 = 7999999900
+      }
+    }
+  }
+
   it should "store DenseVector[Double] values a vector model" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
