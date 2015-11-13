@@ -13,28 +13,28 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
- * The manager that handles the setup of parameter server actors
- */
+  * The manager that handles the setup of parameter server actors
+  */
 class Master() extends Actor with ActorLogging {
 
   /**
-   * Collection of servers available
-   */
+    * Collection of servers available
+    */
   var servers = Set.empty[ActorRef]
 
   /**
-   * Collection of models
-   */
+    * Collection of models
+    */
   var clientModels = Map.empty[ActorRef, Set[String]]
 
   /**
-   * Collection of models
-   */
+    * Collection of models
+    */
   var models = Map.empty[String, (BigModel[_, _], ActorRef)]
 
   /**
-   * Collection of clients
-   */
+    * Collection of clients
+    */
   var clients = Set.empty[ActorRef]
 
   override def receive: Receive = {
@@ -94,16 +94,16 @@ class Master() extends Actor with ActorLogging {
 }
 
 /**
- * Parameter manager object
- */
+  * Parameter manager object
+  */
 object Master extends StrictLogging {
 
   /**
-   * Starts a parameter server ready to receive commands
-   *
-   * @param config The configuration
-   * @return The started actor system and reference to the master actor
-   */
+    * Starts a parameter server ready to receive commands
+    *
+    * @param config The configuration
+    * @return The started actor system and reference to the master actor
+    */
   def run(config: Config): Future[(ActorSystem, ActorRef)] = {
 
     logger.debug("Starting master actor system")

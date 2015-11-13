@@ -6,28 +6,28 @@ import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
 /**
- * Main application
- */
+  * Main application
+  */
 object Main extends StrictLogging {
 
   /**
-   * Command-line options
-   *
-   * @param mode The mode of operation (either "master" or "server")
-   * @param config The configuration file to load (defaults to the included glint.conf)
-   * @param host The host of the parameter server (only when mode of operation is "server")
-   * @param port The port of the parameter server (only when mode of operation is "server")
-   */
+    * Command-line options
+    *
+    * @param mode The mode of operation (either "master" or "server")
+    * @param config The configuration file to load (defaults to the included glint.conf)
+    * @param host The host of the parameter server (only when mode of operation is "server")
+    * @param port The port of the parameter server (only when mode of operation is "server")
+    */
   case class Options(mode: String = "",
                      config: File = new File(getClass.getClassLoader.getResource("glint.conf").getFile),
                      host: String = "localhost",
                      port: Int = 0)
 
   /**
-   * Main entry point of the application
-   *
-   * @param args The command-line arguments
-   */
+    * Main entry point of the application
+    *
+    * @param args The command-line arguments
+    */
   def main(args: Array[String]): Unit = {
 
     val parser = new scopt.OptionParser[Options]("glint") {

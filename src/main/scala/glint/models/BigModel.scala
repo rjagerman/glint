@@ -3,6 +3,7 @@ package glint.models
 import akka.actor.ActorRef
 import akka.pattern.ask
 import akka.util.Timeout
+import glint.indexing.Indexer
 import glint.messages.server.{Pull, Push, Response}
 import glint.partitioning.Partitioner
 
@@ -11,29 +12,45 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 /**
- * A big model
- */
-class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[K, ActorRef], chunks: Array[ActorRef], default: V)
-  extends Serializable {
+  * A big model
+  *
+  * @param partitioner The partitioner used to partition keys into servers
+  * @param indexer The indexer used to convert keys to indices
+  * @param chunks The partial models
+  * @param default The default value
+  * @tparam K The type of keys to store
+  * @tparam V The type of values to store
+  */
+class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
+                                         indexer: Indexer[K],
+                                         chunks: Array[ActorRef],
+                                         default: V) extends Serializable {
+
+  @transient
+  private implicit lazy val ec = ExecutionContext.Implicits.global
+
+  @transient
+  private implicit lazy val timeout = Timeout(30 seconds)
 
   /**
-   * Asynchronous function to pull values from the big model
-   *
-   * @param keys The array of keys
-   * @return A future for the array of returned values
-   */
+    * Asynchronous function to pull values from the big model
+    *
+    * @param keys The array of keys
+    * @return A future for the array of returned values
+    */
   def pull(keys: Array[K]): Future[Array[V]] = {
-    implicit val ec = ExecutionContext.Implicits.global
-    implicit val timeout = Timeout(30 seconds)
+
+    // Reindex keys appropriately
+    val indexedKeys = keys.map(indexer.index)
 
     // Send pull request of the list of keys
-    val pulls = keys.groupBy(partitioner.partition).map {
+    val pulls = indexedKeys.groupBy(partitioner.partition).map {
       case (partition, partitionKeys) =>
-        (partition ? Pull[K](partitionKeys)).mapTo[Response[V]]
+        (partition ? Pull[Long](partitionKeys)).mapTo[Response[V]]
     }
 
     // Obtain key indices after partitioning so we can place the results in a correctly ordered array
-    val indices = keys.zipWithIndex.groupBy {
+    val indices = indexedKeys.zipWithIndex.groupBy {
       case (k, i) => partitioner.partition(k)
     }.map {
       case (_, arr) => arr.map(_._2)
@@ -55,31 +72,29 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[K, ActorRef], 
   }
 
   /**
-   * Asynchronous function to pull a single value from the big model
-   *
-   * @param key The key
-   * @return A future for the returned value
-   */
+    * Asynchronous function to pull a single value from the big model
+    *
+    * @param key The key
+    * @return A future for the returned value
+    */
   def pullSingle(key: K): Future[V] = {
-    implicit val ec = ExecutionContext.Implicits.global
-    implicit val timeout = Timeout(30 seconds)
-    val server = partitioner.partition(key)
-    (server ? Pull[K](Array(key))).mapTo[Response[V]].map(r => r.values(0))
+    pull(Array(key)).map { case values: Array[V] => values(0) }
   }
 
   /**
-   * Asynchronous function to push values to the big model
-   *
-   * @param keys The array of keys
-   * @return A future for the completion of the operation
-   */
+    * Asynchronous function to push values to the big model
+    *
+    * @param keys The array of keys
+    * @return A future for the completion of the operation
+    */
   def push(keys: Array[K], values: Array[V]): Future[Unit] = {
-    implicit val ec = ExecutionContext.Implicits.global
-    implicit val timeout = Timeout(30 seconds)
+
+    // Reindex keys appropriately
+    val indexedKeys = keys.map(indexer.index)
 
     // Send push request
-    val pushes = keys.groupBy(k => partitioner.partition(k)).map {
-      case (partition, keys) => partition ? Push[K, V](keys, values)
+    val pushes = indexedKeys.groupBy(k => partitioner.partition(k)).map {
+      case (partition, keys) => partition ? Push[Long, V](keys, values)
     }
 
     // Combine and aggregate futures
@@ -87,18 +102,18 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[K, ActorRef], 
   }
 
   /**
-   * Asynchronous function to push a single value to the big model
-   *
-   * @param key The key
-   * @return A future for the completion of the operation
-   */
+    * Asynchronous function to push a single value to the big model
+    *
+    * @param key The key
+    * @return A future for the completion of the operation
+    */
   def pushSingle(key: K, value: V): Future[Unit] = {
     push(Array(key), Array(value))
   }
 
   /**
-   * Destroys the model and releases the resources at the parameter servers
-   */
+    * Destroys the model and releases the resources at the parameter servers
+    */
   def destroy(): Unit = {
     chunks.foreach {
       case chunk => chunk ! akka.actor.PoisonPill
