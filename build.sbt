@@ -24,6 +24,10 @@ libraryDependencies += "org.scalanlp" %% "breeze" % "0.11.2"
 
 libraryDependencies += "org.scalanlp" %% "breeze-natives" % "0.11.2"
 
+// Spray
+
+libraryDependencies += "io.spray" % "spray-caching" % "1.3.1"
+
 // Unit tests
 
 libraryDependencies <+= scalaVersion {
