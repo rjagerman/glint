@@ -24,10 +24,10 @@ import scala.reflect.ClassTag
 class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
                                          indexer: Indexer[K],
                                          chunks: Array[ActorRef],
-                                         default: V) extends Serializable {
+                                         val default: V) extends Serializable {
 
-  @transient
-  private implicit lazy val ec = ExecutionContext.Implicits.global
+  //@transient
+  //private implicit lazy val ec = ExecutionContext.Implicits.global
 
   @transient
   private implicit lazy val timeout = Timeout(30 seconds)
@@ -38,7 +38,7 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     * @param keys The array of keys
     * @return A future for the array of returned values
     */
-  def pull(keys: Array[K]): Future[Array[V]] = {
+  def pull(keys: Array[K])(implicit ec: ExecutionContext): Future[Array[V]] = {
 
     // Reindex keys appropriately
     val indexedKeys = keys.map(indexer.index)
@@ -77,7 +77,7 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     * @param key The key
     * @return A future for the returned value
     */
-  def pullSingle(key: K): Future[V] = {
+  def pullSingle(key: K)(implicit ec: ExecutionContext): Future[V] = {
     pull(Array(key)).map { case values: Array[V] => values(0) }
   }
 
@@ -87,7 +87,7 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     * @param keys The array of keys
     * @return A future for the completion of the operation
     */
-  def push(keys: Array[K], values: Array[V]): Future[Unit] = {
+  def push(keys: Array[K], values: Array[V])(implicit ec: ExecutionContext): Future[Unit] = {
 
     // Reindex keys appropriately
     val indexedKeys = keys.map(indexer.index)
@@ -107,7 +107,7 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     * @param key The key
     * @return A future for the completion of the operation
     */
-  def pushSingle(key: K, value: V): Future[Unit] = {
+  def pushSingle(key: K, value: V)(implicit ec: ExecutionContext): Future[Unit] = {
     push(Array(key), Array(value))
   }
 
@@ -115,6 +115,7 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     * Destroys the model and releases the resources at the parameter servers
     */
   def destroy(): Unit = {
+    implicit val ec = ExecutionContext.Implicits.global
     chunks.foreach {
       case chunk => chunk ! akka.actor.PoisonPill
     }
