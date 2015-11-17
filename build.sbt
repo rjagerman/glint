@@ -8,6 +8,13 @@ scalaVersion := "2.11.7"
 
 crossScalaVersions := Seq("2.10.6", "2.11.7")
 
+// Spark
+
+libraryDependencies <+= scalaVersion {
+  case x if x.startsWith("2.10") => "org.apache.spark" % "spark-core_2.10" % "1.5.1" % "provided"
+  case x if x.startsWith("2.11") => "org.apache.spark" % "spark-core_2.11" % "1.5.1" % "provided"
+}
+
 // Akka
 
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.14"
@@ -23,6 +30,10 @@ libraryDependencies += "org.spire-math" %% "spire" % "0.7.4"
 libraryDependencies += "org.scalanlp" %% "breeze" % "0.11.2"
 
 libraryDependencies += "org.scalanlp" %% "breeze-natives" % "0.11.2"
+
+// Spray
+
+libraryDependencies += "io.spray" % "spray-caching" % "1.3.1"
 
 // Unit tests
 

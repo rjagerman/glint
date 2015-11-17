@@ -13,6 +13,7 @@ import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 import spire.implicits._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 /**
@@ -97,6 +98,8 @@ class ClientSpec extends FlatSpec with ScalaFutures {
       |}
     """.stripMargin
   ).resolve()
+
+  implicit val ec = ExecutionContext.Implicits.global
 
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(10, Seconds), interval = Span(50, Millis))
