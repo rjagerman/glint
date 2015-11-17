@@ -5,17 +5,36 @@ import glint.models.BigModel
 import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import spray.caching.{Cache, LruCache}
+import scala.concurrent.duration._
 
 import scala.reflect.ClassTag
 
 /**
   * A Cache trait for models
   */
+/**
+  * A cache wrapper for models
+  *
+  * @param bigModel The model
+  * @param aggregate The aggregation function (typically you want to use _ + _)
+  * @param pushQueueSize The size of the push queue before a forced flush occurs
+  * @param pullCacheSize The size of the pull LRU cache
+  * @param timeToLive Time to live in the pull LRU cache
+  * @param timeToIdle Time to idle in the pull LRU cache
+  * @tparam K The type of keys to store
+  * @tparam V The type of values to store
+  */
 class CacheModel[K: ClassTag, V: ClassTag](bigModel: BigModel[K, V],
                                            aggregate: (V, V) => V,
-                                           val pushQueueSize: Int = 200) {
+                                           val pushQueueSize: Int = 200,
+                                           val pullCacheSize: Int = 200,
+                                           val timeToLive: Duration = 60 seconds,
+                                           val timeToIdle: Duration = 59 seconds) {
 
-  val cache: Cache[V] = LruCache()
+  val cache: Cache[V] = LruCache(pullCacheSize,
+                                 pullCacheSize,
+                                 timeToLive,
+                                 timeToIdle)
   val pushQueue = mutable.HashMap[K, V]()
 
   /**
