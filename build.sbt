@@ -8,6 +8,10 @@ scalaVersion := "2.11.7"
 
 crossScalaVersions := Seq("2.10.6", "2.11.7")
 
+fork in Test := true
+
+javaOptions in Test := Seq("-DHOSTNAME=127.0.0.1")
+
 // Spark
 
 libraryDependencies <+= scalaVersion {

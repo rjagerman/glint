@@ -185,7 +185,7 @@ object Client {
     * @return A future Client
     */
   def apply(config: Config): Future[Client] = {
-    val default = ConfigFactory.parseResourcesAnySyntax("glint").resolve()
+    val default = ConfigFactory.parseResourcesAnySyntax("glint")
     val conf = config.withFallback(default).resolve()
     start(conf)
   }
