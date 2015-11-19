@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+GLINT_PATH=$GLINT_SBIN_PATH/../
+GLINT_PATH=`cd $GLINT_PATH; pwd`
+
+GLINT_CONF_PATH=$GLINT_PATH/conf
