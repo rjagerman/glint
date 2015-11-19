@@ -5,6 +5,8 @@ import java.io.File
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
+import scala.concurrent.ExecutionContext
+
 /**
   * Main application
   */
@@ -59,9 +61,22 @@ object Main extends StrictLogging {
         val config = ConfigFactory.parseFile(options.config).withFallback(default).resolve()
 
         // Start specified mode of operation
+        implicit val ec = ExecutionContext.Implicits.global
         options.mode match {
-          case "server" => Server.run(config, options.host, options.port)
-          case "master" => Master.run(config)
+          case "server" => Server.run(config, options.host, options.port).onSuccess {
+            case (system, ref) => sys.addShutdownHook {
+              logger.info("Shutting down")
+              system.shutdown()
+              system.awaitTermination()
+            }
+          }
+          case "master" => Master.run(config).onSuccess {
+            case (system, ref) => sys.addShutdownHook {
+              logger.info("Shutting down")
+              system.shutdown()
+              system.awaitTermination()
+            }
+          }
           case _ =>
             parser.showUsageAsError
             System.exit(1)
