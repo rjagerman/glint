@@ -125,7 +125,7 @@ class ClientSpec extends FlatSpec with ScalaFutures {
     * @param testCode The test code to run
     */
   def withServer(testCode: ActorRef => Any): Unit = {
-    val (serverSystem: ActorSystem, serverActor: ActorRef) = whenReady(Server.run(testConfig, "localhost", 0)) { case (s, a) => (s, a) }
+    val (serverSystem: ActorSystem, serverActor: ActorRef) = whenReady(Server.run(testConfig)) { case (s, a) => (s, a) }
     try {
       testCode(serverActor)
     } finally {

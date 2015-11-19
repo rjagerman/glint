@@ -42,14 +42,7 @@ object Main extends StrictLogging {
       } text "Starts a master node."
       cmd("server") action { (_, c) =>
         c.copy(mode = "server")
-      } text "Starts a server node." children(
-        opt[String]('h', "host") required() valueName "<host>" action { (x, c) =>
-          c.copy(host = x)
-        } text "The hostname of the server",
-        opt[Int]('p', "port") valueName "<port>" action { (x, c) =>
-          c.copy(port = x)
-        } text "The port of the server"
-        )
+      } text "Starts a server node."
     }
 
     parser.parse(args, Options()) match {
@@ -63,7 +56,7 @@ object Main extends StrictLogging {
         // Start specified mode of operation
         implicit val ec = ExecutionContext.Implicits.global
         options.mode match {
-          case "server" => Server.run(config, options.host, options.port).onSuccess {
+          case "server" => Server.run(config).onSuccess {
             case (system, ref) => sys.addShutdownHook {
               logger.info("Shutting down")
               system.shutdown()
