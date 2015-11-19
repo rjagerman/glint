@@ -33,16 +33,11 @@ object Server extends StrictLogging {
     * Starts a parameter server ready to receive commands
     *
     * @param config The configuration
-    * @param host The host name
-    * @param port The port
     */
-  def run(config: Config, host: String, port: Int): Future[(ActorSystem, ActorRef)] = {
+  def run(config: Config): Future[(ActorSystem, ActorRef)] = {
 
-    var modifiedConfig = config.withValue("glint.server.akka.remote.netty.tcp.hostname", ConfigValueFactory.fromAnyRef(host))
-    modifiedConfig = modifiedConfig.withValue("glint.server.akka.remote.netty.tcp.port", ConfigValueFactory.fromAnyRef(port))
-
-    logger.debug(s"Starting actor system ${config.getString("glint.server.system")}@${host}:${port}")
-    val system = ActorSystem(config.getString("glint.server.system"), modifiedConfig.getConfig("glint.server"))
+    logger.debug(s"Starting actor system ${config.getString("glint.server.system")}")
+    val system = ActorSystem(config.getString("glint.server.system"), config.getConfig("glint.server"))
 
     logger.debug("Starting server actor")
     val server = system.actorOf(Props[Server], config.getString("glint.server.name"))
