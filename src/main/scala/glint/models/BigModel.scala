@@ -7,6 +7,8 @@ import glint.indexing.Indexer
 import glint.messages.server.{Pull, Push, Response}
 import glint.partitioning.Partitioner
 
+import java.util.concurrent.atomic.AtomicInteger
+
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
@@ -29,6 +31,9 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
   //@transient
   //private implicit lazy val ec = ExecutionContext.Implicits.global
 
+  private val processingPulls: AtomicInteger = new AtomicInteger()
+  private val processingPushes: AtomicInteger = new AtomicInteger()
+
   @transient
   private implicit lazy val timeout = Timeout(30 seconds)
 
@@ -39,6 +44,9 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     * @return A future for the array of returned values
     */
   def pull(keys: Array[K])(implicit ec: ExecutionContext): Future[Array[V]] = {
+
+    // Increment currently in process tasks
+    processingPulls.incrementAndGet()
 
     // Reindex keys appropriately
     val indexedKeys = keys.map(indexer.index)
@@ -68,7 +76,9 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     }
 
     // Combine and aggregate futures
-    Future.sequence(pulls).transform(aggregateSuccess, err => err)
+    val allFutures = Future.sequence(pulls).transform(aggregateSuccess, err => err)
+    allFutures.onComplete { case _ => processingPulls.decrementAndGet() }
+    allFutures
   }
 
   /**
@@ -89,6 +99,9 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     */
   def push(keys: Array[K], values: Array[V])(implicit ec: ExecutionContext): Future[Unit] = {
 
+    // Increment currently in process tasks
+    processingPushes.incrementAndGet()
+
     // Reindex keys appropriately
     val indexedKeys = keys.map(indexer.index)
 
@@ -98,7 +111,9 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     }
 
     // Combine and aggregate futures
-    Future.sequence(pushes).transform(results => Unit, err => err)
+    val allFutures: Future[Unit] = Future.sequence(pushes).transform(results => None, err => err)
+    allFutures.onComplete { case _ => processingPushes.decrementAndGet() }
+    allFutures
   }
 
   /**
@@ -120,5 +135,20 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
       case chunk => chunk ! akka.actor.PoisonPill
     }
   }
+
+  /**
+    * Blocking call that waits until all currently processing requests are done
+    */
+  def synchronize(): Unit = {
+    while(processing() > 0) {
+      Thread.sleep(500)
+    }
+  }
+
+  /**
+    * Gets the number of currently processing tasks
+    * @return The number of currently processing tasks
+    */
+  def processing(): Int = processingPushes.get() + processingPulls.get()
 
 }

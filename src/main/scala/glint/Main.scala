@@ -5,6 +5,8 @@ import java.io.File
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
+import scala.concurrent.ExecutionContext
+
 /**
   * Main application
   */
@@ -40,14 +42,7 @@ object Main extends StrictLogging {
       } text "Starts a master node."
       cmd("server") action { (_, c) =>
         c.copy(mode = "server")
-      } text "Starts a server node." children(
-        opt[String]('h', "host") required() valueName "<host>" action { (x, c) =>
-          c.copy(host = x)
-        } text "The hostname of the server",
-        opt[Int]('p', "port") valueName "<port>" action { (x, c) =>
-          c.copy(port = x)
-        } text "The port of the server"
-        )
+      } text "Starts a server node."
     }
 
     parser.parse(args, Options()) match {
@@ -59,9 +54,22 @@ object Main extends StrictLogging {
         val config = ConfigFactory.parseFile(options.config).withFallback(default).resolve()
 
         // Start specified mode of operation
+        implicit val ec = ExecutionContext.Implicits.global
         options.mode match {
-          case "server" => Server.run(config, options.host, options.port)
-          case "master" => Master.run(config)
+          case "server" => Server.run(config).onSuccess {
+            case (system, ref) => sys.addShutdownHook {
+              logger.info("Shutting down")
+              system.shutdown()
+              system.awaitTermination()
+            }
+          }
+          case "master" => Master.run(config).onSuccess {
+            case (system, ref) => sys.addShutdownHook {
+              logger.info("Shutting down")
+              system.shutdown()
+              system.awaitTermination()
+            }
+          }
           case _ =>
             parser.showUsageAsError
             System.exit(1)
