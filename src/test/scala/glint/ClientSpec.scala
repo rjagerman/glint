@@ -166,7 +166,7 @@ class ClientSpec extends FlatSpec with ScalaFutures {
       withClient { client =>
         val bigModel = whenReady(client.denseScalarModel[Double]("test", 100, 0.0)) { case a => a }
         val bigModel2 = whenReady(client.get[Long, Double]("test")) { case a => a }
-        assert(bigModel2.nonEmpty)
+        assert(bigModel2.processing() == 0)
       }
     }
   }
