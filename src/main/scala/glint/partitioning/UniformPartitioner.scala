@@ -34,7 +34,7 @@ class UniformPartitioner[P](val partitions: Array[P], val keys: Long) extends Pa
     * @return The end index
     */
   private def end(p: Long): Long = {
-    start(p + 1) - 1
+    start(p + 1)
   }
 }
 

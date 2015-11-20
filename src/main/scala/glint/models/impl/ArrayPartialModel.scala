@@ -43,8 +43,8 @@ abstract class ArrayPartialModel[V: ClassTag](val start: Long,
     * @return The local key
     */
   def index(key: Long): Int = {
-    assert(key >= start)
-    assert(key < end)
+    assert(key >= start, s"Key out of range ${key} < ${start}")
+    assert(key < end, s"Key out of range ${key} >= ${end}")
     (key - start).toInt
   }
 

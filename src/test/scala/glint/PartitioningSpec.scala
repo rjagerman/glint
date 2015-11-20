@@ -17,6 +17,17 @@ class PartitioningSpec extends FlatSpec {
     }
   }
 
+  it should " succeed with an uneven distribution" in {
+    val partitions = (0 until 20).toArray
+    val keys = (0 until 50).toArray
+    val partitioner = new UniformPartitioner(partitions, keys.length)
+    for (key <- keys) {
+      val p = partitioner.partition(key)
+      assert(partitioner.start(p) <= key)
+      assert(partitioner.end(p) > key)
+    }
+  }
+
   it should " fail when partitioning outside its key size" in {
     val up = new UniformPartitioner(Array(0, 1, 2, 3, 4), 11)
     an [IndexOutOfBoundsException] should be thrownBy up.partition(11)

@@ -54,8 +54,11 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
     * @tparam V The type of values for this model
     * @return
     */
-  def get[K, V](id: String): Future[Option[BigModel[K, V]]] = {
-    (master ? new GetModel(id)).mapTo[Option[BigModel[K, V]]]
+  def get[K, V](id: String): Future[BigModel[K, V]] = {
+    (master ? new GetModel(id)).mapTo[Option[BigModel[K, V]]].map {
+      case None => throw new NoSuchElementException(s"Model ${id} does not exist")
+      case Some(x) => x
+    }.mapTo[BigModel[K, V]]
   }
 
   /**
@@ -150,8 +153,8 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
       }
       servers.zipWithIndex.map {
         case (server, index) =>
-          val start = Math.floor(size.toDouble * (index.toDouble / servers.length.toDouble)).toLong
-          val end = Math.floor(size.toDouble * ((index.toDouble + 1) / servers.length.toDouble)).toLong
+          val start = Math.ceil(index * (size.toDouble / servers.length.toDouble)).toLong
+          val end = Math.ceil((index+1) * (size.toDouble / servers.length.toDouble)).toLong
           val propsToDeploy = props(start, end, default)
           system.actorOf(propsToDeploy.withDeploy(Deploy(scope = RemoteScope(server.path.address))))
       }
