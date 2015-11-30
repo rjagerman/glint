@@ -25,12 +25,14 @@ abstract class ArrayPartialModel[V: ClassTag](val start: Long,
     // Pull request, send back the data for given keys
     case p: Pull[Long] =>
       log.info(s"Received pull request from ${sender.path.address}")
-      sender ! new Response[V](p.keys.map(k => data(index(k))).toArray)
+      sender ! new Response[V](p.keys.map(k => data(index(k))))
 
     // Push request, update local data based on given key/values using addition to update
     case p: Push[Long, V] =>
       log.info(s"Received push request from ${sender.path.address}")
-      p.keys.zip(p.values).foreach { case (k, v) => update(k, v) }
+      for (idx <- p.keys.indices) {
+        update(p.keys(idx), p.values(idx))
+      }
       sender ! true
   }
 
