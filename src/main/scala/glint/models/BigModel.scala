@@ -10,7 +10,7 @@ import glint.partitioning.Partitioner
 import java.util.concurrent.atomic.AtomicInteger
 
 import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.{Promise, Await, ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 /**
@@ -28,11 +28,12 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
                                          chunks: Array[ActorRef],
                                          val default: V) extends Serializable {
 
-  //@transient
-  //private implicit lazy val ec = ExecutionContext.Implicits.global
 
   private val processingPulls: AtomicInteger = new AtomicInteger()
   private val processingPushes: AtomicInteger = new AtomicInteger()
+
+  @transient
+  private lazy val lock = new Object()
 
   @transient
   private implicit lazy val timeout = Timeout(30 seconds)
@@ -77,7 +78,11 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
 
     // Combine and aggregate futures
     val allFutures = Future.sequence(pulls).transform(aggregateSuccess, err => err)
-    allFutures.onComplete { case _ => processingPulls.decrementAndGet() }
+    allFutures.onComplete {
+      case _ =>
+        processingPulls.decrementAndGet()
+        lock.synchronized { lock.notifyAll() }
+    }
     allFutures
   }
 
@@ -111,8 +116,12 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     }
 
     // Combine and aggregate futures
-    val allFutures: Future[Unit] = Future.sequence(pushes).transform(results => None, err => err)
-    allFutures.onComplete { case _ => processingPushes.decrementAndGet() }
+    val allFutures: Future[Unit] = Future.sequence(pushes).transform(results => (), err => err)
+    allFutures.onComplete {
+      case _ =>
+        processingPushes.decrementAndGet()
+        lock.synchronized { lock.notifyAll() }
+    }
     allFutures
   }
 
@@ -130,7 +139,6 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     * Destroys the model and releases the resources at the parameter servers
     */
   def destroy(): Unit = {
-    implicit val ec = ExecutionContext.Implicits.global
     chunks.foreach {
       case chunk => chunk ! akka.actor.PoisonPill
     }
@@ -138,11 +146,28 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
 
   /**
     * Blocking call that waits until all currently processing requests are done
+    * @return Time spent waiting
     */
-  def synchronize(): Unit = {
-    while(processing() > 0) {
-      Thread.sleep(500)
+  def block(): Long = block(0)
+
+  /**
+    * Blocking call that waits until there are at most given amount of processing requests
+    *
+    * @param tasks The upper bound on active requests
+    * @return Time spent waiting
+    */
+  def block(tasks: Int): Long = {
+    val startTime = System.currentTimeMillis()
+    lock.synchronized {
+      while (processing() > tasks) {
+        try {
+          lock.wait(5000)
+        } catch {
+          case ex: InterruptedException => // On interrupt we continue regular execution
+        }
+      }
     }
+    System.currentTimeMillis() - startTime
   }
 
   /**
