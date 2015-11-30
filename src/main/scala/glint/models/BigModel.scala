@@ -111,8 +111,8 @@ class BigModel[K: ClassTag, V: ClassTag](partitioner: Partitioner[ActorRef],
     val indexedKeys = keys.map(indexer.index)
 
     // Send push request
-    val pushes = indexedKeys.groupBy(k => partitioner.partition(k)).map {
-      case (partition, keys) => partition ? Push[Long, V](keys, values)
+    val pushes = indexedKeys.zip(values).groupBy { case (k,v) => partitioner.partition(k) }.map {
+      case (partition, keyValues) => partition ? Push[Long, V](keyValues.map(_._1), keyValues.map(_._2))
     }
 
     // Combine and aggregate futures

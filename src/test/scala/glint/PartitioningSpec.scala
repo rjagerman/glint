@@ -28,14 +28,23 @@ class PartitioningSpec extends FlatSpec {
     }
   }
 
-  it should " fail when partitioning outside its key size" in {
-    val up = new UniformPartitioner(Array(0, 1, 2, 3, 4), 11)
-    an [IndexOutOfBoundsException] should be thrownBy up.partition(11)
-    an [IndexOutOfBoundsException] should be thrownBy up.partition(-2)
+  it should " succeed with an even number of partitions and keys" in {
+    val partitions = Array(0, 1, 2)
+    val keys = Array(0, 1, 2)
+    val partitioner = new UniformPartitioner(partitions, keys.length)
+    for (key <- keys) {
+      assert(partitioner.partition(key) == key)
+    }
   }
 
   it should " succeed when creating a partitioner with exactly the same amount of keys and partitions" in {
     val up = new UniformPartitioner(Array(0, 1, 2, 3), 4)
+  }
+
+  it should " fail when partitioning outside its key size" in {
+    val up = new UniformPartitioner(Array(0, 1, 2, 3, 4), 11)
+    an [IndexOutOfBoundsException] should be thrownBy up.partition(11)
+    an [IndexOutOfBoundsException] should be thrownBy up.partition(-2)
   }
 
 }

@@ -8,7 +8,7 @@ import org.scalatest.FlatSpec
  */
 class IndexingSpec extends FlatSpec {
 
-  "An CyclicIndexer" should " index all unique keys into unique new keys" in {
+  "A CyclicIndexer" should " index all unique keys into unique new keys" in {
 
     val features = 20655
     val models = 21
@@ -21,5 +21,15 @@ class IndexingSpec extends FlatSpec {
       outputSet += o
     }
 
+  }
+
+  it should " index uniformly when number of keys is equal to number of models" in {
+    val keys = Array(0, 1, 2)
+    val models = 3
+
+    val ci = new CyclicIndexer(models, keys.length)
+    for (key <- keys) {
+      assert(ci.index(key) == key)
+    }
   }
 }
