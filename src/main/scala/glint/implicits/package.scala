@@ -37,8 +37,8 @@ package object implicits {
       for (t <- 0 until iterations) {
         rddNext = rddNext.mapPartitionsWithIndex {
           case (partition, it) =>
-            implicit val ec = ExecutionContext.fromExecutor(Executors.newCachedThreadPool())
-            val client = Await.result(Client(config), 30 seconds)
+            implicit val ec = ExecutionContext.Implicits.global
+            val client = Await.result(Client(config), 120 seconds)
             val output = func(t, partition, client, it)
             client.stop()
             output
@@ -46,6 +46,22 @@ package object implicits {
       }
       rddNext foreachPartition { case it => }
       rddNext
+    }
+
+    /**
+     * Executes a function for each partition while providing a client interface to the parameter server
+     *
+     * @param config The parameter server config
+     * @param func The function to execute
+     */
+    def foreachPartitionWithGlint(config: Config)(func: (Int, Client, Iterator[A]) => Unit): Unit = {
+      rdd foreachPartitionWithIndex {
+        case (partition, it) =>
+          implicit val ec = ExecutionContext.Implicits.global
+          val client = Await.result(Client(config), 120 seconds)
+          func(partition, client, it)
+          client.stop()
+      }
     }
 
     /**

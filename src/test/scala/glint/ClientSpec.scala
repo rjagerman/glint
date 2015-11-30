@@ -67,6 +67,9 @@ class ClientSpec extends FlatSpec with ScalaFutures {
       |      remote {
       |        log-remote-lifecycle-events = off
       |        enable-transports = ["akka.remote.netty.tcp"]
+      |        netty.tcp {
+      |          port = 0
+      |        }
       |      }
       |    }
       |  }
@@ -175,6 +178,19 @@ class ClientSpec extends FlatSpec with ScalaFutures {
     withClient { client =>
       whenReady(client.denseScalarModel("test", 100, 0.0).failed) {
         case e => e shouldBe a[ModelCreationException]
+      }
+    }
+  }
+
+  it should "be able to store less keys than servers" in withMaster { _ =>
+    withServer { server1 =>
+      withServer { server2 =>
+        withServer { server3 =>
+          withClient { client =>
+            val model = whenReady(client.denseScalarModel[Double]("test", 1, 0.0)) { identity }
+            assert(model.default == 0.0)
+          }
+        }
       }
     }
   }

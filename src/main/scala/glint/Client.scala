@@ -148,13 +148,14 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
 
     // Spawn models on the servers and get a list of the models
     val listOfModels = listOfServers.mapTo[Array[ActorRef]].map { servers =>
-      if (servers.length <= 0) {
+      val nrOfServers = Math.min(size, servers.length).toInt
+      if (nrOfServers <= 0) {
         throw new ModelCreationException("Cannot create a model with 0 parameter servers")
       }
-      servers.zipWithIndex.map {
+      servers.take(nrOfServers).zipWithIndex.map {
         case (server, index) =>
-          val start = Math.ceil(index * (size.toDouble / servers.length.toDouble)).toLong
-          val end = Math.ceil((index+1) * (size.toDouble / servers.length.toDouble)).toLong
+          val start = Math.ceil(index * (size.toDouble / nrOfServers.toDouble)).toLong
+          val end = Math.ceil((index+1) * (size.toDouble / nrOfServers.toDouble)).toLong
           val propsToDeploy = props(start, end, default)
           system.actorOf(propsToDeploy.withDeploy(Deploy(scope = RemoteScope(server.path.address))))
       }
