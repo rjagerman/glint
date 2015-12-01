@@ -1,7 +1,7 @@
 package glint.messages.master
 
 import akka.actor.ActorRef
-import glint.models.BigModel
+import glint.models.client.BigModel
 
 /**
   * Registers a model with the master

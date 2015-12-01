@@ -1,4 +1,4 @@
-package glint.models.impl
+package glint.models.server
 
 import breeze.linalg._
 import breeze.math._

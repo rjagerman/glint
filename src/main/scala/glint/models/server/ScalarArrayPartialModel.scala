@@ -1,4 +1,4 @@
-package glint.models.impl
+package glint.models.server
 
 import spire.algebra._
 import spire.implicits._

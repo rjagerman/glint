@@ -11,8 +11,8 @@ import com.typesafe.config.{Config, ConfigFactory}
 import glint.exceptions.ModelCreationException
 import glint.indexing.{CyclicIndexer, Indexer}
 import glint.messages.master.{GetModel, RegisterClient, RegisterModel, ServerList}
-import glint.models.BigModel
-import glint.models.impl.{ScalarArrayPartialModel, VectorArrayPartialModel}
+import glint.models.client.{AsyncBigModel, BigModel}
+import glint.models.server.{ScalarArrayPartialModel, VectorArrayPartialModel}
 import glint.partitioning.{Partitioner, UniformPartitioner}
 
 import scala.concurrent.duration._
@@ -163,7 +163,7 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
 
     // Map the list of models to a single BigModel reference
     val bigModel = listOfModels.map {
-      case models: Array[ActorRef] => new BigModel[K, V](partitioner(models), indexer(models), models, default)
+      case models: Array[ActorRef] => new AsyncBigModel[K, V](partitioner(models), indexer(models), models, default)
     }
 
     // Register the big model on the master before returning it
