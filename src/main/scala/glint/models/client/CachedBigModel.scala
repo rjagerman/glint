@@ -76,7 +76,7 @@ class CachedBigModel[K: ClassTag, V: ClassTag](val bigModel: BigModel[K, V],
         val (ks, vs, ps) = getPushesAndClear
         flush(ks, vs, ps)
       }
-    } (updateEc)
+    }(updateEc)
     promise future
   }
 
@@ -93,7 +93,7 @@ class CachedBigModel[K: ClassTag, V: ClassTag](val bigModel: BigModel[K, V],
   def flush(implicit ec: ExecutionContext): Future[Unit] = {
     Future {
       getPushesAndClear
-    } (updateEc).flatMap {
+    }(updateEc).flatMap {
       case (keys, values, promises) => flush(keys, values, promises)
     }
   }
@@ -138,4 +138,15 @@ class CachedBigModel[K: ClassTag, V: ClassTag](val bigModel: BigModel[K, V],
     */
   override def processing: Int = bigModel.processing
 
+}
+
+object CachedBigModel {
+  def apply[K: ClassTag, V: ClassTag](bigModel: BigModel[K, V],
+                                      aggregate: (V, V) => V,
+                                      pushQueueSize: Int = 200,
+                                      pullCacheSize: Int = 200,
+                                      timeToLive: Duration = 60 seconds,
+                                      timeToIdle: Duration = 59 seconds): CachedBigModel[K, V] = {
+    new CachedBigModel[K, V](bigModel, aggregate, pushQueueSize, pullCacheSize, timeToLive, timeToIdle)
+  }
 }

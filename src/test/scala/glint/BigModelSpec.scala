@@ -101,7 +101,7 @@ class BigModelSpec extends FlatSpec with SystemTest with Matchers {
     withServer { _ =>
       withClient { client =>
         val bigModel = whenReady(client.denseScalarModel("test", 50000, 0L)) { identity }
-        val boundedBigModel = new BoundedBigModel(bigModel, 1)
+        val boundedBigModel = BoundedBigModel(bigModel, 1)
         val keys = (0 until 50000).map(x => x.toLong).toArray
         val values = Array.fill(50000)(133L)
         for (i <- 0 until 20) {
@@ -116,7 +116,7 @@ class BigModelSpec extends FlatSpec with SystemTest with Matchers {
     withServer { _ =>
       withClient { client =>
         val bigModel = whenReady(client.denseScalarModel("test", 50000, 0L)) { identity }
-        val boundedBigModel = new BoundedBigModel(bigModel, 2)
+        val boundedBigModel = BoundedBigModel(bigModel, 2)
         val keys = (0 until 50000).map(x => x.toLong).toArray
         val values = Array.fill(50000)(133L)
         for (i <- 0 until 40) {
@@ -131,7 +131,7 @@ class BigModelSpec extends FlatSpec with SystemTest with Matchers {
     withServer { _ =>
       withClient { client =>
         val bigModel = whenReady(client.denseScalarModel("test", 50000, 0L)) { identity }
-        val boundedBigModel = new BoundedBigModel(bigModel, 4)
+        val boundedBigModel = BoundedBigModel(bigModel, 4)
         val keys = (0 until 50000).map(x => x.toLong).toArray
         val values = Array.fill(50000)(133L)
         for (i <- 0 until 80) {
@@ -146,7 +146,7 @@ class BigModelSpec extends FlatSpec with SystemTest with Matchers {
     withServer { _ =>
       withClient { client =>
         val bigModel = whenReady(client.denseScalarModel("test", 50000, 0L)) { identity }
-        val boundedBigModel = new BoundedBigModel(bigModel, 8)
+        val boundedBigModel = BoundedBigModel(bigModel, 8)
         val keys = (0 until 50000).map(x => x.toLong).toArray
         val values = Array.fill(50000)(133L)
         for (i <- 0 until 160) {
@@ -161,7 +161,7 @@ class BigModelSpec extends FlatSpec with SystemTest with Matchers {
     withServer { _ =>
       withClient { client =>
         val bigModel = whenReady(client.denseScalarModel("test", 50000, 0L)) { identity }
-        val cachedBigModel = new CachedBigModel[Long, Long](bigModel, (x,y) => x + y, 3, 5)
+        val cachedBigModel = CachedBigModel[Long, Long](bigModel, (x,y) => x + y, 3, 5)
         cachedBigModel.pushSingle(0, 5)
         cachedBigModel.pushSingle(1, 133)
         cachedBigModel.pushSingle(2, 799)
@@ -180,7 +180,7 @@ class BigModelSpec extends FlatSpec with SystemTest with Matchers {
     withServer { _ =>
       withClient { client =>
         val bigModel = whenReady(client.denseScalarModel("test", 50000, 0L)) { identity }
-        val cachedBigModel = new CachedBigModel[Long, Long](bigModel, (x,y) => x + y, 10, 5)
+        val cachedBigModel = CachedBigModel[Long, Long](bigModel, (x,y) => x + y, 10, 5)
         cachedBigModel.push(Array(0, 1, 2, 3, 4), Array(5, 133, 799, 100, 50))
         val preFlush = whenReady(bigModel.pull(Array(0, 1, 2, 3, 4))) { identity }
         preFlush should equal (Array(0L, 0L, 0L, 0L, 0L))

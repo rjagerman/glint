@@ -90,3 +90,9 @@ class BoundedBigModel[K: ClassTag, V: ClassTag](val bigModel: BigModel[K, V],
   override def processing: Int = bigModel.processing
 
 }
+
+object BoundedBigModel {
+  def apply[K: ClassTag, V: ClassTag](bigModel: BigModel[K, V], maximum: Int): BoundedBigModel[K, V] = {
+    new BoundedBigModel[K, V](bigModel, maximum)
+  }
+}
