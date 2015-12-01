@@ -38,6 +38,7 @@ trait SystemTest extends ScalaFutures  {
       |        netty.tcp {
       |          hostname = ${glint.master.host}
       |          port = ${glint.master.port}
+      |          maximum-frame-size = 1280000b
       |        }
       |      }
       |    }
@@ -64,6 +65,7 @@ trait SystemTest extends ScalaFutures  {
       |        enable-transports = ["akka.remote.netty.tcp"]
       |        netty.tcp {
       |          port = 0
+      |          maximum-frame-size = 1280000b
       |        }
       |      }
       |    }
@@ -90,6 +92,7 @@ trait SystemTest extends ScalaFutures  {
       |        netty.tcp {
       |          hostname = ${glint.client.host}
       |          port = ${glint.client.port}
+      |          maximum-frame-size = 1280000b
       |        }
       |      }
       |    }

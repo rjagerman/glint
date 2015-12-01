@@ -1,19 +1,16 @@
 package glint
 
-import akka.actor.{ActorRef, ActorSystem, ExtendedActorSystem}
+import akka.actor.{ActorRef, ExtendedActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import breeze.linalg.{sum, DenseVector}
-import com.typesafe.config.ConfigFactory
+import breeze.linalg.DenseVector
 import glint.exceptions.ModelCreationException
 import glint.messages.master.ClientList
+import glint.models.client.BigModel
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
-import org.scalatest.concurrent.ScalaFutures
-import org.scalatest.time.{Millis, Seconds, Span}
 import spire.implicits._
 
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 /**
@@ -37,9 +34,9 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "register a created model with master" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
-        val bigModel = whenReady(client.denseScalarModel[Double]("test", 100, 0.0)) { case a => a }
-        val bigModel2 = whenReady(client.get[Long, Double]("test")) { case a => a }
-        assert(bigModel2.processing() == 0)
+        val bigModel = whenReady(client.denseScalarModel[Double]("test", 100, 0.0)) { identity }
+        val bigModel2 = whenReady(client.get[Long, Double]("test")) { identity }
+        assert(bigModel2.isInstanceOf[BigModel[_, _]])
       }
     }
   }
@@ -58,7 +55,7 @@ class ClientSpec extends FlatSpec with SystemTest {
         withServer { server3 =>
           withClient { client =>
             val model = whenReady(client.denseScalarModel[Double]("test", 1, 0.0)) { identity }
-            assert(model.default == 0.0)
+            assert(model.isInstanceOf[BigModel[_, _]])
           }
         }
       }
@@ -70,8 +67,8 @@ class ClientSpec extends FlatSpec with SystemTest {
       withServer { server2 =>
         withServer { server3 =>
           withClient { client =>
-            val model = whenReady(client.denseScalarModel[Double]("test", 1327, 0.0)) { identity }
-            assert(model.default == 0.0)
+            val bigModel = whenReady(client.denseScalarModel[Double]("test", 1327, 0.0)) { identity }
+            assert(bigModel.isInstanceOf[BigModel[_, _]])
           }
         }
       }
@@ -81,8 +78,8 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a scalar model with Double primitives" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
-        val bigModel = whenReady(client.denseScalarModel[Double]("test", 100, 0.3)) { case a => a }
-        assert(bigModel.default == 0.3)
+        val bigModel = whenReady(client.denseScalarModel[Double]("test", 100, 0.3)) { identity }
+        assert(bigModel.isInstanceOf[BigModel[_, _]])
       }
     }
   }
@@ -90,8 +87,8 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a scalar model with Int primitives" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
-        val bigModel = whenReady(client.denseScalarModel[Int]("test", 100, 12)) { case a => a }
-        assert(bigModel.default == 12)
+        val bigModel = whenReady(client.denseScalarModel[Int]("test", 100, 12)) { identity }
+        assert(bigModel.isInstanceOf[BigModel[_, _]])
       }
     }
   }
@@ -99,8 +96,8 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a scalar model with Long primitives" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
-        val bigModel = whenReady(client.denseScalarModel[Long]("test", 100, 89990009991L)) { case a => a }
-        assert(bigModel.default == 89990009991L)
+        val bigModel = whenReady(client.denseScalarModel[Long]("test", 100, 89990009991L)) { identity }
+        assert(bigModel.isInstanceOf[BigModel[_, _]])
       }
     }
   }
@@ -108,8 +105,8 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a vector model with Double primitives" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
-        val bigModel = whenReady(client.denseVectorModel[Double]("test", 100, DenseVector.ones[Double](10))) { case a => a }
-        assert(sum(bigModel.default) == 10)
+        val bigModel = whenReady(client.denseVectorModel[Double]("test", 100, DenseVector.ones[Double](10))) { identity }
+        assert(bigModel.isInstanceOf[BigModel[_, _]])
       }
     }
   }
@@ -117,8 +114,8 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a vector model with Int primitives" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
-        val bigModel = whenReady(client.denseVectorModel[Int]("test", 100, DenseVector.ones[Int](12))) { case a => a }
-        assert(sum(bigModel.default) == 12)
+        val bigModel = whenReady(client.denseVectorModel[Int]("test", 100, DenseVector.ones[Int](12))) { identity }
+        assert(bigModel.isInstanceOf[BigModel[_, _]])
       }
     }
   }
@@ -126,8 +123,8 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a vector model with Long primitives" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
-        val bigModel = whenReady(client.denseVectorModel[Long]("test", 100, DenseVector.ones[Long](14))) { case a => a }
-        assert(sum(bigModel.default) == 14)
+        val bigModel = whenReady(client.denseVectorModel[Long]("test", 100, DenseVector.ones[Long](14))) { identity }
+        assert(bigModel.isInstanceOf[BigModel[_, _]])
       }
     }
   }
