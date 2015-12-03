@@ -89,6 +89,14 @@ class BoundedBigModel[K: ClassTag, V: ClassTag](val bigModel: BigModel[K, V],
     */
   override def processing: Int = bigModel.processing
 
+  /**
+    * This call blocks until all currently processing tasks have finished
+    */
+  def block(): Unit = {
+    semaphore.acquire(maximum)
+    semaphore.release(maximum)
+  }
+
 }
 
 object BoundedBigModel {
