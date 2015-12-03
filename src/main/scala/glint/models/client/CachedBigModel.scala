@@ -1,6 +1,6 @@
 package glint.models.client
 
-import java.util.concurrent.Executors
+import java.util.concurrent.{Semaphore, Executors}
 
 import spray.caching.{Cache, LruCache}
 
@@ -22,7 +22,7 @@ class CachedBigModel[K: ClassTag, V: ClassTag](val bigModel: BigModel[K, V],
   private val cache: Cache[V] = LruCache(pullCacheSize, pullCacheSize, timeToLive, timeToIdle)
   private val pushQueue = mutable.HashMap[K, V]()
   private val promisePushes = mutable.Set[Promise[Unit]]()
-  private val updateEc = ExecutionContext.fromExecutorService(Executors.newSingleThreadExecutor())
+  private val updateLock = new Semaphore(1)
 
   /**
     * Function to pull values from the big model
@@ -65,18 +65,18 @@ class CachedBigModel[K: ClassTag, V: ClassTag](val bigModel: BigModel[K, V],
     */
   override def pushSingle(key: K, value: V)(implicit ec: ExecutionContext): Future[Unit] = {
     val promise = Promise[Unit]()
-    Future {
-      promisePushes += promise
-      if (pushQueue.contains(key)) {
-        pushQueue(key) = aggregate(pushQueue(key), value)
-      } else {
-        pushQueue(key) = value
-      }
-      if (pushQueue.keySet.size > pushQueueSize) {
-        val (ks, vs, ps) = getPushesAndClear
-        flush(ks, vs, ps)
-      }
-    }(updateEc)
+    updateLock.acquire()
+    promisePushes += promise
+    if (pushQueue.contains(key)) {
+      pushQueue(key) = aggregate(pushQueue(key), value)
+    } else {
+      pushQueue(key) = value
+    }
+    updateLock.release()
+    if (pushQueue.keySet.size > pushQueueSize) {
+      val (ks, vs, ps) = getPushesAndClear
+      flush(ks, vs, ps)
+    }
     promise future
   }
 
@@ -91,11 +91,8 @@ class CachedBigModel[K: ClassTag, V: ClassTag](val bigModel: BigModel[K, V],
     * @return A future for the completion of the operation
     */
   def flush(implicit ec: ExecutionContext): Future[Unit] = {
-    Future {
-      getPushesAndClear
-    }(updateEc).flatMap {
-      case (keys, values, promises) => flush(keys, values, promises)
-    }
+    val (keys, values, promises) = getPushesAndClear
+    flush(keys, values, promises)
   }
 
   /**
@@ -123,11 +120,13 @@ class CachedBigModel[K: ClassTag, V: ClassTag](val bigModel: BigModel[K, V],
     * @return The current push queue state
     */
   private def getPushesAndClear: (Array[K], Array[V], List[Promise[Unit]]) = {
+    updateLock.acquire()
     val keys = pushQueue.keys.toArray
     val values = keys.map(k => pushQueue(k))
     val promisesToComplete = promisePushes.toList
     promisePushes.clear()
     pushQueue.clear()
+    updateLock.release()
     (keys, values, promisesToComplete)
   }
 
