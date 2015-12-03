@@ -157,6 +157,24 @@ class BigModelSpec extends FlatSpec with SystemTest with Matchers {
     }
   }
 
+  it should "block until everything is finished when block is called" in withMaster { _ =>
+    withServer { _ =>
+      withClient { client =>
+        val bigModel = whenReady(client.denseScalarModel("test", 50000, 0L)) { identity }
+        val boundedBigModel = BoundedBigModel(bigModel, 8)
+        val keys = (0 until 50000).map(x => x.toLong).toArray
+        val values = Array.fill(50000)(133L)
+        for (i <- 0 until 90) {
+          boundedBigModel.push(keys, values)
+          if (i == 80) {
+            boundedBigModel.block()
+            assert(boundedBigModel.processing == 0)
+          }
+        }
+      }
+    }
+  }
+
   "A CachedBigModel" should "cache at most 3 push requests when set" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
