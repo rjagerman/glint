@@ -1,4 +1,4 @@
-package glint.models.impl
+package glint.models.server
 
 import akka.actor.{Actor, ActorLogging}
 import glint.messages.server.{Pull, Push, Response}

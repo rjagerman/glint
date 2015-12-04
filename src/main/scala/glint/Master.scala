@@ -7,7 +7,7 @@ import akka.util.Timeout
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import glint.messages.master._
-import glint.models.BigModel
+import glint.models.client.BigModel
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
