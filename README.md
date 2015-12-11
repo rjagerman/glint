@@ -48,7 +48,7 @@ The first thing you want to do is construct a Client that is connected to the ma
 
 Now we can use this client object to construct a large model distributed over the parameter servers. The example below constructs a large matrix storing integers with 10000 rows and 10 columns:
 
-    val model = Await.result(gc.matrix[Int](10000, 10), 30 seconds)
+    val model = Await.result(client.matrix[Int](10000, 10), 30 seconds)
     
 Next, this model can be used to pull/push data to and from the parameter server:
 
