@@ -3,13 +3,11 @@ package glint
 import akka.actor.{ActorRef, ExtendedActorSystem}
 import akka.pattern.ask
 import akka.util.Timeout
-import breeze.linalg.DenseVector
 import glint.exceptions.ModelCreationException
 import glint.messages.master.ClientList
-import glint.models.client.BigModel
+import glint.models.client.{BigMatrix, BigVector}
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
-import spire.implicits._
 
 import scala.concurrent.duration._
 
@@ -17,7 +15,6 @@ import scala.concurrent.duration._
   * Client test specification
   */
 class ClientSpec extends FlatSpec with SystemTest {
-
 
   "A client" should "register with master" in withMaster { master =>
     withClient { client =>
@@ -31,100 +28,136 @@ class ClientSpec extends FlatSpec with SystemTest {
     }
   }
 
-  it should "register a created model with master" in withMaster { _ =>
-    withServer { _ =>
-      withClient { client =>
-        val bigModel = whenReady(client.denseScalarModel[Double]("test", 100, 0.0)) { identity }
-        val bigModel2 = whenReady(client.get[Long, Double]("test")) { identity }
-        assert(bigModel2.isInstanceOf[BigModel[_, _]])
-      }
-    }
-  }
-
-  it should "fail to register a model when there are no servers" in withMaster { _ =>
+  it should "fail to create a BigMatrix when there are no servers" in withMaster { _ =>
     withClient { client =>
-      whenReady(client.denseScalarModel("test", 100, 0.0).failed) {
+      whenReady(client.matrix[Long](100, 10).failed) {
         case e => e shouldBe a[ModelCreationException]
       }
     }
   }
 
-  it should "be able to create models with less keys than servers" in withMaster { _ =>
+  it should "fail to create a BigMatrix when an invalid type is provided" in withMaster { _ =>
+    withServer { server =>
+      withClient { client =>
+        whenReady(client.matrix[Boolean](100, 10).failed) {
+          case e => e shouldBe a[ModelCreationException]
+        }
+      }
+    }
+  }
+
+  it should "be able to create a BigMatrix with less rows than servers" in withMaster { _ =>
     withServer { server1 =>
       withServer { server2 =>
         withServer { server3 =>
           withClient { client =>
-            val model = whenReady(client.denseScalarModel[Double]("test", 1, 0.0)) { identity }
-            assert(model.isInstanceOf[BigModel[_, _]])
+            val model = whenReady(client.matrix[Long](2, 10)) {
+              identity
+            }
+            assert(model.isInstanceOf[BigMatrix[Long]])
           }
         }
       }
     }
   }
 
-  it should "be able to create models with more keys than servers" in withMaster { _ =>
+  it should "be able to create a BigMatrix with more rows than servers" in withMaster { _ =>
     withServer { server1 =>
       withServer { server2 =>
-        withServer { server3 =>
-          withClient { client =>
-            val bigModel = whenReady(client.denseScalarModel[Double]("test", 1327, 0.0)) { identity }
-            assert(bigModel.isInstanceOf[BigModel[_, _]])
+        withClient { client =>
+          val model = whenReady(client.matrix[Long](49, 7)) {
+            identity
           }
+          assert(model.isInstanceOf[BigMatrix[Long]])
         }
       }
     }
   }
 
-  it should "be able to create a scalar model with Double primitives" in withMaster { _ =>
-    withServer { _ =>
+  it should "be able to create a BigMatrix[Int]" in withMaster { _ =>
+    withServer { server1 =>
       withClient { client =>
-        val bigModel = whenReady(client.denseScalarModel[Double]("test", 100, 0.3)) { identity }
-        assert(bigModel.isInstanceOf[BigModel[_, _]])
+        val model = whenReady(client.matrix[Int](49, 7)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigMatrix[Int]])
       }
     }
   }
 
-  it should "be able to create a scalar model with Int primitives" in withMaster { _ =>
-    withServer { _ =>
+  it should "be able to create a BigMatrix[Long]" in withMaster { _ =>
+    withServer { server1 =>
       withClient { client =>
-        val bigModel = whenReady(client.denseScalarModel[Int]("test", 100, 12)) { identity }
-        assert(bigModel.isInstanceOf[BigModel[_, _]])
+        val model = whenReady(client.matrix[Long](49, 7)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigMatrix[Long]])
       }
     }
   }
 
-  it should "be able to create a scalar model with Long primitives" in withMaster { _ =>
-    withServer { _ =>
+  it should "be able to create a BigMatrix[Float]" in withMaster { _ =>
+    withServer { server1 =>
       withClient { client =>
-        val bigModel = whenReady(client.denseScalarModel[Long]("test", 100, 89990009991L)) { identity }
-        assert(bigModel.isInstanceOf[BigModel[_, _]])
+        val model = whenReady(client.matrix[Float](49, 7)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigMatrix[Float]])
       }
     }
   }
 
-  it should "be able to create a vector model with Double primitives" in withMaster { _ =>
-    withServer { _ =>
+  it should "be able to create a BigMatrix[Double]" in withMaster { _ =>
+    withServer { server1 =>
       withClient { client =>
-        val bigModel = whenReady(client.denseVectorModel[Double]("test", 100, DenseVector.ones[Double](10))) { identity }
-        assert(bigModel.isInstanceOf[BigModel[_, _]])
+        val model = whenReady(client.matrix[Double](49, 7)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigMatrix[Double]])
       }
     }
   }
 
-  it should "be able to create a vector model with Int primitives" in withMaster { _ =>
-    withServer { _ =>
+  it should "be able to create a BigVector[Int]" in withMaster { _ =>
+    withServer { server1 =>
       withClient { client =>
-        val bigModel = whenReady(client.denseVectorModel[Int]("test", 100, DenseVector.ones[Int](12))) { identity }
-        assert(bigModel.isInstanceOf[BigModel[_, _]])
+        val model = whenReady(client.vector[Int](49)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigVector[Int]])
       }
     }
   }
 
-  it should "be able to create a vector model with Long primitives" in withMaster { _ =>
-    withServer { _ =>
+  it should "be able to create a BigVector[Long]" in withMaster { _ =>
+    withServer { server1 =>
       withClient { client =>
-        val bigModel = whenReady(client.denseVectorModel[Long]("test", 100, DenseVector.ones[Long](14))) { identity }
-        assert(bigModel.isInstanceOf[BigModel[_, _]])
+        val model = whenReady(client.vector[Long](490)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigVector[Long]])
+      }
+    }
+  }
+
+  it should "be able to create a BigVector[Float]" in withMaster { _ =>
+    withServer { server1 =>
+      withClient { client =>
+        val model = whenReady(client.vector[Float](1)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigVector[Float]])
+      }
+    }
+  }
+
+  it should "be able to create a BigVector[Double]" in withMaster { _ =>
+    withServer { server1 =>
+      withClient { client =>
+        val model = whenReady(client.vector[Double](10000)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigVector[Double]])
       }
     }
   }

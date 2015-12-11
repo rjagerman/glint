@@ -10,15 +10,6 @@ crossScalaVersions := Seq("2.10.6", "2.11.7")
 
 fork in Test := true
 
-javaOptions in Test := Seq("-DHOSTNAME=127.0.0.1")
-
-// Spark
-
-libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.10") => "org.apache.spark" % "spark-core_2.10" % "1.5.1" % "provided"
-  case x if x.startsWith("2.11") => "org.apache.spark" % "spark-core_2.11" % "1.5.1" % "provided"
-}
-
 // Akka
 
 libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.14"
@@ -46,6 +37,10 @@ libraryDependencies <+= scalaVersion {
   case x if x.startsWith("2.11") => "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
 }
 
+// Performance benchmarking
+
+libraryDependencies += "com.storm-enroute" %% "scalameter" % "0.7" % "provided"
+
 // Scala option parser
 
 libraryDependencies += "com.github.scopt" %% "scopt" % "3.3.0"
@@ -64,6 +59,18 @@ libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.3"
 // Resolvers
 
 resolvers += Resolver.sonatypeRepo("public")
+
+resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
+
+// Set up scalameter
+
+val scalaMeterFramework = new TestFramework("org.scalameter.ScalaMeterFramework")
+
+testFrameworks += scalaMeterFramework
+
+testOptions in ThisBuild += Tests.Argument(scalaMeterFramework, "-silent")
+
+logBuffered := false
 
 // Testing only sequential (due to binding to network ports)
 

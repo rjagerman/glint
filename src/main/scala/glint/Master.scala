@@ -7,7 +7,6 @@ import akka.util.Timeout
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import glint.messages.master._
-import glint.models.client.BigModel
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,7 +29,7 @@ class Master() extends Actor with ActorLogging {
   /**
     * Collection of models
     */
-  var models = Map.empty[String, (BigModel[_, _], ActorRef)]
+  //var models = Map.empty[String, (BigMatrix[_], ActorRef)]
 
   /**
     * Collection of clients
@@ -51,15 +50,15 @@ class Master() extends Actor with ActorLogging {
       context.watch(client)
       sender ! true
 
-    case RegisterModel(name, model, client) =>
+    case RegisterModel(name, client) =>
       log.info(s"Registering model ${name}")
-      models = models + (name ->(model, client))
-      clientModels = clientModels + (client -> (clientModels.getOrElse(client, Set.empty[String]) + name))
-      sender ! model
+    //models = models + (name ->(model, client))
+    //clientModels = clientModels + (client -> (clientModels.getOrElse(client, Set.empty[String]) + name))
+    //sender ! model
 
     case GetModel(name) =>
       log.info(s"Sending model reference ${name} to ${sender.path.toString}")
-      sender ! models.get(name).map(_._1)
+    //sender ! models.get(name).map(_._1)
 
     case ServerList() =>
       log.info(s"Sending current server list to ${sender.path.toString}")
@@ -79,11 +78,11 @@ class Master() extends Actor with ActorLogging {
           log.info(s"Removing client ${client.path.toString}")
           clients -= client
           log.debug(s"Removing models associated with client ${client.path.toString}")
-          clientModels.getOrElse(client, Set.empty[String]).foreach {
-            case name =>
-              models(name)._1.destroy()
-              models = models - name
-          }
+          //          clientModels.getOrElse(client, Set.empty[String]).foreach {
+          //            case name =>
+          //              models(name)._1.destroy()
+          //              models = models - name
+          //          }
           clientModels = clientModels - client
 
         case actor: ActorRef =>
@@ -105,6 +104,7 @@ object Master extends StrictLogging {
     * @return The started actor system and reference to the master actor
     */
   def run(config: Config): Future[(ActorSystem, ActorRef)] = {
+
 
     logger.debug("Starting master actor system")
     val system = ActorSystem(config.getString("glint.master.system"), config.getConfig("glint.master"))

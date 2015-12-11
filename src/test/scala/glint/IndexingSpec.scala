@@ -4,8 +4,8 @@ import glint.indexing.CyclicIndexer
 import org.scalatest.FlatSpec
 
 /**
- * Test specification for indexers
- */
+  * Test specification for indexers
+  */
 class IndexingSpec extends FlatSpec {
 
   "A CyclicIndexer" should " index all unique keys into unique new keys" in {

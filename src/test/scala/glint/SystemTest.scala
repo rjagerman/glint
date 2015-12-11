@@ -1,108 +1,102 @@
 package glint
 
-import akka.actor.{ActorSystem, ActorRef}
+import akka.actor.{ActorRef, ActorSystem}
+import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
 
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration._
 
 /**
   * Provides some basic functions (e.g. setup of client, server and master) when performing system-wide tests
   */
-trait SystemTest extends ScalaFutures  {
+trait SystemTest extends ScalaFutures {
 
   val testConfig = ConfigFactory.parseString(
     """
       |glint {
-      |
-      |  // Configuration for the master
       |  master {
       |    host = "127.0.0.1"
       |    port = 13370
       |    name = "master"
       |    system = "glint-master"
       |    startup-timeout = 30 seconds
-      |    loglevel = "ERROR"
-      |
-      |    akka {
-      |      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
-      |      loglevel = "ERROR"
-      |      stdout-loglevel = "ERROR"
-      |      actor {
-      |        provider = "akka.remote.RemoteActorRefProvider"
-      |      }
-      |      remote {
-      |        log-remote-lifecycle-events = off
-      |        enable-transports = ["akka.remote.netty.tcp"]
-      |        netty.tcp {
-      |          hostname = ${glint.master.host}
-      |          port = ${glint.master.port}
-      |          maximum-frame-size = 1280000b
-      |        }
+      |    akka = ${glint.default.akka}
+      |    akka.remote {
+      |      log-remote-lifecycle-events = on
+      |      netty.tcp {
+      |        hostname = ${glint.master.host}
+      |        port = ${glint.master.port}
       |      }
       |    }
-      |
       |  }
-      |
-      |  // Configuration for the parameter servers
       |  server {
-      |    memory = "2g"
       |    system = "glint-server"
       |    name = "server"
       |    registration-timeout = 10 seconds
-      |    loglevel = "ERROR"
-      |
-      |    akka {
-      |      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
-      |      loglevel = "ERROR"
-      |      stdout-loglevel = "ERROR"
-      |      actor {
-      |        provider = "akka.remote.RemoteActorRefProvider"
-      |      }
-      |      remote {
-      |        log-remote-lifecycle-events = off
-      |        enable-transports = ["akka.remote.netty.tcp"]
-      |        netty.tcp {
-      |          port = 0
-      |          maximum-frame-size = 1280000b
-      |        }
-      |      }
-      |    }
+      |    akka = ${glint.default.akka}
+      |    akka.remote.netty.tcp.hostname = "127.0.0.1"
+      |    akka.remote.netty.tcp.port = 0
       |  }
-      |
-      |  // Configuration for the clients (e.g. spark workers)
       |  client {
       |    host = "127.0.0.1"
       |    port = 0
       |    system = "glint-client"
       |    default-timeout = 5 seconds
-      |    loglevel = "ERROR"
-      |
+      |    akka = ${glint.default.akka}
+      |    akka.remote.netty.tcp {
+      |      hostname = ${glint.client.host}
+      |      port = ${glint.client.port}
+      |    }
+      |  }
+      |  default {
       |    akka {
       |      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
-      |      loglevel = "ERROR"
-      |      stdout-loglevel = "ERROR"
-      |      actor {
-      |        provider = "akka.remote.RemoteActorRefProvider"
-      |      }
+      |      loglevel = "OFF"
+      |      stdout-loglevel = "OFF"
       |      remote {
       |        log-remote-lifecycle-events = off
       |        enable-transports = ["akka.remote.netty.tcp"]
       |        netty.tcp {
-      |          hostname = ${glint.client.host}
-      |          port = ${glint.client.port}
       |          maximum-frame-size = 1280000b
+      |        }
+      |      }
+      |      actor {
+      |        provider = "akka.remote.RemoteActorRefProvider"
+      |        serializers {
+      |          java = "akka.serialization.JavaSerializer"
+      |          requestserializer = "glint.serialization.RequestSerializer"
+      |          responseserializer = "glint.serialization.ResponseSerializer"
+      |        }
+      |        serialization-bindings {
+      |          "glint.messages.server.request.PullMatrix" = requestserializer
+      |          "glint.messages.server.request.PullMatrixRows" = requestserializer
+      |          "glint.messages.server.request.PullVector" = requestserializer
+      |          "glint.messages.server.request.PushMatrixDouble" = requestserializer
+      |          "glint.messages.server.request.PushMatrixFloat" = requestserializer
+      |          "glint.messages.server.request.PushMatrixInt" = requestserializer
+      |          "glint.messages.server.request.PushMatrixLong" = requestserializer
+      |          "glint.messages.server.request.PushVectorDouble" = requestserializer
+      |          "glint.messages.server.request.PushVectorFloat" = requestserializer
+      |          "glint.messages.server.request.PushVectorInt" = requestserializer
+      |          "glint.messages.server.request.PushVectorLong" = requestserializer
+      |          "glint.messages.server.response.ResponseDouble" = responseserializer
+      |          "glint.messages.server.response.ResponseFloat" = responseserializer
+      |          "glint.messages.server.response.ResponseInt" = responseserializer
+      |          "glint.messages.server.response.ResponseLong" = responseserializer
       |        }
       |      }
       |    }
       |  }
-      |
       |}
     """.stripMargin
   ).resolve()
 
   implicit val ec = ExecutionContext.Implicits.global
+
+  implicit val timeout = Timeout(10 seconds)
 
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(10, Seconds), interval = Span(50, Millis))
