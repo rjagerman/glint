@@ -9,7 +9,7 @@ To use the current version you should compile the system manually, publish it to
 
     sbt "+ compile" "+ assembly" "+ publish-local"
 
-The `+` indicates that it should compile for all versions defined in the `build.sbt` file. The command will compile, assemble and publish the library jar file to the local ivy2 repository, which means you can then use it in your project's `build.sbt` (on the same machine) as follows:
+The `+` indicates that it should compile for all scala versions defined in the `build.sbt` file. The command will compile, assemble and publish the library jar file to the local ivy2 repository, which means you can then use it in your project's `build.sbt` (on the same machine) as follows:
 
     libraryDependencies += "ch.ethz.inf.da" %% "glint" % "0.1-SNAPSHOT"
 
@@ -46,16 +46,16 @@ The first thing you want to do is construct a Client that is connected to the ma
     implicit val ec = ExecutionContext.Implicits.global
     val client = Await.result(Client(ConfigFactory.parseFile(new java.io.File("<config-file>.conf"))), 30 seconds)
 
-Now we can use this client object to construct a large model distributed over the parameter servers. The example below constructs a large matrix storing integers with 10000 rows and 10000 columns:
+Now we can use this client object to construct a large model distributed over the parameter servers. The example below constructs a large matrix storing integers with 10000 rows and 10 columns:
 
     val model = Await.result(gc.matrix[Int](10000, 10), 30 seconds)
     
 Next, this model can be used to pull/push data to and from the parameter server:
 
-    // Push new data to row 3 and column 5
+    // Push new data to row 999 and column 5
     // The parameter server aggregates pushes by adding it to the old value.
-    // In this case we are adding "109" to the old value of (3,5)
-    model.push(Array(999L), Array(5), Array(5))
+    // In this case we are adding 109 to the old value of (999, 5)
+    model.push(Array(999L), Array(5), Array(109))
 
     // Pull row 999 from the parameter server, this will return the entire row (all 10 values)
     model.pull(Array(999L)).onSuccess { case values => println(values(0)) }
