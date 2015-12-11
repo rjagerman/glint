@@ -43,8 +43,8 @@ class PartitioningSpec extends FlatSpec {
 
   it should " fail when partitioning outside its key size" in {
     val up = new UniformPartitioner(Array(0, 1, 2, 3, 4), 11)
-    an [IndexOutOfBoundsException] should be thrownBy up.partition(11)
-    an [IndexOutOfBoundsException] should be thrownBy up.partition(-2)
+    an[IndexOutOfBoundsException] should be thrownBy up.partition(11)
+    an[IndexOutOfBoundsException] should be thrownBy up.partition(-2)
   }
 
 }

@@ -5,7 +5,7 @@ import java.util.concurrent.TimeUnit
 import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigValueFactory}
+import com.typesafe.config.Config
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import glint.messages.master.RegisterServer
 
