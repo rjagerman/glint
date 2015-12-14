@@ -164,7 +164,7 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     // Send push requests
     val pushes = mapPartitions(indexedRows) {
       case (partition, indices) =>
-        (partition ? toPushMessage(indices.map(rows).toArray, indices.map(cols).toArray, indices.map(values).toArray)).mapTo[Boolean]
+        (partition ? toPushMessage(indices.map(indexedRows).toArray, indices.map(cols).toArray, indices.map(values).toArray)).mapTo[Boolean]
     }
 
     // Combine and aggregate futures
