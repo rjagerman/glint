@@ -68,7 +68,7 @@ class BigMatrixSpec extends FlatSpec with SystemTest with Matchers {
   }
 
   it should "store Long values" in withMaster { _ =>
-    withServer { _ =>
+    withServers(3) { _ =>
       withClient { client =>
         val model = whenReady(client.matrix[Long](23, 10)) {
           identity
@@ -87,26 +87,24 @@ class BigMatrixSpec extends FlatSpec with SystemTest with Matchers {
   }
 
   it should "aggregate values through addition" in withMaster { _ =>
-    withServer { _ =>
-      withServer { _ =>
-        withClient { client =>
-          val model = whenReady(client.matrix[Int](9, 100)) {
-            identity
-          }
-          val result1 = whenReady(model.push(Array(0L, 2L, 5L, 8L), Array(0, 10, 99, 80), Array(100, 100, 20, 30))) {
-            identity
-          }
-          val result2 = whenReady(model.push(Array(0L, 2L, 5L, 8L), Array(0, 10, 99, 80), Array(1, -1, 2, 3))) {
-            identity
-          }
-          assert(result1)
-          assert(result2)
-          val future = model.pull(Array(0L, 2L, 5L, 8L), Array(0, 10, 99, 80))
-          val value = whenReady(future) {
-            identity
-          }
-          value should equal(Array(101, 99, 22, 33))
+    withServers(2) { _ =>
+      withClient { client =>
+        val model = whenReady(client.matrix[Int](9, 100)) {
+          identity
         }
+        val result1 = whenReady(model.push(Array(0L, 2L, 5L, 8L), Array(0, 10, 99, 80), Array(100, 100, 20, 30))) {
+          identity
+        }
+        val result2 = whenReady(model.push(Array(0L, 2L, 5L, 8L), Array(0, 10, 99, 80), Array(1, -1, 2, 3))) {
+          identity
+        }
+        assert(result1)
+        assert(result2)
+        val future = model.pull(Array(0L, 2L, 5L, 8L), Array(0, 10, 99, 80))
+        val value = whenReady(future) {
+          identity
+        }
+        value should equal(Array(101, 99, 22, 33))
       }
     }
   }
@@ -114,28 +112,26 @@ class BigMatrixSpec extends FlatSpec with SystemTest with Matchers {
   it should "deserialize without an ActorSystem in scope" in {
     var ab: Array[Byte] = Array.empty[Byte]
     withMaster { _ =>
-      withServer { _ =>
-        withServer { _ =>
-          withClient { client =>
-            val model = whenReady(client.matrix[Int](9, 10)) {
-              identity
-            }
-            val bos = new ByteArrayOutputStream
-            val out = new ObjectOutputStream(bos)
-            out.writeObject(model)
-            out.close()
-            ab = bos.toByteArray
-
-            whenReady(model.push(Array(0L, 7L), Array(1, 2), Array(12, 42))) { identity }
-
-            val bis = new ByteArrayInputStream(ab)
-            val in = new ObjectInputStream(bis)
-            val matrix = in.readObject().asInstanceOf[BigMatrix[Int]]
-            val result = whenReady(matrix.pull(Array(0L, 7L), Array(1, 2))) {
-              identity
-            }
-            result should equal(Array(12, 42))
+      withServers(2) { _ =>
+        withClient { client =>
+          val model = whenReady(client.matrix[Int](9, 10)) {
+            identity
           }
+          val bos = new ByteArrayOutputStream
+          val out = new ObjectOutputStream(bos)
+          out.writeObject(model)
+          out.close()
+          ab = bos.toByteArray
+
+          whenReady(model.push(Array(0L, 7L), Array(1, 2), Array(12, 42))) { identity }
+
+          val bis = new ByteArrayInputStream(ab)
+          val in = new ObjectInputStream(bis)
+          val matrix = in.readObject().asInstanceOf[BigMatrix[Int]]
+          val result = whenReady(matrix.pull(Array(0L, 7L), Array(1, 2))) {
+            identity
+          }
+          result should equal(Array(12, 42))
         }
       }
     }

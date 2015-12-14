@@ -47,35 +47,29 @@ class ClientSpec extends FlatSpec with SystemTest {
   }
 
   it should "be able to create a BigMatrix with less rows than servers" in withMaster { _ =>
-    withServer { server1 =>
-      withServer { server2 =>
-        withServer { server3 =>
-          withClient { client =>
-            val model = whenReady(client.matrix[Long](2, 10)) {
-              identity
-            }
-            assert(model.isInstanceOf[BigMatrix[Long]])
-          }
+    withServers(3) { case _ =>
+      withClient { client =>
+        val model = whenReady(client.matrix[Long](2, 10)) {
+          identity
         }
+        assert(model.isInstanceOf[BigMatrix[Long]])
       }
     }
   }
 
   it should "be able to create a BigMatrix with more rows than servers" in withMaster { _ =>
-    withServer { server1 =>
-      withServer { server2 =>
-        withClient { client =>
-          val model = whenReady(client.matrix[Long](49, 7)) {
-            identity
-          }
-          assert(model.isInstanceOf[BigMatrix[Long]])
+    withServers(2) { _ =>
+      withClient { client =>
+        val model = whenReady(client.matrix[Long](49, 7)) {
+          identity
         }
+        assert(model.isInstanceOf[BigMatrix[Long]])
       }
     }
   }
 
   it should "be able to create a BigMatrix[Int]" in withMaster { _ =>
-    withServer { server1 =>
+    withServer { server =>
       withClient { client =>
         val model = whenReady(client.matrix[Int](49, 7)) {
           identity
@@ -86,7 +80,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   }
 
   it should "be able to create a BigMatrix[Long]" in withMaster { _ =>
-    withServer { server1 =>
+    withServer { server =>
       withClient { client =>
         val model = whenReady(client.matrix[Long](49, 7)) {
           identity
@@ -97,7 +91,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   }
 
   it should "be able to create a BigMatrix[Float]" in withMaster { _ =>
-    withServer { server1 =>
+    withServer { server =>
       withClient { client =>
         val model = whenReady(client.matrix[Float](49, 7)) {
           identity
@@ -108,7 +102,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   }
 
   it should "be able to create a BigMatrix[Double]" in withMaster { _ =>
-    withServer { server1 =>
+    withServer { server =>
       withClient { client =>
         val model = whenReady(client.matrix[Double](49, 7)) {
           identity
@@ -119,7 +113,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   }
 
   it should "be able to create a BigVector[Int]" in withMaster { _ =>
-    withServer { server1 =>
+    withServer { server =>
       withClient { client =>
         val model = whenReady(client.vector[Int](49)) {
           identity
@@ -130,7 +124,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   }
 
   it should "be able to create a BigVector[Long]" in withMaster { _ =>
-    withServer { server1 =>
+    withServer { server =>
       withClient { client =>
         val model = whenReady(client.vector[Long](490)) {
           identity
@@ -141,7 +135,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   }
 
   it should "be able to create a BigVector[Float]" in withMaster { _ =>
-    withServer { server1 =>
+    withServer { server =>
       withClient { client =>
         val model = whenReady(client.vector[Float](1)) {
           identity
@@ -152,7 +146,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   }
 
   it should "be able to create a BigVector[Double]" in withMaster { _ =>
-    withServer { server1 =>
+    withServer { server =>
       withClient { client =>
         val model = whenReady(client.vector[Double](10000)) {
           identity
