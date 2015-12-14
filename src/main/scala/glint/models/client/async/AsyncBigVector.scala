@@ -108,7 +108,7 @@ abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, 
     // Send push requests
     val pushes = mapPartitions(indexedKeys) {
       case (partition, indices) =>
-        (partition ? toPushMessage(indices.map(keys).toArray, indices.map(values).toArray)).mapTo[Boolean]
+        (partition ? toPushMessage(indices.map(indexedKeys).toArray, indices.map(values).toArray)).mapTo[Boolean]
     }
 
     // Combine and aggregate futures
