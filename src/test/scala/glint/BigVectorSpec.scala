@@ -68,7 +68,7 @@ class BigVectorSpec extends FlatSpec with SystemTest with Matchers {
   }
 
   it should "store Long values" in withMaster { _ =>
-    withServer { _ =>
+    withServers(2) { _ =>
       withClient { client =>
         val model = whenReady(client.vector[Long](9)) {
           identity
@@ -87,7 +87,7 @@ class BigVectorSpec extends FlatSpec with SystemTest with Matchers {
   }
 
   it should "aggregate values through addition" in withMaster { _ =>
-    withServer { _ =>
+    withServers(3) { _ =>
       withClient { client =>
         val model = whenReady(client.vector[Int](100)) {
           identity
@@ -112,7 +112,7 @@ class BigVectorSpec extends FlatSpec with SystemTest with Matchers {
   it should "deserialize without an ActorSystem in scope" in {
     var ab: Array[Byte] = Array.empty[Byte]
     withMaster { _ =>
-      withServer { _ =>
+      withServers(3) { _ =>
         withClient { client =>
           val model = whenReady(client.vector[Int](10)) {
             identity

@@ -132,6 +132,28 @@ trait SystemTest extends ScalaFutures {
   }
 
   /**
+    * Fixture that starts multiple parameter servers when running test code and cleans up where necessary
+    *
+    * @param nrOfServers The number of servers to start
+    * @param testCode The test code to run
+    */
+  def withServers(nrOfServers: Int)(testCode: Seq[ActorRef] => Any): Unit = {
+    val servers = (0 until nrOfServers).map {
+      case i => whenReady(Server.run(testConfig)) { case (s, a) => (s, a) }
+    }
+    try {
+      testCode(servers.map { case (s, a) => a })
+    } finally {
+      servers.foreach {
+        case (s, a) =>
+          s.shutdown()
+          s.awaitTermination()
+      }
+    }
+
+  }
+
+  /**
     * Fixture that starts a client when running test code and cleans up afterwards
     *
     * @param testCode The test code to run
