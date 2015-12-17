@@ -4,7 +4,7 @@ import akka.util.Timeout
 import breeze.linalg.Vector
 import glint.models.client.BigMatrix
 
-import scala.collection.mutable.HashMap
+import scala.collection.mutable
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
@@ -15,7 +15,7 @@ class AggregatedBigMatrix[V: ClassTag](underlying: BigMatrix[V],
                                        aggregate: (V, V) => V,
                                        default: V) extends BigMatrix[V] {
 
-  val map = HashMap.empty[(Long, Int), V]
+  val map = mutable.HashMap.empty[(Long, Int), V]
 
   /**
     * Pulls a set of rows
