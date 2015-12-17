@@ -14,6 +14,13 @@ trait Partitioner[P] extends Serializable {
   def partition(key: Long): P
 
   /**
+    * Provides a sequence of all possible partitions
+    *
+    * @return A sequence of partitions
+    */
+  def partitions: Seq[P]
+
+  /**
     * Computes the start key for given partition
     *
     * @param partition The partition
