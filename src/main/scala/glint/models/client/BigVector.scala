@@ -28,4 +28,11 @@ trait BigVector[V] extends Serializable {
     */
   def push(keys: Array[Long], values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean]
 
+  /**
+    * Destroys the big vector and its resources on the parameter server
+    *
+    * @return A future whether the vector was successfully destroyed
+    */
+  def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean]
+
 }

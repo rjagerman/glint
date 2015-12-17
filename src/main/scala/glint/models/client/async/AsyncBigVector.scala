@@ -3,6 +3,7 @@ package glint.models.client.async
 import java.io.{IOException, ObjectInputStream, ObjectOutputStream}
 
 import akka.actor.{ActorRef, ActorSystem, ExtendedActorSystem}
+import akka.pattern.Patterns.gracefulStop
 import akka.pattern.ask
 import akka.serialization.JavaSerializer
 import akka.util.Timeout
@@ -15,6 +16,7 @@ import glint.models.client.BigVector
 import glint.partitioning.Partitioner
 
 import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.duration._
 import scala.reflect.ClassTag
 
 /**
@@ -127,6 +129,18 @@ abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, 
     */
   private def mapPartitions[T](keys: Seq[Long])(func: (ActorRef, Seq[Int]) => T): Iterable[T] = {
     keys.indices.groupBy(i => partitioner.partition(keys(i))).map { case (a, b) => func(a, b) }
+  }
+
+  /**
+    * Destroys the matrix on the parameter servers
+    *
+    * @return A future whether the matrix was successfully destroyed
+    */
+  override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+    val partitionFutures = partitioner.partitions.map {
+      case partition => gracefulStop(partition, 60 seconds)
+    }
+    Future.sequence(partitionFutures).transform(successes => successes.forall(success => success), err => err)
   }
 
   /**

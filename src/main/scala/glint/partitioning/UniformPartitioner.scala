@@ -3,19 +3,21 @@ package glint.partitioning
 /**
   * A uniform key partitioner with fixed number of servers and keys
   *
-  * @param partitions An array of possible partitions
+  * @param partitionsArray An array of possible partitions
   * @param keys The number of keys
   */
-class UniformPartitioner[P](val partitions: Array[P], val keys: Long) extends Partitioner[P] {
-  assert(keys >= partitions.length, "cannot create a partitioner with less keys than partitions")
+class UniformPartitioner[P](partitionsArray: Array[P], val keys: Long) extends Partitioner[P] {
+  assert(keys >= partitionsArray.length, "cannot create a partitioner with less keys than partitions")
 
   override def partition(key: Long): P = {
-    partitions(Math.floor((key.toDouble / keys.toDouble) * partitions.length.toDouble).toInt)
+    partitionsArray(Math.floor((key.toDouble / keys.toDouble) * partitionsArray.length.toDouble).toInt)
   }
 
-  override def start(partition: P): Long = start(partitions.indexOf(partition))
+  override def partitions: Seq[P] = partitionsArray.toSeq
 
-  override def end(partition: P): Long = end(partitions.indexOf(partition))
+  override def start(partition: P): Long = start(partitionsArray.indexOf(partition))
+
+  override def end(partition: P): Long = end(partitionsArray.indexOf(partition))
 
   /**
     * Computes the start index of partition p
@@ -24,7 +26,7 @@ class UniformPartitioner[P](val partitions: Array[P], val keys: Long) extends Pa
     * @return The start index
     */
   private def start(p: Long): Long = {
-    Math.ceil(p * (keys.toDouble / partitions.length.toDouble)).toLong
+    Math.ceil(p * (keys.toDouble / partitionsArray.length.toDouble)).toLong
   }
 
   /**

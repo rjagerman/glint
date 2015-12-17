@@ -39,4 +39,12 @@ trait BigMatrix[V] extends Serializable {
     */
   def push(rows: Array[Long], cols: Array[Int], values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean]
 
+
+  /**
+    * Destroys the big matrix and its resources on the parameter server
+    *
+    * @return A future whether the matrix was successfully destroyed
+    */
+  def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean]
+
 }
