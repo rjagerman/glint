@@ -85,6 +85,9 @@ class AggregatedBigMatrix[V: ClassTag](underlying: BigMatrix[V],
     * @return A future indicating the success or failure of pushing the values to the parameter servers
     */
   def flush()(implicit ec: ExecutionContext, timeout: Timeout): Future[Boolean] = {
+    if (map.isEmpty) {
+      Future { true }
+    }
     val rows = new Array[Long](map.size)
     val cols = new Array[Int](map.size)
     val values = new Array[V](map.size)
