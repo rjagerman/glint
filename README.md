@@ -17,7 +17,7 @@ The `+` indicates that it should compile for all scala versions defined in the `
 
 The parameter server is designed to be ran stand alone as a separate java process.
 
-The first thing you have to do is configure the parameter server for your cluster. The default configuration is sufficient for running a simple localhost test. An example configuration can be found in [src/main/resources/glint.conf](src/main/resources/glint.conf). Most importantly you would want to set the master's hostname and port. This makes it so every parameter server and client interface knows where to find the master node.
+The first thing you have to do is configure the parameter server for your cluster. The default configuration is sufficient for running a simple localhost test. An example configuration can be found in [src/main/resources/glint.conf](src/main/resources/glint.conf). Most importantly you would want to set the master's hostname and port. This ensures that every parameter server and client interface knows where to find the master node.
 
 After having created a `.conf` file we can run a master and multiple parameter servers:
 
