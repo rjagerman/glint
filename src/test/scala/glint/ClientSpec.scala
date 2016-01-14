@@ -5,6 +5,7 @@ import akka.pattern.ask
 import akka.util.Timeout
 import glint.exceptions.ModelCreationException
 import glint.messages.master.ClientList
+import glint.models.client.async.{AsyncBigVector, AsyncBigMatrix}
 import glint.models.client.{BigMatrix, BigVector}
 import org.scalatest.FlatSpec
 import org.scalatest.Matchers._
@@ -64,6 +65,54 @@ class ClientSpec extends FlatSpec with SystemTest {
           identity
         }
         assert(model.isInstanceOf[BigMatrix[Long]])
+      }
+    }
+  }
+
+  it should "be able to create a BigMatrix with one partial model per server" in withMaster { _ =>
+    withServers(2) { _ =>
+      withClient { client =>
+        val model = whenReady(client.matrix[Long](49, 7, 1)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigMatrix[Long]])
+        println(model.asInstanceOf[AsyncBigMatrix[_,_,_]].nrOfPartitions == 2)
+      }
+    }
+  }
+
+  it should "be able to create a BigMatrix with multiple partial models per server" in withMaster { _ =>
+    withServers(2) { _ =>
+      withClient { client =>
+        val model = whenReady(client.matrix[Long](49, 7, 3)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigMatrix[Long]])
+        assert(model.asInstanceOf[AsyncBigMatrix[_, _, _]].nrOfPartitions == 6)
+      }
+    }
+  }
+
+  it should "be able to create a BigVector with one partial model per server" in withMaster { _ =>
+    withServers(3) { _ =>
+      withClient { client =>
+        val model = whenReady(client.vector[Long](4200, 1)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigVector[Long]])
+        println(model.asInstanceOf[AsyncBigVector[_, _, _]].nrOfPartitions == 3)
+      }
+    }
+  }
+
+  it should "be able to create a BigVector with multiple partial models per server" in withMaster { _ =>
+    withServers(3) { _ =>
+      withClient { client =>
+        val model = whenReady(client.vector[Long](4200, 8)) {
+          identity
+        }
+        assert(model.isInstanceOf[BigVector[Long]])
+        assert(model.asInstanceOf[AsyncBigVector[_, _, _]].nrOfPartitions == 24)
       }
     }
   }

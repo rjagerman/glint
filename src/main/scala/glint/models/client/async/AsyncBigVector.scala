@@ -132,6 +132,11 @@ abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, 
   }
 
   /**
+    * @return The number of partitions this big vector's data is spread across
+    */
+  def nrOfPartitions: Int = { partitioner.partitions.length }
+
+  /**
     * Destroys the matrix on the parameter servers
     *
     * @return A future whether the matrix was successfully destroyed

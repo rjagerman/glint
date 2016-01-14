@@ -200,6 +200,11 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
   }
 
   /**
+    * @return The number of partitions this big matrix's data is spread across
+    */
+  def nrOfPartitions: Int = { partitioner.partitions.length }
+
+  /**
     * Deserializes this instance. This starts an ActorSystem with appropriate configuration before attempting to
     * deserialize ActorRefs
     *

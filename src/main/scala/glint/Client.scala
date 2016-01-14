@@ -69,9 +69,10 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
     * @tparam V The type of values to store
     * @return A future containing a serializable BigMatrix reference to the created models on the parameter server
     */
-  def matrix[V: breeze.math.Semiring : TypeTag](rows: Long, cols: Int): Future[BigMatrix[V]] = {
+  def matrix[V: breeze.math.Semiring : TypeTag](rows: Long, cols: Int, modelsPerServer: Int = 1): Future[BigMatrix[V]] = {
     matrix[V](rows,
       cols,
+      modelsPerServer,
       (models: Array[ActorRef]) => new CyclicIndexer(models.length, rows),
       (models: Array[ActorRef]) => new UniformPartitioner[ActorRef](models, rows))
   }
@@ -86,6 +87,7 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
     */
   def matrix[V: breeze.math.Semiring : TypeTag](rows: Long,
                                                 cols: Int,
+                                                modelsPerServer: Int,
                                                 indexer: (Array[ActorRef]) => Indexer[Long],
                                                 partitioner: (Array[ActorRef]) => Partitioner[ActorRef]): Future[BigMatrix[V]] = {
 
@@ -98,7 +100,10 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
       if (nrOfServers <= 0) {
         throw new ModelCreationException("Cannot create a model with 0 parameter servers")
       }
-      servers.take(nrOfServers).zipWithIndex.map {
+      val nrOfModels = Math.min(nrOfServers * modelsPerServer, rows).toInt
+      val models = new Array[ActorRef](nrOfModels)
+      models.zipWithIndex.foreach { case (_, i) => models(i) = servers(i % nrOfServers)}
+      models.take(nrOfModels).zipWithIndex.map {
         case (server, index) =>
           val start = Math.ceil(index * (rows.toDouble / nrOfServers.toDouble)).toLong
           val end = Math.ceil((index + 1) * (rows.toDouble / nrOfServers.toDouble)).toLong
@@ -131,11 +136,13 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
     * Constructs a distributed matrix (indexed by (row: Long, col: Int)) for specified type of values
     *
     * @param keys The number of rows
+    * @param modelsPerServer The number of partial models to store per parameter server (default: 1)
     * @tparam V The type of values to store
     * @return A future containing a serializable BigMatrix reference to the created models on the parameter server
     */
-  def vector[V: breeze.math.Semiring : TypeTag](keys: Long): Future[BigVector[V]] = {
+  def vector[V: breeze.math.Semiring : TypeTag](keys: Long, modelsPerServer: Int = 1): Future[BigVector[V]] = {
     vector[V](keys,
+      modelsPerServer,
       (models: Array[ActorRef]) => new CyclicIndexer(models.length, keys),
       (models: Array[ActorRef]) => new UniformPartitioner[ActorRef](models, keys))
   }
@@ -148,6 +155,7 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
     * @return A future containing a serializable BigMatrix reference to the created models on the parameter server
     */
   def vector[V: breeze.math.Semiring : TypeTag](keys: Long,
+                                                modelsPerServer: Int,
                                                 indexer: (Array[ActorRef]) => Indexer[Long],
                                                 partitioner: (Array[ActorRef]) => Partitioner[ActorRef]): Future[BigVector[V]] = {
 
@@ -160,7 +168,10 @@ class Client(val config: Config, val system: ActorSystem, val master: ActorRef) 
       if (nrOfServers <= 0) {
         throw new ModelCreationException("Cannot create a model with 0 parameter servers")
       }
-      servers.take(nrOfServers).zipWithIndex.map {
+      val nrOfModels = Math.min(nrOfServers * modelsPerServer, keys).toInt
+      val models = new Array[ActorRef](nrOfModels)
+      models.zipWithIndex.foreach { case (_, i) => models(i) = servers(i % nrOfServers)}
+      models.take(nrOfModels).zipWithIndex.map {
         case (server, index) =>
           val start = Math.ceil(index * (keys.toDouble / nrOfServers.toDouble)).toLong
           val end = Math.ceil((index + 1) * (keys.toDouble / nrOfServers.toDouble)).toLong
