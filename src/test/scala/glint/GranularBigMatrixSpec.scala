@@ -1,9 +1,5 @@
 package glint
 
-import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
-
-import glint.models.client.BigMatrix
-import glint.models.client.aggregate.AggregatedBigMatrix
 import glint.models.client.granular.GranularBigMatrix
 import org.scalatest.{FlatSpec, Matchers}
 
