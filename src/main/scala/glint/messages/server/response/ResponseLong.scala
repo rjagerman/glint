@@ -2,5 +2,7 @@ package glint.messages.server.response
 
 /**
   * A response containing longs
+  *
+  * @param values The response values
   */
-case class ResponseLong(values: Array[Long]) extends Response
+private[glint] case class ResponseLong(values: Array[Long]) extends Response

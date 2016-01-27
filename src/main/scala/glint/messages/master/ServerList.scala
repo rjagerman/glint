@@ -1,6 +1,6 @@
 package glint.messages.master
 
 /**
-  * Message to the master retrieving the list of active servers
+  * Message that retrieves the list of active servers
   */
-case class ServerList()
+private[glint] case class ServerList()

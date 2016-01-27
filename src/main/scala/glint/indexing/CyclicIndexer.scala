@@ -1,9 +1,19 @@
 package glint.indexing
 
 /**
-  * An indexer that uses a cyclic model where keys would be distributed n mod m
+  * An indexer that uses a cyclic model where keys would be distributed (n mod m)
+  *
+  * @param models The number of models
+  * @param keys The number of keys
   */
 class CyclicIndexer(models: Int, keys: Long) extends Indexer[Long] {
+
+  /**
+    * Transforms given key to a long value indicating its index
+    *
+    * @param key The key
+    * @return The index
+    */
   override def index(key: Long): Long = {
     val model = key % models
     val indexInModel = (key - model) / models

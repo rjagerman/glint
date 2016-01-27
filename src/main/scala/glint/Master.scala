@@ -12,24 +12,14 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 /**
-  * The manager that handles the setup of parameter server actors
+  * The master that registers the available parameter servers and clients
   */
-class Master() extends Actor with ActorLogging {
+private[glint] class Master() extends Actor with ActorLogging {
 
   /**
     * Collection of servers available
     */
   var servers = Set.empty[ActorRef]
-
-  /**
-    * Collection of models
-    */
-  var clientModels = Map.empty[ActorRef, Set[String]]
-
-  /**
-    * Collection of models
-    */
-  //var models = Map.empty[String, (BigMatrix[_], ActorRef)]
 
   /**
     * Collection of clients
@@ -50,16 +40,6 @@ class Master() extends Actor with ActorLogging {
       context.watch(client)
       sender ! true
 
-    case RegisterModel(name, client) =>
-      log.info(s"Registering model ${name}")
-    //models = models + (name ->(model, client))
-    //clientModels = clientModels + (client -> (clientModels.getOrElse(client, Set.empty[String]) + name))
-    //sender ! model
-
-    case GetModel(name) =>
-      log.info(s"Sending model reference ${name} to ${sender.path.toString}")
-    //sender ! models.get(name).map(_._1)
-
     case ServerList() =>
       log.info(s"Sending current server list to ${sender.path.toString}")
       sender ! servers.toArray
@@ -77,13 +57,6 @@ class Master() extends Actor with ActorLogging {
         case client: ActorRef if clients contains client =>
           log.info(s"Removing client ${client.path.toString}")
           clients -= client
-          log.debug(s"Removing models associated with client ${client.path.toString}")
-          //          clientModels.getOrElse(client, Set.empty[String]).foreach {
-          //            case name =>
-          //              models(name)._1.destroy()
-          //              models = models - name
-          //          }
-          clientModels = clientModels - client
 
         case actor: ActorRef =>
           log.warning(s"Received terminated notification for unknown actor ${actor.path.toString}")
@@ -93,18 +66,17 @@ class Master() extends Actor with ActorLogging {
 }
 
 /**
-  * Parameter manager object
+  * The master node that registers the available parameter servers and clients
   */
-object Master extends StrictLogging {
+private[glint] object Master extends StrictLogging {
 
   /**
-    * Starts a parameter server ready to receive commands
+    * Starts a parameter server master node ready to receive commands
     *
     * @param config The configuration
-    * @return The started actor system and reference to the master actor
+    * @return A future containing the started actor system and reference to the master actor
     */
   def run(config: Config): Future[(ActorSystem, ActorRef)] = {
-
 
     logger.debug("Starting master actor system")
     val system = ActorSystem(config.getString("glint.master.system"), config.getConfig("glint.master"))

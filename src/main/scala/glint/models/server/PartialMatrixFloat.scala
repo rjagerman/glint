@@ -11,9 +11,9 @@ import glint.messages.server.response.ResponseFloat
   * @param end The row end index
   * @param cols The number of columns
   */
-class PartialMatrixFloat(start: Long,
-                         end: Long,
-                         cols: Int) extends PartialMatrix[Float](start, end, cols) {
+private[glint] class PartialMatrixFloat(start: Long,
+                                       end: Long,
+                                       cols: Int) extends PartialMatrix[Float](start, end, cols) {
 
   override val data: Matrix[Float] = DenseMatrix.zeros[Float](rows, cols)
 

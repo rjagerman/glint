@@ -3,4 +3,4 @@ package glint.messages.server.request
 /**
   * A request
   */
-trait Request
+private[glint] trait Request

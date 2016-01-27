@@ -2,5 +2,7 @@ package glint.messages.server.request
 
 /**
   * A pull request for vectors
+  *
+  * @param keys The indices
   */
-case class PullVector(keys: Array[Long]) extends Request
+private[glint] case class PullVector(keys: Array[Long]) extends Request

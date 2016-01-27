@@ -10,10 +10,10 @@ import glint.partitioning.Partitioner
 /**
   * Asynchronous implementation of a BigVector for longs
   */
-class AsyncBigVectorLong(partitioner: Partitioner[ActorRef],
-                         indexer: Indexer[Long],
-                         config: Config,
-                         keys: Long)
+private[glint] class AsyncBigVectorLong(partitioner: Partitioner[ActorRef],
+                                        indexer: Indexer[Long],
+                                        config: Config,
+                                        keys: Long)
   extends AsyncBigVector[Long, ResponseLong, PushVectorLong](partitioner, indexer, config, keys) {
 
   /**
@@ -23,6 +23,7 @@ class AsyncBigVectorLong(partitioner: Partitioner[ActorRef],
     * @param values The values
     * @return A PushVectorLong message for type V
     */
+  @inline
   override protected def toPushMessage(keys: Array[Long], values: Array[Long]): PushVectorLong = {
     PushVectorLong(keys, values)
   }
@@ -34,6 +35,7 @@ class AsyncBigVectorLong(partitioner: Partitioner[ActorRef],
     * @param index The index
     * @return The value
     */
+  @inline
   override protected def toValue(response: ResponseLong, index: Int): Long = response.values(index)
 
 }

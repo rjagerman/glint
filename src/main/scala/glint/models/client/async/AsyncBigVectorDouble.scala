@@ -10,10 +10,10 @@ import glint.partitioning.Partitioner
 /**
   * Asynchronous implementation of a BigVector for doubles
   */
-class AsyncBigVectorDouble(partitioner: Partitioner[ActorRef],
-                           indexer: Indexer[Long],
-                           config: Config,
-                           keys: Long)
+private[glint] class AsyncBigVectorDouble(partitioner: Partitioner[ActorRef],
+                                          indexer: Indexer[Long],
+                                          config: Config,
+                                          keys: Long)
   extends AsyncBigVector[Double, ResponseDouble, PushVectorDouble](partitioner, indexer, config, keys) {
 
   /**
@@ -23,6 +23,7 @@ class AsyncBigVectorDouble(partitioner: Partitioner[ActorRef],
     * @param values The values
     * @return A PushVectorDouble message for type V
     */
+  @inline
   override protected def toPushMessage(keys: Array[Long], values: Array[Double]): PushVectorDouble = {
     PushVectorDouble(keys, values)
   }
@@ -34,6 +35,7 @@ class AsyncBigVectorDouble(partitioner: Partitioner[ActorRef],
     * @param index The index
     * @return The value
     */
+  @inline
   override protected def toValue(response: ResponseDouble, index: Int): Double = response.values(index)
 
 }

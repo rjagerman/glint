@@ -3,8 +3,8 @@ package glint.models.client.async
 import java.io.{IOException, ObjectInputStream, ObjectOutputStream}
 
 import akka.actor.{ActorRef, ActorSystem, ExtendedActorSystem}
-import akka.pattern.ask
 import akka.pattern.Patterns.gracefulStop
+import akka.pattern.ask
 import akka.serialization.JavaSerializer
 import akka.util.Timeout
 import breeze.linalg.{DenseVector, Vector}
@@ -14,13 +14,18 @@ import glint.indexing.Indexer
 import glint.messages.server.request.{PullMatrix, PullMatrixRows}
 import glint.models.client.BigMatrix
 import glint.partitioning.Partitioner
+import spire.implicits.cforRange
 
-import scala.concurrent.{ExecutionContext, Future}
 import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 /**
-  * An asynchronous implementation of the BigMatrix.
+  * An asynchronous implementation of a [[glint.models.client.BigMatrix BigMatrix]]. You don't want to construct this
+  * object manually but instead use the methods provided in [[glint.Client Client]], as so
+  * {{{
+  *   client.matrix[Double](rows, columns)
+  * }}}
   *
   * @param partitioner A partitioner to map rows to parameter servers
   * @param indexer An indexer to remap rows
@@ -39,38 +44,11 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
   extends BigMatrix[V] {
 
   /**
-    * Creates a vector from range [start, end) in values in given response
-    *
-    * @param response The response containing the values
-    * @param start The start index
-    * @param end The end index
-    * @return A vector for the range [start, end)
-    */
-  protected def toVector(response: R, start: Int, end: Int): Vector[V]
-
-  /**
-    * Extracts a value from a given response at given index
-    *
-    * @param response The response
-    * @param index The index
-    * @return The value
-    */
-  protected def toValue(response: R, index: Int): V
-
-  /**
-    * Creates a push message from given sequence of rows, columns and values
-    *
-    * @param rows The rows
-    * @param cols The columns
-    * @param values The values
-    * @return A PushMatrix message for type V
-    */
-  protected def toPushMessage(rows: Array[Long], cols: Array[Int], values: Array[V]): P
-
-  /**
     * Pulls a set of rows
     *
     * @param rows The indices of the rows
+    * @param timeout The timeout for this request
+    * @param ec The implicit execution context in which to execute the request
     * @return A future containing the vectors representing the rows
     */
   override def pull(rows: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[Vector[V]]] = {
@@ -89,17 +67,19 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
       case (k, i) => partitioner.partition(k)
     }.map {
       case (_, arr) => arr.map(_._2)
-    }
+    }.toArray
 
     // Define aggregator for successful responses
     def aggregateSuccess(responses: Iterable[R]): Array[Vector[V]] = {
       val result: Array[Vector[V]] = Array.fill[Vector[V]](rows.length)(DenseVector.zeros[V](0))
-      responses.zip(indices).foreach {
-        case (response, idx) =>
-          for (i <- idx.indices) {
-            result(idx(i)) = toVector(response, i * cols, (i + 1) * cols)
-          }
-      }
+      val responsesArray = responses.toArray
+      cforRange(0 until responsesArray.length)(i => {
+        val response = responsesArray(i)
+        val idx = indices(i)
+        cforRange(0 until idx.length)(i => {
+          result(idx(i)) = toVector(response, i * cols, (i + 1) * cols)
+        })
+      })
       result
     }
 
@@ -112,6 +92,8 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     *
     * @param rows The indices of the rows
     * @param cols The corresponding indices of the columns
+    * @param timeout The timeout for this request
+    * @param ec The implicit execution context in which to execute the request
     * @return A future containing the values of the elements at given rows, columns
     */
   override def pull(rows: Array[Long], cols: Array[Int])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[V]] = {
@@ -131,18 +113,20 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
       case (k, i) => partitioner.partition(k)
     }.map {
       case (_, arr) => arr.map(_._2)
-    }
+    }.toArray
 
     // Define aggregator for successful responses
     def aggregateSuccess(responses: Iterable[R]): Array[V] = {
-      val result = DenseVector.zeros[V](rows.length)
-      responses.zip(indices).foreach {
-        case (response, idx) =>
-          for (i <- idx.indices) {
-            result(idx(i)) = toValue(response, i)
-          }
-      }
-      result.toArray
+      val responsesArray = responses.toArray
+      val result = new Array[V](rows.length)
+      cforRange(0 until responsesArray.length)(i => {
+        val response = responsesArray(i)
+        val idx = indices(i)
+        cforRange(0 until idx.length)(j => {
+          result(idx(j)) = toValue(response, j)
+        })
+      })
+      result
     }
 
     // Combine and aggregate futures
@@ -156,6 +140,8 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     * @param rows The indices of the rows
     * @param cols The indices of the columns
     * @param values The values to update
+    * @param timeout The timeout for this request
+    * @param ec The implicit execution context in which to execute the request
     * @return A future containing either the success or failure of the operation
     */
   override def push(rows: Array[Long], cols: Array[Int], values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
@@ -175,6 +161,20 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
   }
 
   /**
+    * Groups indices of given rows into partitions according to this models partitioner and maps each partition to a
+    * type T
+    *
+    * @param rows The rows to partition
+    * @param func The function that takes a partition and corresponding indices and creates something of type T
+    * @tparam T The type to map to
+    * @return An iterable over the partitioned results
+    */
+  @inline
+  private def mapPartitions[T](rows: Seq[Long])(func: (ActorRef, Seq[Int]) => T): Iterable[T] = {
+    rows.indices.groupBy(i => partitioner.partition(rows(i))).map { case (a, b) => func(a, b) }
+  }
+
+  /**
     * Destroys the matrix on the parameter servers
     *
     * @return A future whether the matrix was successfully destroyed
@@ -187,22 +187,43 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
   }
 
   /**
-    * Groups indices of given rows into partitions according to this models partitioner and maps each partition to a
-    * type T
-    *
-    * @param rows The rows to partition
-    * @param func The function that takes a partition and corresponding indices and creates something of type T
-    * @tparam T The type to map to
-    * @return An iterable over the partitioned results
+    * @return The number of partitions this big matrix's data is spread across
     */
-  private def mapPartitions[T](rows: Seq[Long])(func: (ActorRef, Seq[Int]) => T): Iterable[T] = {
-    rows.indices.groupBy(i => partitioner.partition(rows(i))).map { case (a, b) => func(a, b) }
+  def nrOfPartitions: Int = {
+    partitioner.partitions.length
   }
 
   /**
-    * @return The number of partitions this big matrix's data is spread across
+    * Creates a vector from range [start, end) in values in given response
+    *
+    * @param response The response containing the values
+    * @param start The start index
+    * @param end The end index
+    * @return A vector for the range [start, end)
     */
-  def nrOfPartitions: Int = { partitioner.partitions.length }
+  @inline
+  protected def toVector(response: R, start: Int, end: Int): Vector[V]
+
+  /**
+    * Extracts a value from a given response at given index
+    *
+    * @param response The response
+    * @param index The index
+    * @return The value
+    */
+  @inline
+  protected def toValue(response: R, index: Int): V
+
+  /**
+    * Creates a push message from given sequence of rows, columns and values
+    *
+    * @param rows The rows
+    * @param cols The columns
+    * @param values The values
+    * @return A PushMatrix message for type V
+    */
+  @inline
+  protected def toPushMessage(rows: Array[Long], cols: Array[Int], values: Array[V]): P
 
   /**
     * Deserializes this instance. This starts an ActorSystem with appropriate configuration before attempting to

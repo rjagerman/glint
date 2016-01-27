@@ -6,8 +6,11 @@ import glint.messages.server.response.ResponseFloat
 
 /**
   * A partial vector holding floats
+  *
+  * @param start The start index
+  * @param end The end index
   */
-class PartialVectorFloat(start: Long, end: Long) extends PartialVector[Float](start, end) {
+private[glint] class PartialVectorFloat(start: Long, end: Long) extends PartialVector[Float](start, end) {
 
   override val data: Vector[Float] = DenseVector.zeros[Float](size)
 

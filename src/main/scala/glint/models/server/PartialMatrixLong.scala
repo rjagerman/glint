@@ -11,9 +11,9 @@ import glint.messages.server.response.ResponseLong
   * @param end The row end index
   * @param cols The number of columns
   */
-class PartialMatrixLong(start: Long,
-                        end: Long,
-                        cols: Int) extends PartialMatrix[Long](start, end, cols) {
+private[glint] class PartialMatrixLong(start: Long,
+                                      end: Long,
+                                      cols: Int) extends PartialMatrix[Long](start, end, cols) {
 
   override val data: Matrix[Long] = DenseMatrix.zeros[Long](rows, cols)
 

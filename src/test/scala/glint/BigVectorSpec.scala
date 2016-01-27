@@ -13,9 +13,7 @@ class BigVectorSpec extends FlatSpec with SystemTest with Matchers {
   "A BigVector" should "store Double values" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
-        val model = whenReady(client.vector[Double](1000)) {
-          identity
-        }
+        val model = client.vector[Double](1000)
         val result = whenReady(model.push(Array(0L, 999L), Array(0.54, -0.9999))) {
           identity
         }
@@ -32,9 +30,7 @@ class BigVectorSpec extends FlatSpec with SystemTest with Matchers {
   it should "store Float values" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
-        val model = whenReady(client.vector[Double](9)) {
-          identity
-        }
+        val model = client.vector[Double](9)
         val result = whenReady(model.push(Array(0L, 2L, 5L, 8L), Array(0.0, -0.001, 100.001, 3.14152))) {
           identity
         }
@@ -51,9 +47,7 @@ class BigVectorSpec extends FlatSpec with SystemTest with Matchers {
   it should "store Int values" in withMaster { _ =>
     withServer { _ =>
       withClient { client =>
-        val model = whenReady(client.vector[Int](1000)) {
-          identity
-        }
+        val model = client.vector[Int](1000)
         val result = whenReady(model.push(Array(0L, 999L, 99L, 98L, 100L), Array(1090807, -23, 100, 45, 90))) {
           identity
         }
@@ -70,9 +64,7 @@ class BigVectorSpec extends FlatSpec with SystemTest with Matchers {
   it should "store Long values" in withMaster { _ =>
     withServers(2) { _ =>
       withClient { client =>
-        val model = whenReady(client.vector[Long](9)) {
-          identity
-        }
+        val model = client.vector[Long](9)
         val result = whenReady(model.push(Array(0L, 2L, 5L, 8L), Array(0, -1, 900800700600L, -100200300400500L))) {
           identity
         }
@@ -89,9 +81,7 @@ class BigVectorSpec extends FlatSpec with SystemTest with Matchers {
   it should "aggregate values through addition" in withMaster { _ =>
     withServers(3) { _ =>
       withClient { client =>
-        val model = whenReady(client.vector[Int](100)) {
-          identity
-        }
+        val model = client.vector[Int](100)
         val result1 = whenReady(model.push(Array(0L, 2L, 5L, 8L), Array(10, 10, 20, 30))) {
           identity
         }
@@ -114,9 +104,7 @@ class BigVectorSpec extends FlatSpec with SystemTest with Matchers {
     withMaster { _ =>
       withServers(3) { _ =>
         withClient { client =>
-          val model = whenReady(client.vector[Int](10)) {
-            identity
-          }
+          val model = client.vector[Int](10)
           val bos = new ByteArrayOutputStream
           val out = new ObjectOutputStream(bos)
           out.writeObject(model)

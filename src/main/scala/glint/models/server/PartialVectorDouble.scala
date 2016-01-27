@@ -5,9 +5,12 @@ import glint.messages.server.request.{PullVector, PushVectorDouble}
 import glint.messages.server.response.ResponseDouble
 
 /**
-  * A partial vector holding floats
+  * A partial vector holding doubles
+  *
+  * @param start The start index
+  * @param end The end index
   */
-class PartialVectorDouble(start: Long, end: Long) extends PartialVector[Double](start, end) {
+private[glint] class PartialVectorDouble(start: Long, end: Long) extends PartialVector[Double](start, end) {
 
   override val data: Vector[Double] = DenseVector.zeros[Double](size)
 

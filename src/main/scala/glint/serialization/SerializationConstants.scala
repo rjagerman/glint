@@ -5,7 +5,7 @@ import sun.misc.Unsafe
 /**
   * Some constants used for serialization
   */
-object SerializationConstants {
+private[glint] object SerializationConstants {
 
   // Unsafe field for direct memory access
   private val field = classOf[Unsafe].getDeclaredField("theUnsafe")
@@ -17,7 +17,6 @@ object SerializationConstants {
   val sizeOfShort = 2
   val sizeOfInt = 4
   val sizeOfLong = 8
-
   val sizeOfFloat = 4
   val sizeOfDouble = 8
 
@@ -33,7 +32,6 @@ object SerializationConstants {
   val pushVectorFloatByte: Byte = 0x08
   val pushVectorIntByte: Byte = 0x09
   val pushVectorLongByte: Byte = 0x0A
-
   val responseDoubleByte: Byte = 0x10
   val responseFloatByte: Byte = 0x11
   val responseIntByte: Byte = 0x12

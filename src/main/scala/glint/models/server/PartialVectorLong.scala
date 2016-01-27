@@ -6,8 +6,11 @@ import glint.messages.server.response.ResponseLong
 
 /**
   * A partial vector holding longs
+  *
+  * @param start The start index
+  * @param end The end index
   */
-class PartialVectorLong(start: Long, end: Long) extends PartialVector[Long](start, end) {
+private[glint] class PartialVectorLong(start: Long, end: Long) extends PartialVector[Long](start, end) {
 
   override val data: Vector[Long] = DenseVector.zeros[Long](size)
 

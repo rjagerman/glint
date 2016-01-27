@@ -44,7 +44,7 @@ trait SystemTest extends ScalaFutures {
       |    host = "127.0.0.1"
       |    port = 0
       |    system = "glint-client"
-      |    default-timeout = 5 seconds
+      |    timeout = 30 seconds
       |    akka = ${glint.default.akka}
       |    akka.remote.netty.tcp {
       |      hostname = ${glint.client.host}
@@ -159,7 +159,7 @@ trait SystemTest extends ScalaFutures {
     * @param testCode The test code to run
     */
   def withClient(testCode: Client => Any): Unit = {
-    val client = whenReady(Client(testConfig)) { case c => c }
+    val client = Client(testConfig)
     try {
       testCode(client)
     } finally {

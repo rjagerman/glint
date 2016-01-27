@@ -20,16 +20,20 @@ class ResponseSerializer extends Serializer {
     val fpd = new FastPrimitiveDeserializer(bytes)
     val objectType = fpd.readByte()
     val objectSize = fpd.readInt()
+
     objectType match {
       case SerializationConstants.responseDoubleByte =>
         val values = fpd.readArrayDouble(objectSize)
         ResponseDouble(values)
+
       case SerializationConstants.responseFloatByte =>
         val values = fpd.readArrayFloat(objectSize)
         ResponseFloat(values)
+
       case SerializationConstants.responseIntByte =>
         val values = fpd.readArrayInt(objectSize)
         ResponseInt(values)
+
       case SerializationConstants.responseLongByte =>
         val values = fpd.readArrayLong(objectSize)
         ResponseLong(values)
@@ -44,18 +48,21 @@ class ResponseSerializer extends Serializer {
         fps.writeInt(x.values.length)
         fps.writeArrayDouble(x.values)
         fps.bytes
+
       case x: ResponseFloat =>
         val fps = new FastPrimitiveSerializer(5 + x.values.length * SerializationConstants.sizeOfFloat)
         fps.writeByte(SerializationConstants.responseFloatByte)
         fps.writeInt(x.values.length)
         fps.writeArrayFloat(x.values)
         fps.bytes
+
       case x: ResponseInt =>
         val fps = new FastPrimitiveSerializer(5 + x.values.length * SerializationConstants.sizeOfInt)
         fps.writeByte(SerializationConstants.responseIntByte)
         fps.writeInt(x.values.length)
         fps.writeArrayInt(x.values)
         fps.bytes
+
       case x: ResponseLong =>
         val fps = new FastPrimitiveSerializer(5 + x.values.length * SerializationConstants.sizeOfLong)
         fps.writeByte(SerializationConstants.responseLongByte)
