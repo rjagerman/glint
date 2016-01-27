@@ -4,7 +4,6 @@ import akka.actor.{Actor, ActorLogging}
 import breeze.linalg.Matrix
 import breeze.math.Semiring
 
-import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 /**
@@ -15,9 +14,9 @@ import scala.reflect.ClassTag
   * @param cols The number of columns
   * @tparam V The type of value to store
   */
-abstract class PartialMatrix[@specialized V: Semiring : ClassTag](val start: Long,
-                                                                  val end: Long,
-                                                                  val cols: Int) extends Actor with ActorLogging {
+private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag](val start: Long,
+                                                                                 val end: Long,
+                                                                                 val cols: Int) extends Actor with ActorLogging {
 
   log.info(s"Constructing PartialMatrix[${implicitly[ClassTag[V]]}] with $cols columns for rows [$start, $end)")
 
@@ -32,14 +31,6 @@ abstract class PartialMatrix[@specialized V: Semiring : ClassTag](val start: Lon
   val data: Matrix[V]
 
   /**
-    * Obtains the local integer index of a given global key
-    *
-    * @param key The global key
-    * @return The local index in the data array
-    */
-  def index(key: Long): Int = (key - start).toInt
-
-  /**
     * Gets rows from the data matrix
     *
     * @param rows The row indices
@@ -47,16 +38,16 @@ abstract class PartialMatrix[@specialized V: Semiring : ClassTag](val start: Lon
     */
   def getRows(rows: Array[Long]): Array[V] = {
     var i = 0
-    val ab = new ArrayBuffer[V](rows.length * cols)
+    val a = new Array[V](rows.length * cols)
     while (i < rows.length) {
       var j = 0
       while (j < cols) {
-        ab += data(index(rows(i)), j)
+        a(i * cols + j) = data(index(rows(i)), j)
         j += 1
       }
       i += 1
     }
-    ab.toArray
+    a
   }
 
   /**
@@ -68,13 +59,21 @@ abstract class PartialMatrix[@specialized V: Semiring : ClassTag](val start: Lon
     */
   def get(rows: Array[Long], cols: Array[Int]): Array[V] = {
     var i = 0
-    val ab = new ArrayBuffer[V](rows.length)
+    val a = new Array[V](rows.length)
     while (i < rows.length) {
-      ab += data(index(rows(i)), cols(i))
+      a(i) = data(index(rows(i)), cols(i))
       i += 1
     }
-    ab.toArray
+    a
   }
+
+  /**
+    * Obtains the local integer index of a given global key
+    *
+    * @param key The global key
+    * @return The local index in the data array
+    */
+  def index(key: Long): Int = (key - start).toInt
 
   /**
     * Updates the data of this partial model by aggregating given keys and values into it

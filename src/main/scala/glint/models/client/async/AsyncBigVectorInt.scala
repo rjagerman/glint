@@ -10,10 +10,10 @@ import glint.partitioning.Partitioner
 /**
   * Asynchronous implementation of a BigVector for integers
   */
-class AsyncBigVectorInt(partitioner: Partitioner[ActorRef],
-                        indexer: Indexer[Long],
-                        config: Config,
-                        keys: Long)
+private[glint] class AsyncBigVectorInt(partitioner: Partitioner[ActorRef],
+                                       indexer: Indexer[Long],
+                                       config: Config,
+                                       keys: Long)
   extends AsyncBigVector[Int, ResponseInt, PushVectorInt](partitioner, indexer, config, keys) {
 
   /**
@@ -23,6 +23,7 @@ class AsyncBigVectorInt(partitioner: Partitioner[ActorRef],
     * @param values The values
     * @return A PushVectorInt message for type V
     */
+  @inline
   override protected def toPushMessage(keys: Array[Long], values: Array[Int]): PushVectorInt = {
     PushVectorInt(keys, values)
   }
@@ -34,6 +35,7 @@ class AsyncBigVectorInt(partitioner: Partitioner[ActorRef],
     * @param index The index
     * @return The value
     */
+  @inline
   override protected def toValue(response: ResponseInt, index: Int): Int = response.values(index)
 
 }

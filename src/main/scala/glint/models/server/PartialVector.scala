@@ -4,7 +4,6 @@ import akka.actor.{Actor, ActorLogging}
 import breeze.linalg.Vector
 import breeze.math.Semiring
 
-import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 
 /**
@@ -14,8 +13,8 @@ import scala.reflect.ClassTag
   * @param end The end index
   * @tparam V The type of value to store
   */
-abstract class PartialVector[@specialized V: Semiring : ClassTag](val start: Long,
-                                                                  val end: Long) extends Actor with ActorLogging {
+private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag](val start: Long,
+                                                                                 val end: Long) extends Actor with ActorLogging {
 
   log.info(s"Constructing PartialVector[${implicitly[ClassTag[V]]}] for keys [$start, $end)")
 
@@ -28,14 +27,6 @@ abstract class PartialVector[@specialized V: Semiring : ClassTag](val start: Lon
     * The data matrix containing the elements
     */
   val data: Vector[V]
-
-  /**
-    * Obtains the local integer index of a given global key
-    *
-    * @param key The global key
-    * @return The local index in the data array
-    */
-  def index(key: Long): Int = (key - start).toInt
 
   /**
     * Updates the data of this partial model by aggregating given keys and values into it
@@ -60,13 +51,21 @@ abstract class PartialVector[@specialized V: Semiring : ClassTag](val start: Lon
     */
   def get(keys: Array[Long]): Array[V] = {
     var i = 0
-    val ab = new ArrayBuffer[V](keys.length)
+    val a = new Array[V](keys.length)
     while (i < keys.length) {
-      ab += data(index(keys(i)))
+      a(i) = data(index(keys(i)))
       i += 1
     }
-    ab.toArray
+    a
   }
+
+  /**
+    * Obtains the local integer index of a given global key
+    *
+    * @param key The global key
+    * @return The local index in the data array
+    */
+  def index(key: Long): Int = (key - start).toInt
 
   /**
     * Aggregates to values of type V together

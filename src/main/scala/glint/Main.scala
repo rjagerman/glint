@@ -8,22 +8,23 @@ import com.typesafe.scalalogging.slf4j.StrictLogging
 import scala.concurrent.ExecutionContext
 
 /**
-  * Main application
+  * This is the main class that runs when you start Glint. By manually specifying additional command-line options it is
+  * possible to start a master node or a parameter server.
+  *
+  * To start a master node:
+  * {{{
+  *   java -jar /path/to/compiled/Glint.jar master -c /path/to/glint.conf
+  * }}}
+  *
+  * To start a parameter server node:
+  * {{{
+  *   java -jar /path/to/compiled/Glint.jar server -c /path/to/glint.conf
+  * }}}
+  *
+  * Alternatively you can use the scripts provided in the ./sbin/ folder of the project to automatically construct a
+  * master and servers over passwordless ssh.
   */
 object Main extends StrictLogging {
-
-  /**
-    * Command-line options
-    *
-    * @param mode The mode of operation (either "master" or "server")
-    * @param config The configuration file to load (defaults to the included glint.conf)
-    * @param host The host of the parameter server (only when mode of operation is "server")
-    * @param port The port of the parameter server (only when mode of operation is "server")
-    */
-  case class Options(mode: String = "",
-                     config: File = new File(getClass.getClassLoader.getResource("glint.conf").getFile),
-                     host: String = "localhost",
-                     port: Int = 0)
 
   /**
     * Main entry point of the application
@@ -77,5 +78,18 @@ object Main extends StrictLogging {
       case None => System.exit(1)
     }
   }
+
+  /**
+    * Command-line options
+    *
+    * @param mode The mode of operation (either "master" or "server")
+    * @param config The configuration file to load (defaults to the included glint.conf)
+    * @param host The host of the parameter server (only when mode of operation is "server")
+    * @param port The port of the parameter server (only when mode of operation is "server")
+    */
+  private case class Options(mode: String = "",
+                             config: File = new File(getClass.getClassLoader.getResource("glint.conf").getFile),
+                             host: String = "localhost",
+                             port: Int = 0)
 
 }

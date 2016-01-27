@@ -5,10 +5,9 @@ import akka.pattern.ask
 import akka.util.Timeout
 import glint.exceptions.ModelCreationException
 import glint.messages.master.ClientList
-import glint.models.client.async.{AsyncBigVector, AsyncBigMatrix}
+import glint.models.client.async.{AsyncBigMatrix, AsyncBigVector}
 import glint.models.client.{BigMatrix, BigVector}
 import org.scalatest.FlatSpec
-import org.scalatest.Matchers._
 
 import scala.concurrent.duration._
 
@@ -31,18 +30,20 @@ class ClientSpec extends FlatSpec with SystemTest {
 
   it should "fail to create a BigMatrix when there are no servers" in withMaster { _ =>
     withClient { client =>
-      whenReady(client.matrix[Long](100, 10).failed) {
-        case e => e shouldBe a[ModelCreationException]
+      val thrown = intercept[ModelCreationException] {
+        client.matrix[Long](100, 10)
       }
+      assert(thrown.isInstanceOf[ModelCreationException])
     }
   }
 
   it should "fail to create a BigMatrix when an invalid type is provided" in withMaster { _ =>
     withServer { server =>
       withClient { client =>
-        whenReady(client.matrix[Boolean](100, 10).failed) {
-          case e => e shouldBe a[ModelCreationException]
+        val thrown = intercept[ModelCreationException] {
+          client.matrix[Boolean](100, 10)
         }
+        assert(thrown.isInstanceOf[ModelCreationException])
       }
     }
   }
@@ -50,9 +51,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigMatrix with less rows than servers" in withMaster { _ =>
     withServers(3) { case _ =>
       withClient { client =>
-        val model = whenReady(client.matrix[Long](2, 10)) {
-          identity
-        }
+        val model = client.matrix[Long](2, 10)
         assert(model.isInstanceOf[BigMatrix[Long]])
       }
     }
@@ -61,9 +60,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigMatrix with more rows than servers" in withMaster { _ =>
     withServers(2) { _ =>
       withClient { client =>
-        val model = whenReady(client.matrix[Long](49, 7)) {
-          identity
-        }
+        val model = client.matrix[Long](49, 7)
         assert(model.isInstanceOf[BigMatrix[Long]])
       }
     }
@@ -72,11 +69,9 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigMatrix with one partial model per server" in withMaster { _ =>
     withServers(2) { _ =>
       withClient { client =>
-        val model = whenReady(client.matrix[Long](49, 7, 1)) {
-          identity
-        }
+        val model = client.matrix[Long](49, 7, 1)
         assert(model.isInstanceOf[BigMatrix[Long]])
-        println(model.asInstanceOf[AsyncBigMatrix[_,_,_]].nrOfPartitions == 2)
+        assert(model.asInstanceOf[AsyncBigMatrix[_, _, _]].nrOfPartitions == 2)
       }
     }
   }
@@ -84,9 +79,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigMatrix with multiple partial models per server" in withMaster { _ =>
     withServers(2) { _ =>
       withClient { client =>
-        val model = whenReady(client.matrix[Long](49, 7, 3)) {
-          identity
-        }
+        val model = client.matrix[Long](49, 7, 3)
         assert(model.isInstanceOf[BigMatrix[Long]])
         assert(model.asInstanceOf[AsyncBigMatrix[_, _, _]].nrOfPartitions == 6)
       }
@@ -96,11 +89,9 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigVector with one partial model per server" in withMaster { _ =>
     withServers(3) { _ =>
       withClient { client =>
-        val model = whenReady(client.vector[Long](4200, 1)) {
-          identity
-        }
+        val model = client.vector[Long](4200, 1)
         assert(model.isInstanceOf[BigVector[Long]])
-        println(model.asInstanceOf[AsyncBigVector[_, _, _]].nrOfPartitions == 3)
+        assert(model.asInstanceOf[AsyncBigVector[_, _, _]].nrOfPartitions == 3)
       }
     }
   }
@@ -108,9 +99,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigVector with multiple partial models per server" in withMaster { _ =>
     withServers(3) { _ =>
       withClient { client =>
-        val model = whenReady(client.vector[Long](4200, 8)) {
-          identity
-        }
+        val model = client.vector[Long](4200, 8)
         assert(model.isInstanceOf[BigVector[Long]])
         assert(model.asInstanceOf[AsyncBigVector[_, _, _]].nrOfPartitions == 24)
       }
@@ -120,9 +109,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigMatrix[Int]" in withMaster { _ =>
     withServer { server =>
       withClient { client =>
-        val model = whenReady(client.matrix[Int](49, 7)) {
-          identity
-        }
+        val model = client.matrix[Int](49, 7)
         assert(model.isInstanceOf[BigMatrix[Int]])
       }
     }
@@ -131,9 +118,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigMatrix[Long]" in withMaster { _ =>
     withServer { server =>
       withClient { client =>
-        val model = whenReady(client.matrix[Long](49, 7)) {
-          identity
-        }
+        val model = client.matrix[Long](49, 7)
         assert(model.isInstanceOf[BigMatrix[Long]])
       }
     }
@@ -142,9 +127,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigMatrix[Float]" in withMaster { _ =>
     withServer { server =>
       withClient { client =>
-        val model = whenReady(client.matrix[Float](49, 7)) {
-          identity
-        }
+        val model = client.matrix[Float](49, 7)
         assert(model.isInstanceOf[BigMatrix[Float]])
       }
     }
@@ -153,9 +136,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigMatrix[Double]" in withMaster { _ =>
     withServer { server =>
       withClient { client =>
-        val model = whenReady(client.matrix[Double](49, 7)) {
-          identity
-        }
+        val model = client.matrix[Double](49, 7)
         assert(model.isInstanceOf[BigMatrix[Double]])
       }
     }
@@ -164,9 +145,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigVector[Int]" in withMaster { _ =>
     withServer { server =>
       withClient { client =>
-        val model = whenReady(client.vector[Int](49)) {
-          identity
-        }
+        val model = client.vector[Int](49)
         assert(model.isInstanceOf[BigVector[Int]])
       }
     }
@@ -175,9 +154,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigVector[Long]" in withMaster { _ =>
     withServer { server =>
       withClient { client =>
-        val model = whenReady(client.vector[Long](490)) {
-          identity
-        }
+        val model = client.vector[Long](490)
         assert(model.isInstanceOf[BigVector[Long]])
       }
     }
@@ -186,9 +163,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigVector[Float]" in withMaster { _ =>
     withServer { server =>
       withClient { client =>
-        val model = whenReady(client.vector[Float](1)) {
-          identity
-        }
+        val model = client.vector[Float](1)
         assert(model.isInstanceOf[BigVector[Float]])
       }
     }
@@ -197,9 +172,7 @@ class ClientSpec extends FlatSpec with SystemTest {
   it should "be able to create a BigVector[Double]" in withMaster { _ =>
     withServer { server =>
       withClient { client =>
-        val model = whenReady(client.vector[Double](10000)) {
-          identity
-        }
+        val model = client.vector[Double](10000)
         assert(model.isInstanceOf[BigVector[Double]])
       }
     }

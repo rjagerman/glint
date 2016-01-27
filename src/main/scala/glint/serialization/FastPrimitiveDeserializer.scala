@@ -8,8 +8,8 @@ package glint.serialization
 private[glint] class FastPrimitiveDeserializer(bytes: Array[Byte]) {
 
   private val unsafe = SerializationConstants.unsafe
-  private var position: Long = 0
   private val offset = unsafe.arrayBaseOffset(classOf[Array[Byte]])
+  private var position: Long = 0
 
   @inline
   def readFloat(): Float = {

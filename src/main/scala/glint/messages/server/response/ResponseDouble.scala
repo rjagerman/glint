@@ -2,5 +2,7 @@ package glint.messages.server.response
 
 /**
   * A response containing doubles
+  *
+  * @param values The response values
   */
-case class ResponseDouble(values: Array[Double]) extends Response
+private[glint] case class ResponseDouble(values: Array[Double]) extends Response

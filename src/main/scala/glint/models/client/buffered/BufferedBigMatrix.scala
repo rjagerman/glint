@@ -1,20 +1,19 @@
 package glint.models.client.buffered
 
-import java.util.concurrent.Semaphore
-
 import akka.util.Timeout
 import breeze.linalg.Vector
 import glint.models.client.BigMatrix
 
-import scala.concurrent.{ExecutionContext, Future, Promise}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 /**
-  * A buffered big matrix that buffers numerous pushes before sending them in one go.
+  * A [[glint.models.client.BigMatrix BigMatrix]] that buffers numerous pushes before sending them in one go
   *
   * {{{
-  *   bufferedBigMatrix = new BufferedBigMatrix[Double](someBigMatrix, 1000)
-  *   bufferedBigMatrix.bufferedPush(2, 6, 10.0)
+  *   matrix = client.matrix[Double](10000, 100)
+  *   bufferedMatrix = new BufferedBigMatrix[Double](matrix, 1000)
+  *   bufferedMatrix.bufferedPush(2, 6, 10.0)
   *   if (bufferedBigMatrix.isFull) {
   *     bufferedBigMatrix.flush()
   *   }
@@ -29,14 +28,14 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
   private val bufferRows = new Array[Long](bufferSize)
   private val bufferCols = new Array[Int](bufferSize)
   private val bufferValues = new Array[V](bufferSize)
-  private val writeLock = new Semaphore(1)
   private var bufferIndex: Int = 0
-  private var promise: Promise[Boolean] = Promise[Boolean]()
 
   /**
-    * Pulls a set of rows
+    * Pulls a set of rows using the underlying BigMatrix implementation
     *
     * @param rows The indices of the rows
+    * @param timeout The timeout for this request
+    * @param ec The implicit execution context in which to execute the request
     * @return A future containing the vectors representing the rows
     */
   override def pull(rows: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[Vector[V]]] = {
@@ -44,18 +43,22 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
   }
 
   /**
-    * Destroys the big matrix and its resources on the parameter server
+    * Destroys the underlying big matrix and its resources on the parameter server
     *
+    * @param timeout The timeout for this request
+    * @param ec The implicit execution context in which to execute the request
     * @return A future whether the matrix was successfully destroyed
     */
   override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = underlying.destroy()
 
   /**
-    * Pushes a set of values
+    * Pushes a set of values using the underlying BigMatrix implementation
     *
     * @param rows The indices of the rows
     * @param cols The indices of the columns
     * @param values The values to update
+    * @param timeout The timeout for this request
+    * @param ec The implicit execution context in which to execute the request
     * @return A future containing either the success or failure of the operation
     */
   override def push(rows: Array[Long],
@@ -65,13 +68,16 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
   }
 
   /**
-    * Pushes a value into the buffer.
+    * Pushes a value into the buffer as long as there is space. Make sure to manually
+    * [[glint.models.client.buffered.BufferedBigMatrix.flush flush]] the buffer when it is full, use
+    * [[glint.models.client.buffered.BufferedBigMatrix.isFull isFull]] to check if the buffer is full. Attempting to
+    * push to the buffer when it is full and not flushed will cause a java.lang.IndexOutOfBoundsException.
     *
     * @param row The row
     * @param col The column
     * @param value The value
     */
-  def bufferedPush(row: Long, col: Int, value: V)(implicit timeout: Timeout, ec: ExecutionContext): Unit = {
+  def bufferedPush(row: Long, col: Int, value: V): Unit = {
     bufferRows(bufferIndex) = row
     bufferCols(bufferIndex) = col
     bufferValues(bufferIndex) = value
@@ -81,6 +87,8 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
   /**
     * Flushes the buffer to the parameter server.
     *
+    * @param timeout The timeout for this request
+    * @param ec The implicit execution context in which to execute the request
     * @return A future containing the success or failure of the operation
     */
   def flush()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
@@ -115,10 +123,12 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
   def size: Int = bufferIndex
 
   /**
-    * Pulls a set of elements
+    * Pulls a set of elements using the underlying BigMatrix implementation
     *
     * @param rows The indices of the rows
     * @param cols The corresponding indices of the columns
+    * @param timeout The timeout for this request
+    * @param ec The implicit execution context in which to execute the request
     * @return A future containing the values of the elements at given rows, columns
     */
   override def pull(rows: Array[Long],

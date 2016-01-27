@@ -34,24 +34,27 @@ Alternatively you can use the provided scripts in the `sbin` folder in combinati
 
 ## Example usage
 
-With your parameter server up and running you can use the library to connect to the parameter servers, construct distributed matrices/vectors and pull/push data.
+With your parameter servers up and running you can use the library to connect to the parameter servers, construct distributed matrices/vectors and pull/push data.
 
 The parameter server is designed to be highly asynchronous. The code uses common concurrency methods from scala. If you are unfamiliar with the concepts of Futures, ExecutionContext, etc. it is best to read up on those first.
 
 The first thing you want to do is construct a Client that is connected to the master:
 
-    import scala.concurrent.{Await, ExecutionContext}
-    import scala.concurrent.duration._
     import glint.Client
-    implicit val ec = ExecutionContext.Implicits.global
-    val client = Await.result(Client(ConfigFactory.parseFile(new java.io.File("<config-file>.conf"))), 30 seconds)
+    val client = Client(ConfigFactory.parseFile(new java.io.File("<config-file>.conf")))
 
 Now we can use this client object to construct a large model distributed over the parameter servers. The example below constructs a large matrix storing integers with 10000 rows and 10 columns:
 
-    val model = Await.result(client.matrix[Int](10000, 10), 30 seconds)
+    val model = client.matrix[Int](10000, 10)
     
 Next, this model can be used to pull/push data to and from the parameter server:
 
+    // First construct an execution context and timeout for the requests
+    import scala.concurrent.duration._
+    import akka.util.Timeout
+    implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
+    implicit val timeout = new Timeout(30 seconds)
+    
     // Push new data to row 999 and column 5
     // The parameter server aggregates pushes by adding it to the old value.
     // In this case we are adding 109 to the old value of (999, 5)

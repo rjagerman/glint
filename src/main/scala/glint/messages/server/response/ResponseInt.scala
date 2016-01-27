@@ -2,5 +2,7 @@ package glint.messages.server.response
 
 /**
   * A response containing integers
+  *
+  * @param values The response values
   */
-case class ResponseInt(values: Array[Int]) extends Response
+private[glint] case class ResponseInt(values: Array[Int]) extends Response

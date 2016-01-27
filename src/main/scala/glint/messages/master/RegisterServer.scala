@@ -3,6 +3,8 @@ package glint.messages.master
 import akka.actor.ActorRef
 
 /**
-  * Message send by a parameter server to the manager when it attempts to register itself
+  * Message that registers a parameter server
+  *
+  * @param server Reference to the server actor
   */
-case class RegisterServer(val server: ActorRef)
+private[glint] case class RegisterServer(val server: ActorRef)

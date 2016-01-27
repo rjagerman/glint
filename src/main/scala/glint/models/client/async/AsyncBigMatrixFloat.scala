@@ -7,15 +7,16 @@ import glint.indexing.Indexer
 import glint.messages.server.request.PushMatrixFloat
 import glint.messages.server.response.ResponseFloat
 import glint.partitioning.Partitioner
+import spire.implicits.cfor
 
 /**
   * Asynchronous implementation of a BigMatrix for floats
   */
-class AsyncBigMatrixFloat(partitioner: Partitioner[ActorRef],
-                          indexer: Indexer[Long],
-                          config: Config,
-                          rows: Long,
-                          cols: Int)
+private[glint] class AsyncBigMatrixFloat(partitioner: Partitioner[ActorRef],
+                                         indexer: Indexer[Long],
+                                         config: Config,
+                                         rows: Long,
+                                         cols: Int)
   extends AsyncBigMatrix[Float, ResponseFloat, PushMatrixFloat](partitioner, indexer, config, rows, cols) {
 
   /**
@@ -26,8 +27,13 @@ class AsyncBigMatrixFloat(partitioner: Partitioner[ActorRef],
     * @param end The end index
     * @return A vector for the range [start, end)
     */
+  @inline
   override protected def toVector(response: ResponseFloat, start: Int, end: Int): Vector[Float] = {
-    DenseVector(response.values.slice(start, end))
+    val result = DenseVector.zeros[Float](end - start)
+    cfor(0)(_ < end - start, _ + 1)(i => {
+      result(i) = response.values(start + i)
+    })
+    result
   }
 
   /**
@@ -38,6 +44,7 @@ class AsyncBigMatrixFloat(partitioner: Partitioner[ActorRef],
     * @param values The values
     * @return A PushMatrix message for type V
     */
+  @inline
   override protected def toPushMessage(rows: Array[Long], cols: Array[Int], values: Array[Float]): PushMatrixFloat = {
     PushMatrixFloat(rows, cols, values)
   }
@@ -49,6 +56,7 @@ class AsyncBigMatrixFloat(partitioner: Partitioner[ActorRef],
     * @param index The index
     * @return The value
     */
+  @inline
   override protected def toValue(response: ResponseFloat, index: Int): Float = response.values(index)
 
 }

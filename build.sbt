@@ -16,6 +16,11 @@ libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.14"
 
 libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.3.14"
 
+libraryDependencies <+= scalaVersion {
+  case x if x.startsWith("2.10") => "com.typesafe.akka" % "akka-stream-experimental_2.10" % "2.0.2"
+  case x if x.startsWith("2.11") => "com.typesafe.akka" % "akka-stream-experimental_2.11" % "2.0.2"
+}
+
 // Spire (generic fast numerics)
 
 libraryDependencies += "org.spire-math" %% "spire" % "0.7.4"
@@ -25,10 +30,6 @@ libraryDependencies += "org.spire-math" %% "spire" % "0.7.4"
 libraryDependencies += "org.scalanlp" %% "breeze" % "0.11.2"
 
 libraryDependencies += "org.scalanlp" %% "breeze-natives" % "0.11.2"
-
-// Spray
-
-libraryDependencies += "io.spray" % "spray-caching" % "1.3.1"
 
 // Unit tests
 
@@ -76,3 +77,7 @@ logBuffered := false
 
 parallelExecution in Test := false
 
+// Scala documentation
+scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value+"/doc/root.txt")
+scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Glint")
+scalacOptions in (Compile, doc) ++= Seq("-skip-packages", "akka")

@@ -7,15 +7,16 @@ import glint.indexing.Indexer
 import glint.messages.server.request.PushMatrixInt
 import glint.messages.server.response.ResponseInt
 import glint.partitioning.Partitioner
+import spire.implicits.cfor
 
 /**
   * Asynchronous implementation of a BigMatrix for integers
   */
-class AsyncBigMatrixInt(partitioner: Partitioner[ActorRef],
-                        indexer: Indexer[Long],
-                        config: Config,
-                        rows: Long,
-                        cols: Int)
+private[glint] class AsyncBigMatrixInt(partitioner: Partitioner[ActorRef],
+                                       indexer: Indexer[Long],
+                                       config: Config,
+                                       rows: Long,
+                                       cols: Int)
   extends AsyncBigMatrix[Int, ResponseInt, PushMatrixInt](partitioner, indexer, config, rows, cols) {
 
   /**
@@ -26,8 +27,13 @@ class AsyncBigMatrixInt(partitioner: Partitioner[ActorRef],
     * @param end The end index
     * @return A vector for the range [start, end)
     */
+  @inline
   override protected def toVector(response: ResponseInt, start: Int, end: Int): Vector[Int] = {
-    DenseVector(response.values.slice(start, end))
+    val result = DenseVector.zeros[Int](end - start)
+    cfor(0)(_ < end - start, _ + 1)(i => {
+      result(i) = response.values(start + i)
+    })
+    result
   }
 
   /**
@@ -38,6 +44,7 @@ class AsyncBigMatrixInt(partitioner: Partitioner[ActorRef],
     * @param values The values
     * @return A PushMatrix message for type V
     */
+  @inline
   override protected def toPushMessage(rows: Array[Long], cols: Array[Int], values: Array[Int]): PushMatrixInt = {
     PushMatrixInt(rows, cols, values)
   }
@@ -49,6 +56,7 @@ class AsyncBigMatrixInt(partitioner: Partitioner[ActorRef],
     * @param index The index
     * @return The value
     */
+  @inline
   override protected def toValue(response: ResponseInt, index: Int): Int = response.values(index)
 
 }

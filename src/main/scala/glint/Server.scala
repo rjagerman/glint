@@ -15,24 +15,24 @@ import scala.concurrent.{ExecutionContext, Future}
 /**
   * A parameter server
   */
-class Server extends Actor with ActorLogging {
+private[glint] class Server extends Actor with ActorLogging {
 
   override def receive: Receive = {
-
     case x =>
       log.warning(s"Received unknown message of type ${x.getClass}")
   }
 }
 
 /**
-  * Parameter server object
+  * The parameter server object
   */
-object Server extends StrictLogging {
+private[glint] object Server extends StrictLogging {
 
   /**
     * Starts a parameter server ready to receive commands
     *
     * @param config The configuration
+    * @return A future containing the started actor system and reference to the server actor
     */
   def run(config: Config): Future[(ActorSystem, ActorRef)] = {
 
