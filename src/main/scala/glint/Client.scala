@@ -28,7 +28,7 @@ import scala.reflect.runtime.universe.{TypeTag, typeOf}
   * @param system The actor system
   * @param master An actor reference to the master
   */
-protected class Client(val config: Config,
+class Client(val config: Config,
                        private[glint] val system: ActorSystem,
                        private[glint] val master: ActorRef) {
 
