@@ -17,9 +17,9 @@ class BufferedBigMatrixSpec extends FlatSpec with SystemTest with Matchers {
         val bufferedModel = new BufferedBigMatrix[Double](model, 4)
 
         // Perform 3 pushes into the buffer
-        bufferedModel.bufferedPush(0, 1, 0.54)
-        bufferedModel.bufferedPush(48, 5, -0.33)
-        bufferedModel.bufferedPush(0, 1, 1.5)
+        bufferedModel.pushToBuffer(0, 1, 0.54)
+        bufferedModel.pushToBuffer(48, 5, -0.33)
+        bufferedModel.pushToBuffer(0, 1, 1.5)
 
         // Assert that nothing has been pushed to the parameter servers yet
         val oldResult = whenReady(bufferedModel.pull(Array(0L, 48L), Array(1, 5))) {
@@ -43,7 +43,7 @@ class BufferedBigMatrixSpec extends FlatSpec with SystemTest with Matchers {
     }
   }
 
-  it should "automatically flush values when the buffer is full" in withMaster { _ =>
+  it should "stop adding to buffer when it is full" in withMaster { _ =>
     withServers(2) { _ =>
       withClient { client =>
         val model = client.matrix[Double](49, 6)
@@ -52,9 +52,9 @@ class BufferedBigMatrixSpec extends FlatSpec with SystemTest with Matchers {
         val bufferedModel = new BufferedBigMatrix[Double](model, 4)
 
         // Perform 3 pushes into the buffer
-        bufferedModel.bufferedPush(0, 1, 0.54)
-        bufferedModel.bufferedPush(48, 5, -0.33)
-        bufferedModel.bufferedPush(0, 1, 1.5)
+        bufferedModel.pushToBuffer(0, 1, 0.54)
+        bufferedModel.pushToBuffer(48, 5, -0.33)
+        bufferedModel.pushToBuffer(0, 1, 1.5)
 
         // Assert that nothing has been pushed to the parameter servers yet
         val oldResult = whenReady(bufferedModel.pull(Array(0L, 48L), Array(1, 5))) {
@@ -62,12 +62,14 @@ class BufferedBigMatrixSpec extends FlatSpec with SystemTest with Matchers {
         }
         oldResult should equal(Array(0.0, 0.0))
 
-        // Push another into the buffer, this time the buffer of size 4 is full and should automatically flush
-        val finalPush = bufferedModel.bufferedPush(0, 1, 0.3)
-        assert(finalPush.isDefined)
-        assert(whenReady(finalPush.get) {
-          identity
-        })
+        // Push another into the buffer
+        assert(bufferedModel.pushToBuffer(0, 1, 0.3))
+
+        // Attempting to push another value should return false
+        assert(!bufferedModel.pushToBuffer(0, 1, 0.3))
+
+        // Flush the values (without the last one, it was not added because the buffer was full)
+        bufferedModel.flush()
 
         // Assert that the results are now on the parameter server
         val future = bufferedModel.pull(Array(0L, 48L), Array(1, 5))
@@ -79,7 +81,7 @@ class BufferedBigMatrixSpec extends FlatSpec with SystemTest with Matchers {
     }
   }
 
-  it should "automatically flush values multiple times whenever the buffer is full" in withMaster { _ =>
+  it should "be able to flush the buffer multiple times" in withMaster { _ =>
     withServers(2) { _ =>
       withClient { client =>
         val model = client.matrix[Double](49, 6)
@@ -88,26 +90,25 @@ class BufferedBigMatrixSpec extends FlatSpec with SystemTest with Matchers {
         val bufferedModel = new BufferedBigMatrix[Double](model, 4)
 
         // Perform 4 pushes into the buffer, causing one flush
-        bufferedModel.bufferedPush(0, 1, 0.54)
-        bufferedModel.bufferedPush(48, 5, -0.33)
-        bufferedModel.bufferedPush(0, 1, 1.5)
-        assert(bufferedModel.bufferedPush(0, 1, 0.3).isDefined)
+        bufferedModel.pushToBuffer(0, 1, 0.54)
+        bufferedModel.pushToBuffer(48, 5, -0.33)
+        bufferedModel.pushToBuffer(0, 1, 1.5)
+        bufferedModel.pushToBuffer(0, 1, 0.3)
+        bufferedModel.flush()
 
         // Perform another 4 pushes into the buffer, causing one flush
-        bufferedModel.bufferedPush(0, 1, 0.54)
-        bufferedModel.bufferedPush(48, 5, -0.33)
-        bufferedModel.bufferedPush(0, 1, 1.5)
-        assert(bufferedModel.bufferedPush(0, 1, 0.3).isDefined)
+        bufferedModel.pushToBuffer(0, 1, 0.54)
+        bufferedModel.pushToBuffer(48, 5, -0.33)
+        bufferedModel.pushToBuffer(0, 1, 1.5)
+        bufferedModel.pushToBuffer(0, 1, 0.3)
+        bufferedModel.flush()
 
         // Perform final 4 pushes into the buffer, causing another flush
-        bufferedModel.bufferedPush(0, 1, 0.54)
-        bufferedModel.bufferedPush(48, 5, -0.33)
-        bufferedModel.bufferedPush(0, 1, 1.5)
-        val finalPush = bufferedModel.bufferedPush(0, 1, 0.3)
-        assert(finalPush.isDefined)
-        assert(whenReady(finalPush.get) {
-          identity
-        })
+        bufferedModel.pushToBuffer(0, 1, 0.54)
+        bufferedModel.pushToBuffer(48, 5, -0.33)
+        bufferedModel.pushToBuffer(0, 1, 1.5)
+        bufferedModel.pushToBuffer(0, 1, 0.3)
+        whenReady(bufferedModel.flush()) { identity }
 
         // Assert that the results are now on the parameter server
         val future = bufferedModel.pull(Array(0L, 48L), Array(1, 5))

@@ -28,7 +28,7 @@ private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag]
   /**
     * The data matrix containing the elements
     */
-  val data: Matrix[V]
+  val data: Array[Array[V]]
 
   /**
     * Gets rows from the data matrix
@@ -41,10 +41,11 @@ private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag]
     val a = new Array[V](rows.length * cols)
     while (i < rows.length) {
       var j = 0
-      while (j < cols) {
+      System.arraycopy(data(index(rows(i))), 0, a, i * cols, cols)
+      /*while (j < cols) {
         a(i * cols + j) = data(index(rows(i)), j)
         j += 1
-      }
+      }*/
       i += 1
     }
     a
@@ -61,7 +62,7 @@ private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag]
     var i = 0
     val a = new Array[V](rows.length)
     while (i < rows.length) {
-      a(i) = data(index(rows(i)), cols(i))
+      a(i) = data(index(rows(i)))(cols(i))
       i += 1
     }
     a
@@ -73,6 +74,7 @@ private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag]
     * @param key The global key
     * @return The local index in the data array
     */
+  @inline
   def index(key: Long): Int = (key - start).toInt
 
   /**
@@ -85,7 +87,7 @@ private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag]
   def update(rows: Array[Long], cols: Array[Int], values: Array[V]): Boolean = {
     var i = 0
     while (i < rows.length) {
-      data.update(index(rows(i)), cols(i), aggregate(data(index(rows(i)), cols(i)), values(i)))
+      data(index(rows(i)))(cols(i)) = aggregate(data(index(rows(i)))(cols(i)), values(i))
       i += 1
     }
     true
@@ -98,6 +100,7 @@ private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag]
     * @param value2 The second value
     * @return The aggregated value
     */
+  @inline
   def aggregate(value1: V, value2: V): V
 
 }

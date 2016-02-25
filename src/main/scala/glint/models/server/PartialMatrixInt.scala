@@ -15,7 +15,8 @@ private[glint] class PartialMatrixInt(start: Long,
                                      end: Long,
                                      cols: Int) extends PartialMatrix[Int](start, end, cols) {
 
-  override val data: Matrix[Int] = DenseMatrix.zeros[Int](rows, cols)
+  //override val data: Matrix[Int] = DenseMatrix.zeros[Int](rows, cols)
+  override val data: Array[Array[Int]] = Array.fill(rows)(Array.fill[Int](cols)(0))
 
   @inline
   override def aggregate(value1: Int, value2: Int): Int = value1 + value2

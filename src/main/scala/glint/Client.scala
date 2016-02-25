@@ -147,10 +147,10 @@ class Client(val config: Config,
                                                 partitioner: (Array[ActorRef]) => Partitioner[ActorRef]): BigVector[V] = {
 
     // Get a list of servers
-    val listOfServers = master ? new ServerList()
+    val listOfServers = (master ? new ServerList()).mapTo[Array[ActorRef]]
 
     // Spawn models on the servers and get a list of the models
-    val listOfModels = listOfServers.mapTo[Array[ActorRef]].map { servers =>
+    val listOfModels = listOfServers.map { servers =>
       val nrOfServers = Math.min(keys, servers.length).toInt
       if (nrOfServers <= 0) {
         throw new ModelCreationException("Cannot create a model with 0 parameter servers")

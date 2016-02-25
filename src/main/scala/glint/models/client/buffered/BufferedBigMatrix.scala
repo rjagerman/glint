@@ -68,23 +68,23 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
   }
 
   /**
-    * Pushes a value into the buffer as long as there is space. If the buffer is full this method will automatically
-    * flush the buffer to the parameter server. It will either return an option that is either set to a future when the
-    * buffer was flushed or set to None when the buffer is not yet full.
+    * Pushes a value into the buffer as long as there is space.
     *
     * @param row The row
     * @param col The column
     * @param value The value
-    * @return An option set to Future[Boolean] if a flush occurred or None if no flush occurred
+    * @return True if the values were succesfully added to the buffer, false if the buffer was full
     */
-  def bufferedPush(row: Long,
-                   col: Int,
-                   value: V)(implicit timeout: Timeout, ec: ExecutionContext): Option[Future[Boolean]] = {
+  @inline
+  def pushToBuffer(row: Long, col: Int, value: V): Boolean = {
+    if (isFull) {
+      return false
+    }
     bufferRows(bufferIndex) = row
     bufferCols(bufferIndex) = col
     bufferValues(bufferIndex) = value
     bufferIndex += 1
-    flushIfFull()
+    true
   }
 
   /**
@@ -100,44 +100,27 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
         true
       }
     } else {
-      var index: Int = 0
       val pushRows = new Array[Long](bufferIndex)
       val pushCols = new Array[Int](bufferIndex)
       val pushValues = new Array[V](bufferIndex)
-      while (index < bufferIndex) {
-        pushRows(index) = bufferRows(index)
-        pushCols(index) = bufferCols(index)
-        pushValues(index) = bufferValues(index)
-        index += 1
-      }
+      System.arraycopy(bufferRows, 0, pushRows, 0, bufferIndex)
+      System.arraycopy(bufferCols, 0, pushCols, 0, bufferIndex)
+      System.arraycopy(bufferValues, 0, pushValues, 0, bufferIndex)
       bufferIndex = 0
       underlying.push(pushRows, pushCols, pushValues)
     }
   }
 
   /**
-    * Flushes the buffer to the parameter server if it is full.
-    *
-    * @param timeout The timeout for this request
-    * @param ec The implicit execution context in which to execute the request
-    * @return A future containing the success or failure of the operation
-    */
-  def flushIfFull()(implicit timeout: Timeout, ec: ExecutionContext): Option[Future[Boolean]] = {
-    if (isFull) {
-      Some(flush())
-    } else {
-      None
-    }
-  }
-
-  /**
     * @return True if the buffer is full, false otherwise
     */
+  @inline
   def isFull: Boolean = size == bufferSize
 
   /**
     * @return The size of the current buffer (in number of elements)
     */
+  @inline
   def size: Int = bufferIndex
 
   /**

@@ -15,7 +15,8 @@ private[glint] class PartialMatrixDouble(start: Long,
                                         end: Long,
                                         cols: Int) extends PartialMatrix[Double](start, end, cols) {
 
-  override val data: Matrix[Double] = DenseMatrix.zeros[Double](rows, cols)
+  //DenseMatrix.zeros[Double](rows, cols)
+  override val data: Array[Array[Double]] = Array.fill(rows)(Array.fill[Double](cols)(0.0))
 
   @inline
   override def aggregate(value1: Double, value2: Double): Double = value1 + value2

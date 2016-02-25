@@ -15,7 +15,8 @@ private[glint] class PartialMatrixFloat(start: Long,
                                        end: Long,
                                        cols: Int) extends PartialMatrix[Float](start, end, cols) {
 
-  override val data: Matrix[Float] = DenseMatrix.zeros[Float](rows, cols)
+  //override val data: Matrix[Float] = DenseMatrix.zeros[Float](rows, cols)
+  override val data: Array[Array[Float]] = Array.fill(rows)(Array.fill[Float](cols)(0.0f))
 
   @inline
   override def aggregate(value1: Float, value2: Float): Float = value1 + value2
