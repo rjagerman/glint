@@ -83,9 +83,13 @@ trait SystemTest extends ScalaFutures {
       |          "glint.messages.server.request.PushVectorInt" = requestserializer
       |          "glint.messages.server.request.PushVectorLong" = requestserializer
       |          "glint.messages.server.response.ResponseDouble" = responseserializer
+      |          "glint.messages.server.response.ResponseRowsDouble" = responseserializer
       |          "glint.messages.server.response.ResponseFloat" = responseserializer
+      |          "glint.messages.server.response.ResponseRowsFloat" = responseserializer
       |          "glint.messages.server.response.ResponseInt" = responseserializer
+      |          "glint.messages.server.response.ResponseRowsInt" = responseserializer
       |          "glint.messages.server.response.ResponseLong" = responseserializer
+      |          "glint.messages.server.response.ResponseRowsLong" = responseserializer
       |        }
       |      }
       |    }

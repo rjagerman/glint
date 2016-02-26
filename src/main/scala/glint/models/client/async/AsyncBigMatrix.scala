@@ -10,10 +10,9 @@ import akka.util.Timeout
 import breeze.linalg.{DenseVector, Vector}
 import breeze.math.Semiring
 import com.typesafe.config.Config
-import glint.indexing.Indexer
 import glint.messages.server.request.{PullMatrix, PullMatrixRows}
 import glint.models.client.BigMatrix
-import glint.partitioning.Partitioner
+import glint.partitioning.{Partition, Partitioner}
 import spire.implicits.cforRange
 
 import scala.concurrent.duration._
@@ -27,8 +26,8 @@ import scala.reflect.ClassTag
   *   client.matrix[Double](rows, columns)
   * }}}
   *
-  * @param partitioner A partitioner to map rows to parameter servers
-  * @param indexer An indexer to remap rows
+  * @param partitioner A partitioner to map rows to partitions
+  * @param matrices The references to the partial matrices on the parameter servers
   * @param config The glint configuration (used for serialization/deserialization construction of actorsystems)
   * @param rows The number of rows
   * @param cols The number of columns
@@ -36,8 +35,8 @@ import scala.reflect.ClassTag
   * @tparam R The type of responses we expect to get from the parameter servers
   * @tparam P The type of push requests we should send to the parameter servers
   */
-abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, P: ClassTag](partitioner: Partitioner[ActorRef],
-                                                                                             indexer: Indexer[Long],
+abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, P: ClassTag](partitioner: Partitioner,
+                                                                                             matrices: Array[ActorRef],
                                                                                              config: Config,
                                                                                              rows: Long,
                                                                                              cols: Int)
@@ -53,17 +52,14 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     */
   override def pull(rows: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[Vector[V]]] = {
 
-    // Reindex keys appropriately
-    val indexedRows = rows.map(indexer.index)
-
     // Send pull request of the list of keys
-    val pulls = indexedRows.groupBy(partitioner.partition).map {
+    val pulls = rows.groupBy(partitioner.partition).map {
       case (partition, partitionKeys) =>
-        (partition ? PullMatrixRows(partitionKeys)).mapTo[R]
+        (matrices(partition.index) ? PullMatrixRows(partitionKeys)).mapTo[R]
     }
 
     // Obtain key indices after partitioning so we can place the results in a correctly ordered array
-    val indices = indexedRows.zipWithIndex.groupBy {
+    val indices = rows.zipWithIndex.groupBy {
       case (k, i) => partitioner.partition(k)
     }.map {
       case (_, arr) => arr.map(_._2)
@@ -98,18 +94,15 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     */
   override def pull(rows: Array[Long], cols: Array[Int])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[V]] = {
 
-    // Reindex keys appropriately
-    val indexedRows = rows.map(indexer.index)
-
     // Send pull request of the list of keys
-    val pulls = mapPartitions(indexedRows) {
+    val pulls = mapPartitions(rows) {
       case (partition, indices) =>
-        val pullMessage = PullMatrix(indices.map(indexedRows).toArray, indices.map(cols).toArray)
-        (partition ? pullMessage).mapTo[R]
+        val pullMessage = PullMatrix(indices.map(rows).toArray, indices.map(cols).toArray)
+        (matrices(partition.index) ? pullMessage).mapTo[R]
     }
 
     // Obtain key indices after partitioning so we can place the results in a correctly ordered array
-    val indices = indexedRows.zipWithIndex.groupBy {
+    val indices = rows.zipWithIndex.groupBy {
       case (k, i) => partitioner.partition(k)
     }.map {
       case (_, arr) => arr.map(_._2)
@@ -146,13 +139,10 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     */
   override def push(rows: Array[Long], cols: Array[Int], values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
 
-    // Reindex rows appropriately
-    val indexedRows = rows.map(indexer.index)
-
     // Send push requests
-    val pushes = mapPartitions(indexedRows) {
+    val pushes = mapPartitions(rows) {
       case (partition, indices) =>
-        (partition ? toPushMessage(indices.map(indexedRows).toArray, indices.map(cols).toArray, indices.map(values).toArray)).mapTo[Boolean]
+        (matrices(partition.index) ? toPushMessage(indices.map(rows).toArray, indices.map(cols).toArray, indices.map(values).toArray)).mapTo[Boolean]
     }
 
     // Combine and aggregate futures
@@ -170,7 +160,7 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     * @return An iterable over the partitioned results
     */
   @inline
-  private def mapPartitions[T](rows: Seq[Long])(func: (ActorRef, Seq[Int]) => T): Iterable[T] = {
+  private def mapPartitions[T](rows: Seq[Long])(func: (Partition, Seq[Int]) => T): Iterable[T] = {
     rows.indices.groupBy(i => partitioner.partition(rows(i))).map { case (a, b) => func(a, b) }
   }
 
@@ -180,9 +170,9 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     * @return A future whether the matrix was successfully destroyed
     */
   override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
-    val partitionFutures = partitioner.partitions.map {
-      case partition => gracefulStop(partition, 60 seconds)
-    }
+    val partitionFutures = partitioner.all().map {
+      case partition => gracefulStop(matrices(partition.index), 60 seconds)
+    }.toIterator
     Future.sequence(partitionFutures).transform(successes => successes.forall(success => success), err => err)
   }
 
@@ -190,7 +180,7 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     * @return The number of partitions this big matrix's data is spread across
     */
   def nrOfPartitions: Int = {
-    partitioner.partitions.length
+    partitioner.all().length
   }
 
   /**

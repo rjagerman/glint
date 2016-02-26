@@ -1,11 +1,11 @@
-package glint
+package glint.mocking
 
 import akka.pattern.AskTimeoutException
 import akka.util.Timeout
 import breeze.linalg.{DenseVector, Vector}
 import glint.models.client.BigMatrix
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
 
 /**

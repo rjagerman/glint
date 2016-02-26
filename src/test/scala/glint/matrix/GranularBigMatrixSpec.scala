@@ -1,5 +1,6 @@
-package glint
+package glint.matrix
 
+import glint.SystemTest
 import glint.models.client.granular.GranularBigMatrix
 import org.scalatest.{FlatSpec, Matchers}
 

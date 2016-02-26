@@ -1,8 +1,7 @@
-package glint
+package glint.serialization
 
 import glint.messages.server.request._
 import glint.messages.server.response._
-import glint.serialization.{RequestSerializer, ResponseSerializer}
 import org.scalatest.{FlatSpec, Matchers}
 
 /**

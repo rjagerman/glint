@@ -1,7 +1,8 @@
-package glint
+package glint.vector
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
+import glint.SystemTest
 import glint.models.client.BigVector
 import org.scalatest.{FlatSpec, Matchers}
 

@@ -1,6 +1,8 @@
-package glint
+package glint.matrix
 
 import akka.pattern.AskTimeoutException
+import glint.SystemTest
+import glint.mocking.MockBigMatrix
 import glint.models.client.retry.RetryBigMatrix
 import org.scalatest.{FlatSpec, Matchers}
 

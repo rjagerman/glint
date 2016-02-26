@@ -21,6 +21,8 @@ libraryDependencies <+= scalaVersion {
   case x if x.startsWith("2.11") => "com.typesafe.akka" % "akka-stream-experimental_2.11" % "2.0.2"
 }
 
+libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.3.14"
+
 // Spire (generic fast numerics)
 
 libraryDependencies += "org.spire-math" %% "spire" % "0.7.4"

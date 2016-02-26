@@ -2,28 +2,25 @@ package glint.models.server
 
 import breeze.linalg.{DenseMatrix, Matrix}
 import glint.messages.server.request.{PullMatrix, PullMatrixRows, PushMatrixLong}
-import glint.messages.server.response.ResponseLong
+import glint.messages.server.response.{ResponseRowsLong, ResponseLong}
+import glint.partitioning.Partition
+import spire.implicits._
 
 /**
   * A partial matrix holding longs
   *
-  * @param start The row start index
-  * @param end The row end index
+  * @param partition The row start index
   * @param cols The number of columns
   */
-private[glint] class PartialMatrixLong(start: Long,
-                                      end: Long,
-                                      cols: Int) extends PartialMatrix[Long](start, end, cols) {
+private[glint] class PartialMatrixLong(partition: Partition,
+                                       cols: Int) extends PartialMatrix[Long](partition, cols) {
 
   //override val data: Matrix[Long] = DenseMatrix.zeros[Long](rows, cols)
   override val data: Array[Array[Long]] = Array.fill(rows)(Array.fill[Long](cols)(0L))
 
-  @inline
-  override def aggregate(value1: Long, value2: Long): Long = value1 + value2
-
   override def receive: Receive = {
     case pull: PullMatrix => sender ! ResponseLong(get(pull.rows, pull.cols))
-    case pull: PullMatrixRows => sender ! ResponseLong(getRows(pull.rows))
+    case pull: PullMatrixRows => sender ! ResponseRowsLong(getRows(pull.rows), cols)
     case push: PushMatrixLong => sender ! update(push.rows, push.cols, push.values)
   }
 }

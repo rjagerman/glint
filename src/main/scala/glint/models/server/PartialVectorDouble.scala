@@ -1,21 +1,18 @@
 package glint.models.server
 
-import breeze.linalg.{DenseVector, Vector}
 import glint.messages.server.request.{PullVector, PushVectorDouble}
 import glint.messages.server.response.ResponseDouble
+import glint.partitioning.Partition
+import spire.implicits._
 
 /**
   * A partial vector holding doubles
   *
-  * @param start The start index
-  * @param end The end index
+  * @param partition The partition
   */
-private[glint] class PartialVectorDouble(start: Long, end: Long) extends PartialVector[Double](start, end) {
+private[glint] class PartialVectorDouble(partition: Partition) extends PartialVector[Double](partition) {
 
-  override val data: Vector[Double] = DenseVector.zeros[Double](size)
-
-  @inline
-  override def aggregate(value1: Double, value2: Double): Double = value1 + value2
+  override val data: Array[Double] = new Array[Double](size)
 
   override def receive: Receive = {
     case pull: PullVector => sender ! ResponseDouble(get(pull.keys))

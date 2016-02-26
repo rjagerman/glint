@@ -3,7 +3,6 @@ package glint.models.client.async
 import akka.actor.ActorRef
 import breeze.linalg.{DenseVector, Vector}
 import com.typesafe.config.Config
-import glint.indexing.Indexer
 import glint.messages.server.request.PushMatrixFloat
 import glint.messages.server.response.ResponseFloat
 import glint.partitioning.Partitioner
@@ -12,12 +11,12 @@ import spire.implicits.cfor
 /**
   * Asynchronous implementation of a BigMatrix for floats
   */
-private[glint] class AsyncBigMatrixFloat(partitioner: Partitioner[ActorRef],
-                                         indexer: Indexer[Long],
+private[glint] class AsyncBigMatrixFloat(partitioner: Partitioner,
+                                         matrices: Array[ActorRef],
                                          config: Config,
                                          rows: Long,
                                          cols: Int)
-  extends AsyncBigMatrix[Float, ResponseFloat, PushMatrixFloat](partitioner, indexer, config, rows, cols) {
+  extends AsyncBigMatrix[Float, ResponseFloat, PushMatrixFloat](partitioner, matrices, config, rows, cols) {
 
   /**
     * Converts the values in given response starting at index start to index end to a vector

@@ -2,7 +2,6 @@ package glint.models.client.async
 
 import akka.actor.ActorRef
 import com.typesafe.config.Config
-import glint.indexing.Indexer
 import glint.messages.server.request.PushVectorInt
 import glint.messages.server.response.ResponseInt
 import glint.partitioning.Partitioner
@@ -10,11 +9,11 @@ import glint.partitioning.Partitioner
 /**
   * Asynchronous implementation of a BigVector for integers
   */
-private[glint] class AsyncBigVectorInt(partitioner: Partitioner[ActorRef],
-                                       indexer: Indexer[Long],
+private[glint] class AsyncBigVectorInt(partitioner: Partitioner,
+                                       models: Array[ActorRef],
                                        config: Config,
                                        keys: Long)
-  extends AsyncBigVector[Int, ResponseInt, PushVectorInt](partitioner, indexer, config, keys) {
+  extends AsyncBigVector[Int, ResponseInt, PushVectorInt](partitioner, models, config, keys) {
 
   /**
     * Creates a push message from given sequence of keys and values

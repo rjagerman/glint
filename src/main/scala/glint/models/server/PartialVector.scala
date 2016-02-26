@@ -1,32 +1,29 @@
 package glint.models.server
 
 import akka.actor.{Actor, ActorLogging}
-import breeze.linalg.Vector
-import breeze.math.Semiring
+import glint.partitioning.Partition
+import spire.algebra.Semiring
+import spire.implicits._
 
 import scala.reflect.ClassTag
 
 /**
   * A partial model representing a part of some vector
   *
-  * @param start The start index
-  * @param end The end index
+  * @param partition The partition
   * @tparam V The type of value to store
   */
-private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag](val start: Long,
-                                                                                 val end: Long) extends Actor with ActorLogging {
-
-  log.info(s"Constructing PartialVector[${implicitly[ClassTag[V]]}] for keys [$start, $end)")
+private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag](partition: Partition) extends Actor with ActorLogging {
 
   /**
     * The size of this partial vector
     */
-  val size: Int = (end - start).toInt
+  val size: Int = partition.size
 
   /**
     * The data matrix containing the elements
     */
-  val data: Vector[V]
+  val data: Array[V]
 
   /**
     * Updates the data of this partial model by aggregating given keys and values into it
@@ -37,7 +34,8 @@ private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag]
   def update(keys: Array[Long], values: Array[V]): Boolean = {
     var i = 0
     while (i < keys.length) {
-      data.update(index(keys(i)), aggregate(data(index(keys(i))), values(i)))
+      val key = partition.globalToLocal(keys(i))
+      data(key) += values(i)
       i += 1
     }
     true
@@ -53,27 +51,13 @@ private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag]
     var i = 0
     val a = new Array[V](keys.length)
     while (i < keys.length) {
-      a(i) = data(index(keys(i)))
+      val key = partition.globalToLocal(keys(i))
+      a(i) = data(key)
       i += 1
     }
     a
   }
 
-  /**
-    * Obtains the local integer index of a given global key
-    *
-    * @param key The global key
-    * @return The local index in the data array
-    */
-  def index(key: Long): Int = (key - start).toInt
-
-  /**
-    * Aggregates to values of type V together
-    *
-    * @param value1 The first value
-    * @param value2 The second value
-    * @return The aggregated value
-    */
-  def aggregate(value1: V, value2: V): V
+  log.info(s"Constructed PartialVector[${implicitly[ClassTag[V]]}] of size $size (partition id: ${partition.index})")
 
 }
