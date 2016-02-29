@@ -1,10 +1,9 @@
 package glint.iterators
 
 import akka.util.Timeout
-import breeze.linalg.Vector
 import glint.models.client.BigMatrix
 
-import scala.concurrent.{Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * An iterator over the columns of a matrix (much more overhead than row iterator due to the way the matrix is stored)

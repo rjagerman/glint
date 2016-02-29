@@ -4,7 +4,7 @@ import akka.util.Timeout
 import breeze.linalg.Vector
 import glint.models.client.BigMatrix
 
-import scala.concurrent.{Await, Future, ExecutionContext}
+import scala.concurrent.{ExecutionContext, Future}
 
 /**
   * An iterator over blocks of rows of a big matrix that attempts to prefetch next blocks through a pipelined design
@@ -21,7 +21,11 @@ class RowBlockIterator[V](val matrix: BigMatrix[V],
   if (matrix.cols == 0 || matrix.rows == 0) {
     total = 0
   } else {
-    val inc = if (matrix.rows % blockSize == 0) { 0 } else { 1 }
+    val inc = if (matrix.rows % blockSize == 0) {
+      0
+    } else {
+      1
+    }
     total = inc + (matrix.rows / blockSize).toInt
   }
 

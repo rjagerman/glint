@@ -1,7 +1,8 @@
 package glint.iterators
 
 import akka.util.Timeout
-import scala.concurrent.{Await, Future, ExecutionContext}
+
+import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
   * An iterator that attempts to prefetch next futures through a pipelined design
@@ -12,6 +13,7 @@ import scala.concurrent.{Await, Future, ExecutionContext}
 abstract class PipelineIterator[T]()(implicit ec: ExecutionContext, timeout: Timeout) extends Iterator[T] {
 
   protected def fetchNextFuture(): Future[T]
+
   protected var index: Int = 0
   protected var total: Int = 0
   private var nextFuture: Future[T] = fetchNextFuture()
