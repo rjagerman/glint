@@ -1,13 +1,10 @@
 package glint.iterators
 
 import akka.util.Timeout
-import breeze.linalg.Vector
-import glint.models.client.BigMatrix
-
 import scala.concurrent.{Await, Future, ExecutionContext}
 
 /**
-  * A pipelined iterator that attempts to prefetch next futures through a pipelined design
+  * An iterator that attempts to prefetch next futures through a pipelined design
   *
   * @param ec The implicit execution context in which to execute requests
   * @param timeout The timeout

@@ -7,7 +7,7 @@ import glint.models.client.BigMatrix
 import scala.concurrent.ExecutionContext
 
 /**
-  * An iterator over the rows of a matrix
+  * An iterator over the rows of a matrix. It uses the pipelined RowBlockIterator internally
   *
   * @param matrix The underlying matrix to iterate over
   * @param blockSize The number of rows to pull per request (default: 100)

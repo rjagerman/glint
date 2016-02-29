@@ -8,6 +8,7 @@ import scala.concurrent.{Future, ExecutionContext}
 
 /**
   * An iterator over the columns of a matrix (much more overhead than row iterator due to the way the matrix is stored)
+  * Attempts to prefetch next columns through a pipelined design
   *
   * @param matrix The matrix
   * @param ec The implicit execution context in which to execute requests

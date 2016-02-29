@@ -7,8 +7,7 @@ import glint.models.client.BigMatrix
 import scala.concurrent.{Await, Future, ExecutionContext}
 
 /**
-  * This is an iterator over blocks of rows of a big matrix that attempts to prefetch next blocks through a pipelined
-  * design
+  * An iterator over blocks of rows of a big matrix that attempts to prefetch next blocks through a pipelined design
   *
   * @param matrix The big matrix to iterate over
   * @param blockSize How many rows to retrieve per iteration
