@@ -11,15 +11,18 @@ import scala.reflect.ClassTag
 /**
   * A mock big matrix that stores all data internally
   *
-  * @param rows The number of rows
+  * @param nrOfRows The number of rows
   * @param cols The number of cols
   * @param default The default value
   * @param aggregate Aggregation function for combining two values (typically addition)
   * @tparam V The type of values to store
   */
-class MockBigMatrix[V: ClassTag](rows: Int, cols: Int, default: V, aggregate: (V, V) => V) extends BigMatrix[V] {
+class MockBigMatrix[V: ClassTag](nrOfRows: Int, val cols: Int, default: V,
+                                 aggregate: (V, V) => V) extends BigMatrix[V] {
 
-  private val data = Array.fill[Array[V]](rows)(Array.fill[V](cols)(default))
+  val rows: Long = nrOfRows
+
+  private val data = Array.fill[Array[V]](nrOfRows)(Array.fill[V](cols)(default))
   private var destroyed: Boolean = false
 
   /**
@@ -53,7 +56,7 @@ class MockBigMatrix[V: ClassTag](rows: Int, cols: Int, default: V, aggregate: (V
         val array = new Array[Vector[V]](rows.length)
         var i = 0
         while (i < rows.length) {
-          array(i) = DenseVector(data(i))
+          array(i) = DenseVector(data(rows(i).toInt))
           i += 1
         }
         array
@@ -93,7 +96,9 @@ class MockBigMatrix[V: ClassTag](rows: Int, cols: Int, default: V, aggregate: (V
       Future {
         var i = 0
         while (i < rows.length) {
-          data(rows(i).toInt)(cols(i)) = aggregate(data(rows(i).toInt)(cols(i)), values(i))
+          val row = rows(i).toInt
+          val col = cols(i)
+          data(row)(col) = aggregate(data(row)(col), values(i))
           i += 1
         }
         true

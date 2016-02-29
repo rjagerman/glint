@@ -17,7 +17,9 @@ import scala.reflect.ClassTag
   */
 class MockBigVector[V: ClassTag](keys: Int, cols: Int, default: V, aggregate: (V, V) => V) extends BigVector[V] {
 
-  private val data = Array.fill[V](keys)(default)
+  val size: Long = keys
+
+  private val data = Array.fill[V](keys.toInt)(default)
   private var destroyed: Boolean = false
 
   /**

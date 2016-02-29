@@ -19,13 +19,14 @@ import scala.reflect.ClassTag
   * }}}
   *
   * @param underlying The underlying big matrix
-  * @param cols The number of columns in the big matrix
   * @param maximumMessageSize The maximum message size
   * @tparam V The type of values to store
   */
 class GranularBigMatrix[V: ClassTag](underlying: BigMatrix[V],
-                                     cols: Int,
                                      maximumMessageSize: Int) extends BigMatrix[V] {
+
+  val rows: Long = underlying.rows
+  val cols: Int = underlying.cols
 
   /**
     * Pulls a set of rows while attempting to keep individual network messages smaller than `maximumMessageSize`

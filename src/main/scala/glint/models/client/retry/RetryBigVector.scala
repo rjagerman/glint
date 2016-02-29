@@ -14,6 +14,8 @@ import scala.concurrent.{Future, ExecutionContext}
   */
 class RetryBigVector[@specialized V](underlying: BigVector[V], val attempts: Int = 3) extends BigVector[V] {
 
+  val size: Long = underlying.size
+
   /**
     * Destroys the big Vector and its resources on the parameter server
     *

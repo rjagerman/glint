@@ -25,6 +25,9 @@ import scala.reflect.ClassTag
   */
 class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], bufferSize: Int) extends BigMatrix[V] {
 
+  val rows: Long = underlying.rows
+  val cols: Int = underlying.cols
+
   private val bufferRows = new Array[Long](bufferSize)
   private val bufferCols = new Array[Int](bufferSize)
   private val bufferValues = new Array[V](bufferSize)

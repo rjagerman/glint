@@ -28,7 +28,7 @@ import scala.reflect.ClassTag
   *
   * @param partitioner A partitioner to map keys to parameter servers
   * @param models The partial models on the parameter servers
-  * @param rows The number of rows
+  * @param size The number of keys
   * @tparam V The type of values to store
   * @tparam R The type of responses we expect to get from the parameter servers
   * @tparam P The type of push requests we should send to the parameter servers
@@ -36,7 +36,7 @@ import scala.reflect.ClassTag
 abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, P: ClassTag](partitioner: Partitioner,
                                                                                              models: Array[ActorRef],
                                                                                              config: Config,
-                                                                                             rows: Long)
+                                                                                             val size: Long)
   extends BigVector[V] {
 
   /**

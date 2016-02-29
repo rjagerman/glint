@@ -38,8 +38,8 @@ import scala.reflect.ClassTag
 abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, P: ClassTag](partitioner: Partitioner,
                                                                                              matrices: Array[ActorRef],
                                                                                              config: Config,
-                                                                                             rows: Long,
-                                                                                             cols: Int)
+                                                                                             val rows: Long,
+                                                                                             val cols: Int)
   extends BigMatrix[V] {
 
   /**

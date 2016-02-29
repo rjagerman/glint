@@ -15,6 +15,9 @@ import scala.concurrent.{Future, ExecutionContext}
   */
 class RetryBigMatrix[@specialized V](underlying: BigMatrix[V], val attempts: Int = 3) extends BigMatrix[V] {
 
+  val rows: Long = underlying.rows
+  val cols: Int = underlying.cols
+
   /**
     * Pulls a set of rows
     *
