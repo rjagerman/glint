@@ -38,14 +38,15 @@ private[glint] class AsyncBigMatrixFloat(partitioner: Partitioner,
   /**
     * Creates a push message from given sequence of rows, columns and values
     *
+    * @param id The identifier
     * @param rows The rows
     * @param cols The columns
     * @param values The values
     * @return A PushMatrix message for type V
     */
   @inline
-  override protected def toPushMessage(rows: Array[Long], cols: Array[Int], values: Array[Float]): PushMatrixFloat = {
-    PushMatrixFloat(rows, cols, values)
+  override protected def toPushMessage(id: Int, rows: Array[Long], cols: Array[Int], values: Array[Float]): PushMatrixFloat = {
+    PushMatrixFloat(id, rows, cols, values)
   }
 
   /**

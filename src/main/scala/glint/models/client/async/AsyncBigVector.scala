@@ -51,7 +51,9 @@ abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, 
     val pulls = mapPartitions(keys) {
       case (partition, indices) =>
         val pullMessage = PullVector(indices.map(keys).toArray)
-        (models(partition.index) ? pullMessage).mapTo[R]
+        val fsm = new PullFSM[PullVector, R](pullMessage, models(partition.index))
+        fsm.run()
+        //(models(partition.index) ? pullMessage).mapTo[R]
     }
 
     // Obtain key indices after partitioning so we can place the results in a correctly ordered array
@@ -106,7 +108,12 @@ abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, 
     // Send push requests
     val pushes = mapPartitions(keys) {
       case (partition, indices) =>
-        (models(partition.index) ? toPushMessage(indices.map(keys).toArray, indices.map(values).toArray)).mapTo[Boolean]
+        val ks = indices.map(keys).toArray
+        val vs = indices.map(values).toArray
+        val fsm = new PushFSM[P]((id) => toPushMessage(id, ks, vs), models(partition.index), 5)
+        fsm.run()
+        //(models(partition.index) ? toPushMessage(0, indices.map(keys).toArray, indices.map(values).toArray))
+        //.mapTo[Boolean]
     }
 
     // Combine and aggregate futures
@@ -146,12 +153,13 @@ abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, 
   /**
     * Creates a push message from given sequence of keys and values
     *
+    * @param id The identifier
     * @param keys The rows
     * @param values The values
     * @return A PushMatrix message for type V
     */
   @inline
-  protected def toPushMessage(keys: Array[Long], values: Array[V]): P
+  protected def toPushMessage(id: Int, keys: Array[Long], values: Array[V]): P
 
   /**
     * Deserializes this instance. This starts an ActorSystem with appropriate configuration before attempting to
@@ -163,7 +171,7 @@ abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, 
   @throws(classOf[IOException])
   private def readObject(in: ObjectInputStream): Unit = {
     val config = in.readObject().asInstanceOf[Config]
-    val as = ActorSystem("AsyncBigMatrix", config.getConfig("glint.client"))
+    val as = DeserializationHelper.getActorSystem(config.getConfig("glint.client"))
     JavaSerializer.currentSystem.withValue(as.asInstanceOf[ExtendedActorSystem]) {
       in.defaultReadObject()
     }

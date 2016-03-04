@@ -4,7 +4,6 @@ import java.io.{IOException, ObjectInputStream, ObjectOutputStream}
 
 import akka.actor.{ActorRef, ActorSystem, ExtendedActorSystem}
 import akka.pattern.Patterns.gracefulStop
-import akka.pattern.ask
 import akka.serialization.JavaSerializer
 import akka.util.Timeout
 import breeze.linalg.{DenseVector, Vector}
@@ -55,7 +54,10 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     // Send pull request of the list of keys
     val pulls = rows.groupBy(partitioner.partition).map {
       case (partition, partitionKeys) =>
-        (matrices(partition.index) ? PullMatrixRows(partitionKeys)).mapTo[R]
+        val pullMessage = PullMatrixRows(partitionKeys)
+        val fsm = new PullFSM[PullMatrixRows, R](pullMessage, matrices(partition.index))
+        fsm.run()
+        //(matrices(partition.index) ? PullMatrixRows(partitionKeys)).mapTo[R]
     }
 
     // Obtain key indices after partitioning so we can place the results in a correctly ordered array
@@ -98,7 +100,9 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     val pulls = mapPartitions(rows) {
       case (partition, indices) =>
         val pullMessage = PullMatrix(indices.map(rows).toArray, indices.map(cols).toArray)
-        (matrices(partition.index) ? pullMessage).mapTo[R]
+        val fsm = new PullFSM[PullMatrix, R](pullMessage, matrices(partition.index))
+        fsm.run()
+        //(matrices(partition.index) ? pullMessage).mapTo[R]
     }
 
     // Obtain key indices after partitioning so we can place the results in a correctly ordered array
@@ -142,7 +146,13 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     // Send push requests
     val pushes = mapPartitions(rows) {
       case (partition, indices) =>
-        (matrices(partition.index) ? toPushMessage(indices.map(rows).toArray, indices.map(cols).toArray, indices.map(values).toArray)).mapTo[Boolean]
+        val rs = indices.map(rows).toArray
+        val cs = indices.map(cols).toArray
+        val vs = indices.map(values).toArray
+        val fsm = new PushFSM[P](id => toPushMessage(id, rs, cs, vs), matrices(partition.index))
+        fsm.run()
+        //(matrices(partition.index) ? toPushMessage(indices.map(rows).toArray, indices.map(cols).toArray, indices.map
+        //(values).toArray)).mapTo[Boolean]
     }
 
     // Combine and aggregate futures
@@ -207,13 +217,14 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
   /**
     * Creates a push message from given sequence of rows, columns and values
     *
+    * @param id The identifier
     * @param rows The rows
     * @param cols The columns
     * @param values The values
     * @return A PushMatrix message for type V
     */
   @inline
-  protected def toPushMessage(rows: Array[Long], cols: Array[Int], values: Array[V]): P
+  protected def toPushMessage(id: Int, rows: Array[Long], cols: Array[Int], values: Array[V]): P
 
   /**
     * Deserializes this instance. This starts an ActorSystem with appropriate configuration before attempting to
@@ -225,7 +236,7 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
   @throws(classOf[IOException])
   private def readObject(in: ObjectInputStream): Unit = {
     val config = in.readObject().asInstanceOf[Config]
-    val as = ActorSystem("AsyncBigMatrix", config.getConfig("glint.client"))
+    val as = DeserializationHelper.getActorSystem(config.getConfig("glint.client"))
     JavaSerializer.currentSystem.withValue(as.asInstanceOf[ExtendedActorSystem]) {
       in.defaultReadObject()
     }

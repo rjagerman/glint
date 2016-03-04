@@ -16,7 +16,10 @@ private[glint] class PartialVectorLong(partition: Partition) extends PartialVect
 
   override def receive: Receive = {
     case pull: PullVector => sender ! ResponseLong(get(pull.keys))
-    case push: PushVectorLong => sender ! update(push.keys, push.values)
+    case push: PushVectorLong =>
+      update(push.keys, push.values)
+      updateFinished(push.id)
+    case x => handleLogic(x, sender)
   }
 
 }

@@ -18,13 +18,14 @@ private[glint] class AsyncBigVectorLong(partitioner: Partitioner,
   /**
     * Creates a push message from given sequence of keys and values
     *
+    * @param id The identifier
     * @param keys The keys
     * @param values The values
     * @return A PushVectorLong message for type V
     */
   @inline
-  override protected def toPushMessage(keys: Array[Long], values: Array[Long]): PushVectorLong = {
-    PushVectorLong(keys, values)
+  override protected def toPushMessage(id: Int, keys: Array[Long], values: Array[Long]): PushVectorLong = {
+    PushVectorLong(id, keys, values)
   }
 
   /**

@@ -16,7 +16,10 @@ private[glint] class PartialVectorInt(partition: Partition) extends PartialVecto
 
   override def receive: Receive = {
     case pull: PullVector => sender ! ResponseInt(get(pull.keys))
-    case push: PushVectorInt => sender ! update(push.keys, push.values)
+    case push: PushVectorInt =>
+      update(push.keys, push.values)
+      updateFinished(push.id)
+    case x => handleLogic(x, sender)
   }
 
 }

@@ -23,6 +23,12 @@ libraryDependencies <+= scalaVersion {
 
 libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.3.14"
 
+// Retry
+
+resolvers += "softprops-maven" at "http://dl.bintray.com/content/softprops/maven"
+
+libraryDependencies += "me.lessis" %% "retry" % "0.2.0"
+
 // Spire (generic fast numerics)
 
 libraryDependencies += "org.spire-math" %% "spire" % "0.7.4"

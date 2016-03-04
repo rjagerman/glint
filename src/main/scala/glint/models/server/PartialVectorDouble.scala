@@ -16,7 +16,10 @@ private[glint] class PartialVectorDouble(partition: Partition) extends PartialVe
 
   override def receive: Receive = {
     case pull: PullVector => sender ! ResponseDouble(get(pull.keys))
-    case push: PushVectorDouble => sender ! update(push.keys, push.values)
+    case push: PushVectorDouble =>
+      update(push.keys, push.values)
+      updateFinished(push.id)
+    case x => handleLogic(x, sender)
   }
 
 }

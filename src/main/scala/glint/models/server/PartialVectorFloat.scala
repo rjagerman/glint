@@ -16,7 +16,10 @@ private[glint] class PartialVectorFloat(partition: Partition) extends PartialVec
 
   override def receive: Receive = {
     case pull: PullVector => sender ! ResponseFloat(get(pull.keys))
-    case push: PushVectorFloat => sender ! update(push.keys, push.values)
+    case push: PushVectorFloat =>
+      update(push.keys, push.values)
+      updateFinished(push.id)
+    case x => handleLogic(x, sender)
   }
 
 }

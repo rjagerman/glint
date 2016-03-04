@@ -21,7 +21,10 @@ private[glint] class PartialMatrixFloat(partition: Partition,
   override def receive: Receive = {
     case pull: PullMatrix => sender ! ResponseFloat(get(pull.rows, pull.cols))
     case pull: PullMatrixRows => sender ! ResponseRowsFloat(getRows(pull.rows), cols)
-    case push: PushMatrixFloat => sender ! update(push.rows, push.cols, push.values)
+    case push: PushMatrixFloat =>
+      update(push.rows, push.cols, push.values)
+      updateFinished(push.id)
+    case x => handleLogic(x, sender)
   }
 
 }

@@ -21,7 +21,10 @@ private[glint] class PartialMatrixDouble(partition: Partition,
   override def receive: Receive = {
     case pull: PullMatrix => sender ! ResponseDouble(get(pull.rows, pull.cols))
     case pull: PullMatrixRows => sender ! ResponseRowsDouble(getRows(pull.rows), cols)
-    case push: PushMatrixDouble => sender ! update(push.rows, push.cols, push.values)
+    case push: PushMatrixDouble =>
+      update(push.rows, push.cols, push.values)
+      updateFinished(push.id)
+    case x => handleLogic(x, sender)
   }
 
 }

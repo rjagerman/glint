@@ -70,7 +70,7 @@ class BufferedBigMatrixSpec extends FlatSpec with SystemTest with Matchers {
         assert(!bufferedModel.pushToBuffer(0, 1, 0.3))
 
         // Flush the values (without the last one, it was not added because the buffer was full)
-        bufferedModel.flush()
+        whenReady(bufferedModel.flush()) { identity }
 
         // Assert that the results are now on the parameter server
         val future = bufferedModel.pull(Array(0L, 48L), Array(1, 5))

@@ -18,13 +18,14 @@ private[glint] class AsyncBigVectorDouble(partitioner: Partitioner,
   /**
     * Creates a push message from given sequence of keys and values
     *
+    * @param id The identifier
     * @param keys The keys
     * @param values The values
     * @return A PushVectorDouble message for type V
     */
   @inline
-  override protected def toPushMessage(keys: Array[Long], values: Array[Double]): PushVectorDouble = {
-    PushVectorDouble(keys, values)
+  override protected def toPushMessage(id: Int, keys: Array[Long], values: Array[Double]): PushVectorDouble = {
+    PushVectorDouble(id, keys, values)
   }
 
   /**

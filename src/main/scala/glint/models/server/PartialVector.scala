@@ -13,7 +13,8 @@ import scala.reflect.ClassTag
   * @param partition The partition
   * @tparam V The type of value to store
   */
-private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag](partition: Partition) extends Actor with ActorLogging {
+private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag](partition: Partition) extends Actor
+  with ActorLogging with PushLogic {
 
   /**
     * The size of this partial vector

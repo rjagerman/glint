@@ -21,6 +21,9 @@ private[glint] class PartialMatrixLong(partition: Partition,
   override def receive: Receive = {
     case pull: PullMatrix => sender ! ResponseLong(get(pull.rows, pull.cols))
     case pull: PullMatrixRows => sender ! ResponseRowsLong(getRows(pull.rows), cols)
-    case push: PushMatrixLong => sender ! update(push.rows, push.cols, push.values)
+    case push: PushMatrixLong =>
+      update(push.rows, push.cols, push.values)
+      updateFinished(push.id)
+    case x => handleLogic(x, sender)
   }
 }

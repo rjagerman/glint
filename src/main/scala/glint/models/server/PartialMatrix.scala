@@ -15,7 +15,8 @@ import scala.reflect.ClassTag
   * @tparam V The type of value to store
   */
 private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag](val partition: Partition,
-                                                                                 val cols: Int) extends Actor with ActorLogging {
+                                                                                 val cols: Int) extends Actor
+  with ActorLogging with PushLogic {
 
   /**
     * The size of this partial matrix in number of rows

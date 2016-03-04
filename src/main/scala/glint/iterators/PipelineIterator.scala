@@ -2,15 +2,16 @@ package glint.iterators
 
 import akka.util.Timeout
 
+import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, ExecutionContext, Future}
 
 /**
   * An iterator that attempts to prefetch next futures through a pipelined design
   *
+  * @param duration The duration to wait at most
   * @param ec The implicit execution context in which to execute requests
-  * @param timeout The timeout
   */
-abstract class PipelineIterator[T]()(implicit ec: ExecutionContext, timeout: Timeout) extends Iterator[T] {
+abstract class PipelineIterator[T](duration: Duration = Duration.Inf)(implicit ec: ExecutionContext) extends Iterator[T] {
 
   protected def fetchNextFuture(): Future[T]
 
@@ -21,7 +22,7 @@ abstract class PipelineIterator[T]()(implicit ec: ExecutionContext, timeout: Tim
   override def hasNext: Boolean = index < total
 
   override def next() = {
-    val result = Await.result(nextFuture, timeout.duration)
+    val result = Await.result(nextFuture, duration)
     index += 1
     if (hasNext) {
       nextFuture = fetchNextFuture()
