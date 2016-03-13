@@ -69,14 +69,10 @@ object PartitioningBenchmark extends Bench.OfflineReport {
       exec.benchRuns -> benchRuns
     ) in {
       using(singleSizes) in { size =>
-        var j = 0
-        while (j < 1000000) {
-          var i = 0
-          while (i < size) {
-            cyclicPartition.globalToLocal(cyclicPartitionData(i))
-            i += 1
-          }
-          j += 1
+        var i = 0
+        while (i < size) {
+          cyclicPartition.globalToLocal(cyclicPartitionData(i))
+          i += 1
         }
       }
     }
@@ -87,14 +83,10 @@ object PartitioningBenchmark extends Bench.OfflineReport {
       exec.benchRuns -> benchRuns
     ) in {
       using(singleSizes) in { size =>
-        var j = 0
-        while (j < 1000000) {
-          var i = 0
-          while (i < size) {
-            rangePartition.globalToLocal(rangePartitionData(i))
-            i += 1
-          }
-          j += 1
+        var i = 0
+        while (i < size) {
+          rangePartition.globalToLocal(rangePartitionData(i))
+          i += 1
         }
       }
     }

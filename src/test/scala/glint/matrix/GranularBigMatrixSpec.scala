@@ -13,7 +13,7 @@ class GranularBigMatrixSpec extends FlatSpec with SystemTest with Matchers {
     withServers(2) { _ =>
       withClient { client =>
         val model = client.matrix[Double](1000, 1000)
-        val granularModel = new GranularBigMatrix[Double](model, 200)
+        val granularModel = new GranularBigMatrix[Double](model, 10000)
         val rows = new Array[Long](1000000)
         val cols = new Array[Int](1000000)
         val values = new Array[Double](1000000)
@@ -41,7 +41,7 @@ class GranularBigMatrixSpec extends FlatSpec with SystemTest with Matchers {
     withServers(3) { _ =>
       withClient { client =>
         val model = client.matrix[Double](1000, 1000)
-        val granularModel = new GranularBigMatrix[Double](model, 200)
+        val granularModel = new GranularBigMatrix[Double](model, 10000)
         val rows = new Array[Long](1000000)
         val cols = new Array[Int](1000000)
         val values = new Array[Double](1000000)
