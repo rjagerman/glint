@@ -4,7 +4,7 @@ version := "0.1-SNAPSHOT"
 
 organization := "ch.ethz.inf.da"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.10.6"
 
 crossScalaVersions := Seq("2.10.6", "2.11.7")
 
@@ -21,6 +21,14 @@ libraryDependencies <+= scalaVersion {
   case x if x.startsWith("2.11") => "com.typesafe.akka" % "akka-stream-experimental_2.11" % "2.0.2"
 }
 
+libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.3.14"
+
+// Retry
+
+resolvers += "softprops-maven" at "http://dl.bintray.com/content/softprops/maven"
+
+libraryDependencies += "me.lessis" %% "retry" % "0.2.0"
+
 // Spire (generic fast numerics)
 
 libraryDependencies += "org.spire-math" %% "spire" % "0.7.4"
@@ -30,6 +38,12 @@ libraryDependencies += "org.spire-math" %% "spire" % "0.7.4"
 libraryDependencies += "org.scalanlp" %% "breeze" % "0.11.2"
 
 libraryDependencies += "org.scalanlp" %% "breeze-natives" % "0.11.2"
+
+// Retry
+
+resolvers += "softprops-maven" at "http://dl.bintray.com/content/softprops/maven"
+
+libraryDependencies += "me.lessis" %% "retry" % "0.2.0"
 
 // Unit tests
 

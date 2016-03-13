@@ -8,12 +8,13 @@ import akka.remote.RemoteScope
 import akka.util.Timeout
 import com.typesafe.config.{Config, ConfigFactory}
 import glint.exceptions.ModelCreationException
-import glint.indexing.{CyclicIndexer, Indexer}
 import glint.messages.master.{RegisterClient, ServerList}
 import glint.models.client.async._
 import glint.models.client.{BigMatrix, BigVector}
 import glint.models.server._
-import glint.partitioning.{Partitioner, RangePartitioner}
+import glint.partitioning.cyclic.CyclicPartitioner
+import glint.partitioning.range.RangePartitioner
+import glint.partitioning.{Partition, Partitioner}
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -39,6 +40,60 @@ class Client(val config: Config,
   private[glint] val registration = master ? RegisterClient(actor)
 
   /**
+    * Creates a distributed model on the parameter servers
+    *
+    * @param keys The total number of keys
+    * @param modelsPerServer The number of models to spawn per parameter server
+    * @param createPartitioner A function that creates a partitioner based on a number of keys and partitions
+    * @param generateServerProp A function that generates a server prop of a partial model for a particular partition
+    * @param generateClientObject A function that generates a client object based on the partitioner and spawned models
+    * @tparam M The final model type to generate
+    * @return The generated model
+    */
+  private def create[M](keys: Long,
+                        modelsPerServer: Int,
+                        createPartitioner: (Int, Long) => Partitioner,
+                        generateServerProp: Partition => Props,
+                        generateClientObject: (Partitioner, Array[ActorRef], Config) => M): M = {
+
+    // Get a list of servers
+    val listOfServers = serverList()
+
+    // Construct a big model based on the list of servers
+    val bigModelFuture = listOfServers.map { servers =>
+
+      // Check if there are servers online
+      if (servers.isEmpty) {
+        throw new ModelCreationException("Cannot create a model without active parameter servers")
+      }
+
+      // Construct a partitioner
+      val numberOfPartitions = Math.min(keys, modelsPerServer * servers.length).toInt
+      val partitioner = createPartitioner(numberOfPartitions, keys)
+      val partitions = partitioner.all()
+
+      // Spawn models that are deployed on the parameter servers according to the partitioner
+      val models = new Array[ActorRef](numberOfPartitions)
+      var partitionIndex = 0
+      while (partitionIndex < numberOfPartitions) {
+        val serverIndex = partitionIndex % servers.length
+        val server = servers(serverIndex)
+        val partition = partitions(partitionIndex)
+        val prop = generateServerProp(partition)
+        models(partitionIndex) = system.actorOf(prop.withDeploy(Deploy(scope = RemoteScope(server.path.address))))
+        partitionIndex += 1
+      }
+
+      // Construct a big model client object
+      generateClientObject(partitioner, models, config)
+    }
+
+    // Wait for the big model to finish
+    Await.result(bigModelFuture, config.getDuration("glint.client.timeout", TimeUnit.MILLISECONDS) milliseconds)
+
+  }
+
+  /**
     * Constructs a distributed matrix (indexed by (row: Long, col: Int)) for specified type of values
     *
     * @param rows The number of rows
@@ -48,11 +103,7 @@ class Client(val config: Config,
     * @return The constructed [[glint.models.client.BigMatrix BigMatrix]]
     */
   def matrix[V: breeze.math.Semiring : TypeTag](rows: Long, cols: Int, modelsPerServer: Int = 1): BigMatrix[V] = {
-    matrix[V](rows,
-      cols,
-      modelsPerServer,
-      (models: Array[ActorRef]) => new CyclicIndexer(models.length, rows),
-      (models: Array[ActorRef]) => new RangePartitioner[ActorRef](models, rows))
+    matrix[V](rows, cols, modelsPerServer, (partitions: Int, keys: Long) => RangePartitioner(partitions, keys))
   }
 
   /**
@@ -61,58 +112,37 @@ class Client(val config: Config,
     * @param rows The number of rows
     * @param cols The number of columns
     * @param modelsPerServer The number of partial models to store per parameter server
-    * @param indexer A function that creates an [[glint.indexing.Indexer indexer]] that indexes keys into a new space
-    * @param partitioner A function that creates a [[glint.partitioning.Partitioner partitioner]] that partitions keys
-    *                    onto parameter servers
+    * @param createPartitioner A function that creates a [[glint.partitioning.Partitioner partitioner]] that partitions
+    *                          keys
     * @tparam V The type of values to store, must be one of the following: Int, Long, Double or Float
     * @return The constructed [[glint.models.client.BigMatrix BigMatrix]]
     */
   def matrix[V: breeze.math.Semiring : TypeTag](rows: Long,
                                                 cols: Int,
                                                 modelsPerServer: Int,
-                                                indexer: (Array[ActorRef]) => Indexer[Long],
-                                                partitioner: (Array[ActorRef]) => Partitioner[ActorRef]): BigMatrix[V] = {
+                                                createPartitioner: (Int, Long) => Partitioner): BigMatrix[V] = {
 
-    // Get a list of servers
-    val listOfServers = master ? new ServerList()
-
-    // Spawn models on the servers and get a list of the models
-    val listOfModels = listOfServers.mapTo[Array[ActorRef]].map { servers =>
-      val nrOfServers = Math.min(rows, servers.length).toInt
-      if (nrOfServers <= 0) {
-        throw new ModelCreationException("Cannot create a model with 0 parameter servers")
-      }
-      val nrOfModels = Math.min(nrOfServers * modelsPerServer, rows).toInt
-      val models = new Array[ActorRef](nrOfModels)
-      models.zipWithIndex.foreach { case (_, i) => models(i) = servers(i % nrOfServers) }
-      models.take(nrOfModels).zipWithIndex.map {
-        case (server, index) =>
-          val start = Math.ceil(index * (rows.toDouble / nrOfModels.toDouble)).toLong
-          val end = Math.ceil((index + 1) * (rows.toDouble / nrOfModels.toDouble)).toLong
-          val propsToDeploy = implicitly[TypeTag[V]].tpe match {
-            case x if x <:< typeOf[Int] => Props(classOf[PartialMatrixInt], start, end, cols)
-            case x if x <:< typeOf[Long] => Props(classOf[PartialMatrixLong], start, end, cols)
-            case x if x <:< typeOf[Float] => Props(classOf[PartialMatrixFloat], start, end, cols)
-            case x if x <:< typeOf[Double] => Props(classOf[PartialMatrixDouble], start, end, cols)
-            case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
-          }
-          system.actorOf(propsToDeploy.withDeploy(Deploy(scope = RemoteScope(server.path.address))))
-      }
+    val propFunction = numberType[V] match {
+      case "Int" => (partition: Partition) => Props(classOf[PartialMatrixInt], partition, cols)
+      case "Long" => (partition: Partition) => Props(classOf[PartialMatrixLong], partition, cols)
+      case "Float" => (partition: Partition) => Props(classOf[PartialMatrixFloat], partition, cols)
+      case "Double" => (partition: Partition) => Props(classOf[PartialMatrixDouble], partition, cols)
+      case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
     }
 
-    // Map the list of models to a single BigModel reference
-    val bigModelFuture = listOfModels.map {
-      case models: Array[ActorRef] =>
-        implicitly[TypeTag[V]].tpe match {
-          case x if x <:< typeOf[Int] => new AsyncBigMatrixInt(partitioner(models), indexer(models), config, rows, cols).asInstanceOf[BigMatrix[V]]
-          case x if x <:< typeOf[Long] => new AsyncBigMatrixLong(partitioner(models), indexer(models), config, rows, cols).asInstanceOf[BigMatrix[V]]
-          case x if x <:< typeOf[Float] => new AsyncBigMatrixFloat(partitioner(models), indexer(models), config, rows, cols).asInstanceOf[BigMatrix[V]]
-          case x if x <:< typeOf[Double] => new AsyncBigMatrixDouble(partitioner(models), indexer(models), config, rows, cols).asInstanceOf[BigMatrix[V]]
-          case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
-        }
+    val objFunction = numberType[V] match {
+      case "Int" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
+        new AsyncBigMatrixInt(partitioner, models, config, rows, cols).asInstanceOf[BigMatrix[V]]
+      case "Long" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
+        new AsyncBigMatrixLong(partitioner, models, config, rows, cols).asInstanceOf[BigMatrix[V]]
+      case "Float" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
+        new AsyncBigMatrixFloat(partitioner, models, config, rows, cols).asInstanceOf[BigMatrix[V]]
+      case "Double" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
+        new AsyncBigMatrixDouble(partitioner, models, config, rows, cols).asInstanceOf[BigMatrix[V]]
+      case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
     }
-    Await.result(bigModelFuture, config.getDuration("glint.client.timeout", TimeUnit.MILLISECONDS) milliseconds)
 
+    create[BigMatrix[V]](rows, modelsPerServer, createPartitioner, propFunction, objFunction)
   }
 
   /**
@@ -124,10 +154,7 @@ class Client(val config: Config,
     * @return The constructed [[glint.models.client.BigVector BigVector]]
     */
   def vector[V: breeze.math.Semiring : TypeTag](keys: Long, modelsPerServer: Int = 1): BigVector[V] = {
-    vector[V](keys,
-      modelsPerServer,
-      (models: Array[ActorRef]) => new CyclicIndexer(models.length, keys),
-      (models: Array[ActorRef]) => new RangePartitioner[ActorRef](models, keys))
+    vector[V](keys, modelsPerServer, (partitions: Int, keys: Long) => RangePartitioner(partitions, keys))
   }
 
   /**
@@ -135,56 +162,60 @@ class Client(val config: Config,
     *
     * @param keys The number of keys
     * @param modelsPerServer The number of partial models to store per parameter server
-    * @param indexer A function that creates an [[glint.indexing.Indexer indexer]] that indexes keys into a new space
-    * @param partitioner A function that creates a [[glint.partitioning.Partitioner partitioner]] that partitions keys
-    *                    onto parameter servers
+    * @param createPartitioner A function that creates a [[glint.partitioning.Partitioner partitioner]] that partitions
+    *                          keys
     * @tparam V The type of values to store, must be one of the following: Int, Long, Double or Float
     * @return The constructed [[glint.models.client.BigVector BigVector]]
     */
   def vector[V: breeze.math.Semiring : TypeTag](keys: Long,
                                                 modelsPerServer: Int,
-                                                indexer: (Array[ActorRef]) => Indexer[Long],
-                                                partitioner: (Array[ActorRef]) => Partitioner[ActorRef]): BigVector[V] = {
+                                                createPartitioner: (Int, Long) => Partitioner): BigVector[V] = {
 
-    // Get a list of servers
-    val listOfServers = master ? new ServerList()
-
-    // Spawn models on the servers and get a list of the models
-    val listOfModels = listOfServers.mapTo[Array[ActorRef]].map { servers =>
-      val nrOfServers = Math.min(keys, servers.length).toInt
-      if (nrOfServers <= 0) {
-        throw new ModelCreationException("Cannot create a model with 0 parameter servers")
-      }
-      val nrOfModels = Math.min(nrOfServers * modelsPerServer, keys).toInt
-      val models = new Array[ActorRef](nrOfModels)
-      models.zipWithIndex.foreach { case (_, i) => models(i) = servers(i % nrOfServers) }
-      models.take(nrOfModels).zipWithIndex.map {
-        case (server, index) =>
-          val start = Math.ceil(index * (keys.toDouble / nrOfModels.toDouble)).toLong
-          val end = Math.ceil((index + 1) * (keys.toDouble / nrOfModels.toDouble)).toLong
-          val propsToDeploy = implicitly[TypeTag[V]].tpe match {
-            case x if x <:< typeOf[Int] => Props(classOf[PartialVectorInt], start, end)
-            case x if x <:< typeOf[Long] => Props(classOf[PartialVectorLong], start, end)
-            case x if x <:< typeOf[Float] => Props(classOf[PartialVectorFloat], start, end)
-            case x if x <:< typeOf[Double] => Props(classOf[PartialVectorDouble], start, end)
-            case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
-          }
-          system.actorOf(propsToDeploy.withDeploy(Deploy(scope = RemoteScope(server.path.address))))
-      }
+    val propFunction = numberType[V] match {
+      case "Int" => (partition: Partition) => Props(classOf[PartialVectorInt], partition)
+      case "Long" => (partition: Partition) => Props(classOf[PartialVectorLong], partition)
+      case "Float" => (partition: Partition) => Props(classOf[PartialVectorFloat], partition)
+      case "Double" => (partition: Partition) => Props(classOf[PartialVectorDouble], partition)
+      case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
     }
 
-    // Map the list of models to a single BigModel reference
-    val bigModelFuture = listOfModels.map {
-      case models: Array[ActorRef] =>
-        implicitly[TypeTag[V]].tpe match {
-          case x if x <:< typeOf[Int] => new AsyncBigVectorInt(partitioner(models), indexer(models), config, keys).asInstanceOf[BigVector[V]]
-          case x if x <:< typeOf[Long] => new AsyncBigVectorLong(partitioner(models), indexer(models), config, keys).asInstanceOf[BigVector[V]]
-          case x if x <:< typeOf[Float] => new AsyncBigVectorFloat(partitioner(models), indexer(models), config, keys).asInstanceOf[BigVector[V]]
-          case x if x <:< typeOf[Double] => new AsyncBigVectorDouble(partitioner(models), indexer(models), config, keys).asInstanceOf[BigVector[V]]
-          case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
-        }
+    val objFunction = numberType[V] match {
+      case "Int" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
+        new AsyncBigVectorInt(partitioner, models, config, keys).asInstanceOf[BigVector[V]]
+      case "Long" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
+        new AsyncBigVectorLong(partitioner, models, config, keys).asInstanceOf[BigVector[V]]
+      case "Float" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
+        new AsyncBigVectorFloat(partitioner, models, config, keys).asInstanceOf[BigVector[V]]
+      case "Double" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
+        new AsyncBigVectorDouble(partitioner, models, config, keys).asInstanceOf[BigVector[V]]
+      case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
     }
-    Await.result(bigModelFuture, config.getDuration("glint.client.timeout", TimeUnit.MILLISECONDS) milliseconds)
+
+    create[BigVector[V]](keys, modelsPerServer, createPartitioner, propFunction, objFunction)
+
+  }
+
+  /**
+    * @return A future containing an array of available servers
+    */
+  def serverList(): Future[Array[ActorRef]] = {
+    (master ? new ServerList()).mapTo[Array[ActorRef]]
+  }
+
+  /**
+    * Determines number type at runtime of given type tag
+    *
+    * @tparam V The type to infer
+    * @return The string representation of the type
+    */
+  def numberType[V: TypeTag]: String = {
+    implicitly[TypeTag[V]].tpe match {
+      case x if x <:< typeOf[Int] => "Int"
+      case x if x <:< typeOf[Long] => "Long"
+      case x if x <:< typeOf[Float] => "Float"
+      case x if x <:< typeOf[Double] => "Double"
+      case x => s"${x.toString}"
+    }
   }
 
   /**

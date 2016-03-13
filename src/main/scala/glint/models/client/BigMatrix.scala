@@ -21,6 +21,16 @@ import scala.concurrent.{ExecutionContext, Future}
 trait BigMatrix[V] extends Serializable {
 
   /**
+    * The number of rows
+    */
+  val rows: Long
+
+  /**
+    * The number of columns
+    */
+  val cols: Int
+
+  /**
     * Pulls a set of rows
     *
     * @param rows The indices of the rows

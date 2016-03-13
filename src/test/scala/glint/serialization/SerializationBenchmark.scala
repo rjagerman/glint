@@ -1,16 +1,21 @@
-package glint
+package glint.serialization
 
 import akka.serialization.JavaSerializer
+import glint.SystemTest
 import glint.messages.server.request.PullMatrix
 import glint.messages.server.response.ResponseLong
-import glint.serialization.{RequestSerializer, ResponseSerializer}
 import org.scalameter.api._
+import org.scalameter.picklers.Implicits._
 import org.scalameter.{Bench, Gen}
 
 /**
   * Benchmarks serialization
   */
 object SerializationBenchmark extends Bench.OfflineReport with SystemTest {
+
+  // Configuration
+  override lazy val executor = LocalExecutor(new Executor.Warmer.Default, aggregator, measurer)
+  exec.reinstantiation.frequency -> 4
 
   // Construct serializers
   val requestSerializer = new RequestSerializer()
@@ -28,6 +33,7 @@ object SerializationBenchmark extends Bench.OfflineReport with SystemTest {
   val responseDataResponseSerialized = for (size <- sizes) yield responseSerializer.toBinary(ResponseLong((0L until size).toArray))
 
   val benchRuns = 150
+  exec.reinstantiation.frequency -> 4
 
   performance of "Request" in {
     performance of "RequestSerializer" in {

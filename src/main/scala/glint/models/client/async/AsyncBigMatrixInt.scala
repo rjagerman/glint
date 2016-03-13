@@ -3,7 +3,6 @@ package glint.models.client.async
 import akka.actor.ActorRef
 import breeze.linalg.{DenseVector, Vector}
 import com.typesafe.config.Config
-import glint.indexing.Indexer
 import glint.messages.server.request.PushMatrixInt
 import glint.messages.server.response.ResponseInt
 import glint.partitioning.Partitioner
@@ -12,12 +11,12 @@ import spire.implicits.cfor
 /**
   * Asynchronous implementation of a BigMatrix for integers
   */
-private[glint] class AsyncBigMatrixInt(partitioner: Partitioner[ActorRef],
-                                       indexer: Indexer[Long],
+private[glint] class AsyncBigMatrixInt(partitioner: Partitioner,
+                                       matrices: Array[ActorRef],
                                        config: Config,
                                        rows: Long,
                                        cols: Int)
-  extends AsyncBigMatrix[Int, ResponseInt, PushMatrixInt](partitioner, indexer, config, rows, cols) {
+  extends AsyncBigMatrix[Int, ResponseInt, PushMatrixInt](partitioner, matrices, config, rows, cols) {
 
   /**
     * Converts the values in given response starting at index start to index end to a vector
@@ -39,14 +38,15 @@ private[glint] class AsyncBigMatrixInt(partitioner: Partitioner[ActorRef],
   /**
     * Creates a push message from given sequence of rows, columns and values
     *
+    * @param id The identifier
     * @param rows The rows
     * @param cols The columns
     * @param values The values
     * @return A PushMatrix message for type V
     */
   @inline
-  override protected def toPushMessage(rows: Array[Long], cols: Array[Int], values: Array[Int]): PushMatrixInt = {
-    PushMatrixInt(rows, cols, values)
+  override protected def toPushMessage(id: Int, rows: Array[Long], cols: Array[Int], values: Array[Int]): PushMatrixInt = {
+    PushMatrixInt(id, rows, cols, values)
   }
 
   /**

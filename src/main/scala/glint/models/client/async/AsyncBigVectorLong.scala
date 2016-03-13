@@ -2,7 +2,6 @@ package glint.models.client.async
 
 import akka.actor.ActorRef
 import com.typesafe.config.Config
-import glint.indexing.Indexer
 import glint.messages.server.request.PushVectorLong
 import glint.messages.server.response.ResponseLong
 import glint.partitioning.Partitioner
@@ -10,22 +9,23 @@ import glint.partitioning.Partitioner
 /**
   * Asynchronous implementation of a BigVector for longs
   */
-private[glint] class AsyncBigVectorLong(partitioner: Partitioner[ActorRef],
-                                        indexer: Indexer[Long],
+private[glint] class AsyncBigVectorLong(partitioner: Partitioner,
+                                        models: Array[ActorRef],
                                         config: Config,
                                         keys: Long)
-  extends AsyncBigVector[Long, ResponseLong, PushVectorLong](partitioner, indexer, config, keys) {
+  extends AsyncBigVector[Long, ResponseLong, PushVectorLong](partitioner, models, config, keys) {
 
   /**
     * Creates a push message from given sequence of keys and values
     *
+    * @param id The identifier
     * @param keys The keys
     * @param values The values
     * @return A PushVectorLong message for type V
     */
   @inline
-  override protected def toPushMessage(keys: Array[Long], values: Array[Long]): PushVectorLong = {
-    PushVectorLong(keys, values)
+  override protected def toPushMessage(id: Int, keys: Array[Long], values: Array[Long]): PushVectorLong = {
+    PushVectorLong(id, keys, values)
   }
 
   /**

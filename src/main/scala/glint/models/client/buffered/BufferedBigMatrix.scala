@@ -25,6 +25,9 @@ import scala.reflect.ClassTag
   */
 class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], bufferSize: Int) extends BigMatrix[V] {
 
+  val rows: Long = underlying.rows
+  val cols: Int = underlying.cols
+
   private val bufferRows = new Array[Long](bufferSize)
   private val bufferCols = new Array[Int](bufferSize)
   private val bufferValues = new Array[V](bufferSize)
@@ -68,20 +71,23 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
   }
 
   /**
-    * Pushes a value into the buffer as long as there is space. Make sure to manually
-    * [[glint.models.client.buffered.BufferedBigMatrix.flush flush]] the buffer when it is full, use
-    * [[glint.models.client.buffered.BufferedBigMatrix.isFull isFull]] to check if the buffer is full. Attempting to
-    * push to the buffer when it is full and not flushed will cause a java.lang.IndexOutOfBoundsException.
+    * Pushes a value into the buffer as long as there is space.
     *
     * @param row The row
     * @param col The column
     * @param value The value
+    * @return True if the values were succesfully added to the buffer, false if the buffer was full
     */
-  def bufferedPush(row: Long, col: Int, value: V): Unit = {
+  @inline
+  def pushToBuffer(row: Long, col: Int, value: V): Boolean = {
+    if (isFull) {
+      return false
+    }
     bufferRows(bufferIndex) = row
     bufferCols(bufferIndex) = col
     bufferValues(bufferIndex) = value
     bufferIndex += 1
+    true
   }
 
   /**
@@ -97,16 +103,12 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
         true
       }
     } else {
-      var index: Int = 0
       val pushRows = new Array[Long](bufferIndex)
       val pushCols = new Array[Int](bufferIndex)
       val pushValues = new Array[V](bufferIndex)
-      while (index < bufferIndex) {
-        pushRows(index) = bufferRows(index)
-        pushCols(index) = bufferCols(index)
-        pushValues(index) = bufferValues(index)
-        index += 1
-      }
+      System.arraycopy(bufferRows, 0, pushRows, 0, bufferIndex)
+      System.arraycopy(bufferCols, 0, pushCols, 0, bufferIndex)
+      System.arraycopy(bufferValues, 0, pushValues, 0, bufferIndex)
       bufferIndex = 0
       underlying.push(pushRows, pushCols, pushValues)
     }
@@ -115,11 +117,13 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
   /**
     * @return True if the buffer is full, false otherwise
     */
+  @inline
   def isFull: Boolean = size == bufferSize
 
   /**
     * @return The size of the current buffer (in number of elements)
     */
+  @inline
   def size: Int = bufferIndex
 
   /**

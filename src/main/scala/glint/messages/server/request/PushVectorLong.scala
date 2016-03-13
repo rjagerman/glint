@@ -6,4 +6,4 @@ package glint.messages.server.request
   * @param keys The indices
   * @param values The values to add
   */
-private[glint] case class PushVectorLong(keys: Array[Long], values: Array[Long]) extends Request
+private[glint] case class PushVectorLong(id: Int, keys: Array[Long], values: Array[Long]) extends Request

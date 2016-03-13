@@ -1,8 +1,9 @@
-package glint
+package glint.matrix
 
 import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, ObjectOutputStream}
 
 import breeze.linalg.DenseVector
+import glint.SystemTest
 import glint.models.client.BigMatrix
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -84,6 +85,9 @@ class BigMatrixSpec extends FlatSpec with SystemTest with Matchers {
       withClient { client =>
         val model = client.matrix[Int](100, 100, 3)
         val result1 = whenReady(model.push(Array(0L, 20L, 50L, 81L), Array(0, 10, 99, 80), Array(100, 100, 20, 30))) {
+          identity
+        }
+        val value1 = whenReady(model.pull(Array(0L, 20L, 50L, 81L))) {
           identity
         }
         val result2 = whenReady(model.push(Array(0L, 20L, 50L, 81L), Array(0, 10, 99, 80), Array(1, -1, 2, 3))) {

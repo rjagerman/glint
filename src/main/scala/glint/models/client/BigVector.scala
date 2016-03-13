@@ -18,6 +18,8 @@ import scala.concurrent.{ExecutionContext, Future}
   */
 trait BigVector[V] extends Serializable {
 
+  val size: Long
+
   /**
     * Pulls a set of elements
     *

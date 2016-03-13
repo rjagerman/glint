@@ -7,4 +7,4 @@ package glint.messages.server.request
   * @param cols The column indices
   * @param values The values to add
   */
-private[glint] case class PushMatrixInt(rows: Array[Long], cols: Array[Int], values: Array[Int]) extends Request
+private[glint] case class PushMatrixInt(id: Int, rows: Array[Long], cols: Array[Int], values: Array[Int]) extends Request
