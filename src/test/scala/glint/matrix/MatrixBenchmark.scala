@@ -22,8 +22,8 @@ class MatrixBenchmark extends Bench.OfflineReport {
   // Construct necessary data
   implicit val system = ActorSystem("MatrixBenchmark")
   val random = new scala.util.Random(42)
-  val rangePartition = new RangePartition(1, 100000, 200000) // 100000 elements
-  val cyclicPartition = new CyclicPartition(3, 10, 1000000) // 100000 elements
+  val rangePartition = new RangePartition(1, 10000, 20000) // 10000 elements
+  val cyclicPartition = new CyclicPartition(3, 10, 100000) // 10000 elements
 
   // Construct matrices for range and cyclic partitions
   val rangeMatrixDoubleRef = TestActorRef(new PartialMatrixDouble(rangePartition, 300))
@@ -32,9 +32,9 @@ class MatrixBenchmark extends Bench.OfflineReport {
   val cyclicMatrixDouble = cyclicMatrixDoubleRef.underlyingActor
 
   // Sizes and data
-  val sizes = Gen.range("size")(40000, 100000, 20000)
+  val sizes = Gen.range("size")(4000, 10000, 2000)
   val rangeData = for (size <- sizes) yield {
-    val rows = (0L until size).map { case x => x + 100000 }.toArray
+    val rows = (0L until size).map { case x => x + 10000 }.toArray
     val cols = (0 until size).map { case x => x % 300 }.toArray
     val values = (0 until size).map(_ => random.nextDouble()).toArray
     (rows, cols, values)
