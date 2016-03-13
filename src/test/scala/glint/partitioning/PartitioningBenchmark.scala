@@ -3,6 +3,7 @@ package glint.partitioning
 import glint.partitioning.cyclic.{CyclicPartition, CyclicPartitioner}
 import glint.partitioning.range.{RangePartition, RangePartitioner}
 import org.scalameter.api._
+import org.scalameter.picklers.Implicits._
 import org.scalameter.{Bench, Gen}
 
 import scala.util.Random
@@ -11,6 +12,10 @@ import scala.util.Random
   * Benchmarks partitioning
   */
 object PartitioningBenchmark extends Bench.OfflineReport {
+
+  // Configuration
+  override lazy val executor = LocalExecutor(new Executor.Warmer.Default, aggregator, measurer)
+  exec.reinstantiation.frequency -> 4
 
   // Initialize
   val random = new Random(42)
