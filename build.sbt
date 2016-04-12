@@ -95,3 +95,10 @@ parallelExecution in Test := false
 scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value+"/doc/root.txt")
 scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Glint")
 scalacOptions in (Compile, doc) ++= Seq("-skip-packages", "akka")
+
+ghpages.settings
+
+git.remoteRepo := "git@github.com:rjagerman/glint.git"
+
+site.includeScaladoc()
+
