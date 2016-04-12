@@ -1,0 +1,109 @@
+{
+    "docs": [
+        {
+            "location": "/",
+            "text": "Glint\n\n\nGlint is a high-performance parameter server compatible with Spark. It provides a high-level API in Scala making it easy for users to build machine learning algorithms with the parameter server as a concurrency model.\n\n\nParameter Server\n\n\nA parameter server is a specialized key-value store for mathematical data structures such as matrices and vectors. It has been succesfully applied in both industry and academia as a tool for distributing the model space of machine learning algorithms to many machines.\n\n\n\n\nDownload\n\n\nThe software is currently still in alpha. Refer to the compile section in order to compile and build the software manually. As we move to beta this page will provide versioned executables ready to download.\n\n\nCompile\n\n\nGlint uses \nsbt\n as a package manager. To compile, run the following commands from a command-line\n\n\ngit clone git@github.com:rjagerman/glint.git\ncd glint\nsbt compile assembly\n\n\n\nThis will (by default) compile for Scala version 2.10. If you wish to compile binaries for both 2.10 and 2.11, use:\n\n\nsbt \"+ compile\" \"+ assembly\"\n\n\n\nA binary jar file is produced in \ntarget/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar\n.\n\n\nRun\n\n\nTo run the parameter server on your localhost, you have two options: Either compile and run the .jar file or use \nsbt run\n. To start a master node, use one of the following commands:\n\n\n\n\njava -jar target/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar master\n\n\nsbt \"run master\"\n \n\n\n\n\nTo start a parameter server node, use one of the following commands:\n\n\n\n\njava -jar target/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar server\n\n\nsbt \"run server\"\n\n\n\n\nWhere to go next?\n\n\n\n\nProgramming Guide\n: Shows how to use the API and program applications with Glint\n\n\nDeployment Guide\n: Shows how to deploy Glint in a stand-alone way on a cluster\n\n\nExample Applications\n: Lists several example applications that use Glint\n\n\nAPI\n: The complete reference API",
+            "title": "Home"
+        },
+        {
+            "location": "/#glint",
+            "text": "Glint is a high-performance parameter server compatible with Spark. It provides a high-level API in Scala making it easy for users to build machine learning algorithms with the parameter server as a concurrency model.",
+            "title": "Glint"
+        },
+        {
+            "location": "/#parameter-server",
+            "text": "A parameter server is a specialized key-value store for mathematical data structures such as matrices and vectors. It has been succesfully applied in both industry and academia as a tool for distributing the model space of machine learning algorithms to many machines.",
+            "title": "Parameter Server"
+        },
+        {
+            "location": "/#download",
+            "text": "The software is currently still in alpha. Refer to the compile section in order to compile and build the software manually. As we move to beta this page will provide versioned executables ready to download.",
+            "title": "Download"
+        },
+        {
+            "location": "/#compile",
+            "text": "Glint uses  sbt  as a package manager. To compile, run the following commands from a command-line  git clone git@github.com:rjagerman/glint.git\ncd glint\nsbt compile assembly  This will (by default) compile for Scala version 2.10. If you wish to compile binaries for both 2.10 and 2.11, use:  sbt \"+ compile\" \"+ assembly\"  A binary jar file is produced in  target/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar .",
+            "title": "Compile"
+        },
+        {
+            "location": "/#run",
+            "text": "To run the parameter server on your localhost, you have two options: Either compile and run the .jar file or use  sbt run . To start a master node, use one of the following commands:   java -jar target/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar master  sbt \"run master\"     To start a parameter server node, use one of the following commands:   java -jar target/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar server  sbt \"run server\"",
+            "title": "Run"
+        },
+        {
+            "location": "/#where-to-go-next",
+            "text": "Programming Guide : Shows how to use the API and program applications with Glint  Deployment Guide : Shows how to deploy Glint in a stand-alone way on a cluster  Example Applications : Lists several example applications that use Glint  API : The complete reference API",
+            "title": "Where to go next?"
+        },
+        {
+            "location": "/programmingguide/",
+            "text": "Programming Guide\n\n\nIn this programming guide we will build a simple Scala application. It will do the following things:\n\n\n\n\nConstruct a distributed matrix on the parameter servers\n\n\nPush some values to the matrix\n\n\nPull some values from the matrix\n\n\nDestroy the matrix when we are done.\n\n\n\n\nContinue reading:\n\n\n\n\nProject setup\n\n\nConstructing and destroying a distributed matrix/vector\n\n\nPushing/Updating values in the matrix/vector\n\n\nPulling/Querying values in the matrix/vector",
+            "title": "Introduction"
+        },
+        {
+            "location": "/programmingguide/#programming-guide",
+            "text": "In this programming guide we will build a simple Scala application. It will do the following things:   Construct a distributed matrix on the parameter servers  Push some values to the matrix  Pull some values from the matrix  Destroy the matrix when we are done.   Continue reading:   Project setup  Constructing and destroying a distributed matrix/vector  Pushing/Updating values in the matrix/vector  Pulling/Querying values in the matrix/vector",
+            "title": "Programming Guide"
+        },
+        {
+            "location": "/programmingguide/setup/",
+            "text": "Project setup\n\n\nUnder construction...",
+            "title": "Project setup"
+        },
+        {
+            "location": "/programmingguide/setup/#project-setup",
+            "text": "Under construction...",
+            "title": "Project setup"
+        },
+        {
+            "location": "/programmingguide/constructing/",
+            "text": "Constructing a distributed matrix\n\n\nUnder construction...",
+            "title": "Constructing models"
+        },
+        {
+            "location": "/programmingguide/constructing/#constructing-a-distributed-matrix",
+            "text": "Under construction...",
+            "title": "Constructing a distributed matrix"
+        },
+        {
+            "location": "/programmingguide/pull/",
+            "text": "Pulling values\n\n\nUnder construction...",
+            "title": "Pulling values"
+        },
+        {
+            "location": "/programmingguide/pull/#pulling-values",
+            "text": "Under construction...",
+            "title": "Pulling values"
+        },
+        {
+            "location": "/programmingguide/push/",
+            "text": "Pushing values\n\n\nUnder construction...",
+            "title": "Pushing values"
+        },
+        {
+            "location": "/programmingguide/push/#pushing-values",
+            "text": "Under construction...",
+            "title": "Pushing values"
+        },
+        {
+            "location": "/deploymentguide/",
+            "text": "Deployment Guide\n\n\nUnder construction...",
+            "title": "Introduction"
+        },
+        {
+            "location": "/deploymentguide/#deployment-guide",
+            "text": "Under construction...",
+            "title": "Deployment Guide"
+        },
+        {
+            "location": "/examples/",
+            "text": "Examples\n\n\nUnder construction...",
+            "title": "Examples"
+        },
+        {
+            "location": "/examples/#examples",
+            "text": "Under construction...",
+            "title": "Examples"
+        }
+    ]
+}

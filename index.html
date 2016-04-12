@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        
+        
+        <link rel="shortcut icon" href="./img/favicon.ico">
+
+	<title>Glint</title>
+
+        <link href="./css/bootstrap-custom.min.css" rel="stylesheet">
+        <link href="./css/font-awesome-4.0.3.css" rel="stylesheet">
+        <link rel="stylesheet" href="./css/highlight.css">
+        <link href="./css/base.css" rel="stylesheet">
+
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+            <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+            <script src="https://oss.maxcdn.com/libs/respond.js/1.3.0/respond.min.js"></script>
+        <![endif]-->
+
+        
+    </head>
+
+    <body>
+
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+    <div class="container">
+
+        <!-- Collapsed navigation -->
+        <div class="navbar-header">
+            <!-- Expander button -->
+            <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="sr-only">Toggle navigation</span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+
+            <!-- Main title -->
+            <a class="navbar-brand" href=".">Glint</a>
+        </div>
+
+        <!-- Expanded navigation -->
+        <div class="navbar-collapse collapse">
+            <!-- Main navigation -->
+            <ul class="nav navbar-nav">
+            
+            
+                <li class="active">
+                    <a href=".">Home</a>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Programming Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="programmingguide/">Introduction</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="programmingguide/setup/">Project setup</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="programmingguide/constructing/">Constructing models</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="programmingguide/pull/">Pulling values</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="programmingguide/push/">Pushing values</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Deployment Guide <b class="caret"></b></a>
+                    <ul class="dropdown-menu">
+                    
+                        
+<li >
+    <a href="deploymentguide/">Introduction</a>
+</li>
+
+                    
+                    </ul>
+                </li>
+            
+            
+            
+                <li >
+                    <a href="examples/">Examples</a>
+                </li>
+            
+            
+            </ul>
+
+            <!-- Search, Navigation and Repo links -->
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a href="#" data-toggle="modal" data-target="#mkdocs_search_modal">
+                        <i class="fa fa-search"></i> Search
+                    </a>
+                </li>
+                <li class="disabled">
+                    <a rel="next" >
+                        <i class="fa fa-arrow-left"></i> Previous
+                    </a>
+                </li>
+                <li >
+                    <a rel="prev" href="programmingguide/">
+                        Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+            </ul>
+        </div>
+    </div>
+</div>
+
+        <div class="container">
+            <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
+    <ul class="nav bs-sidenav">
+    
+        <li class="main active"><a href="#glint">Glint</a></li>
+        
+            <li><a href="#parameter-server">Parameter Server</a></li>
+        
+            <li><a href="#download">Download</a></li>
+        
+            <li><a href="#compile">Compile</a></li>
+        
+            <li><a href="#run">Run</a></li>
+        
+            <li><a href="#where-to-go-next">Where to go next?</a></li>
+        
+    
+    </ul>
+</div></div>
+            <div class="col-md-9" role="main">
+
+<h1 id="glint"><img alt="Glint" src="https://raw.githubusercontent.com/wiki/rjagerman/glint/images/glint-logo-small-notext.png" /> Glint</h1>
+<p>Glint is a high-performance parameter server compatible with Spark. It provides a high-level API in Scala making it easy for users to build machine learning algorithms with the parameter server as a concurrency model.</p>
+<h2 id="parameter-server">Parameter Server</h2>
+<p>A parameter server is a specialized key-value store for mathematical data structures such as matrices and vectors. It has been succesfully applied in both industry and academia as a tool for distributing the model space of machine learning algorithms to many machines.</p>
+<p><img alt="Overview" src="https://raw.githubusercontent.com/wiki/rjagerman/glint/images/overview.png" /></p>
+<h2 id="download">Download</h2>
+<p>The software is currently still in alpha. Refer to the compile section in order to compile and build the software manually. As we move to beta this page will provide versioned executables ready to download.</p>
+<h2 id="compile">Compile</h2>
+<p>Glint uses <a href="http://www.scala-sbt.org/">sbt</a> as a package manager. To compile, run the following commands from a command-line</p>
+<pre><code>git clone git@github.com:rjagerman/glint.git
+cd glint
+sbt compile assembly
+</code></pre>
+<p>This will (by default) compile for Scala version 2.10. If you wish to compile binaries for both 2.10 and 2.11, use:</p>
+<pre><code>sbt "+ compile" "+ assembly"
+</code></pre>
+<p>A binary jar file is produced in <code>target/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar</code>.</p>
+<h2 id="run">Run</h2>
+<p>To run the parameter server on your localhost, you have two options: Either compile and run the .jar file or use <code>sbt run</code>. To start a master node, use one of the following commands:</p>
+<ul>
+<li><code>java -jar target/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar master</code></li>
+<li><code>sbt "run master"</code> </li>
+</ul>
+<p>To start a parameter server node, use one of the following commands:</p>
+<ul>
+<li><code>java -jar target/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar server</code></li>
+<li><code>sbt "run server"</code></li>
+</ul>
+<h2 id="where-to-go-next">Where to go next?</h2>
+<ul>
+<li><a href="programmingguide/">Programming Guide</a>: Shows how to use the API and program applications with Glint</li>
+<li><a href="deploymentguide/">Deployment Guide</a>: Shows how to deploy Glint in a stand-alone way on a cluster</li>
+<li><a href="examples/">Example Applications</a>: Lists several example applications that use Glint</li>
+<li><a href="./latest/api/">API</a>: The complete reference API</li>
+</ul></div>
+        </div>
+
+        <footer class="col-md-12">
+            <hr>
+            
+            <center>Documentation built with <a href="http://www.mkdocs.org/">MkDocs</a>.</center>
+        </footer>
+
+        <script src="./js/jquery-1.10.2.min.js"></script>
+        <script src="./js/bootstrap-3.0.3.min.js"></script>
+        <script src="./js/highlight.pack.js"></script>
+        <script>var base_url = '.';</script>
+        <script data-main="./mkdocs/js/search.js" src="./mkdocs/js/require.js"></script>
+        <script src="./js/base.js"></script>
+
+        <div class="modal" id="mkdocs_search_modal" tabindex="-1" role="dialog" aria-labelledby="Search Modal" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                        <h4 class="modal-title" id="exampleModalLabel">Search</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            From here you can search these documents. Enter
+                            your search terms below.
+                        </p>
+                        <form role="form">
+                            <div class="form-group">
+                                <input type="text" class="form-control" placeholder="Search..." id="mkdocs-search-query">
+                            </div>
+                        </form>
+                        <div id="mkdocs-search-results"></div>
+                    </div>
+                    <div class="modal-footer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+    
+    <url>
+     <loc>None/</loc>
+     <lastmod>2016-04-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+    
+        
+    <url>
+     <loc>None/programmingguide/</loc>
+     <lastmod>2016-04-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/programmingguide/setup/</loc>
+     <lastmod>2016-04-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/programmingguide/constructing/</loc>
+     <lastmod>2016-04-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/programmingguide/pull/</loc>
+     <lastmod>2016-04-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>None/programmingguide/push/</loc>
+     <lastmod>2016-04-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+        
+    <url>
+     <loc>None/deploymentguide/</loc>
+     <lastmod>2016-04-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+    <url>
+     <loc>None/examples/</loc>
+     <lastmod>2016-04-12</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+    
+
+</urlset>
