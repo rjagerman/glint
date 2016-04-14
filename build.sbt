@@ -92,7 +92,7 @@ logBuffered := false
 parallelExecution in Test := false
 
 // Scala documentation
-scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value+"/doc/root.txt")
+scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value+"/docs/root.txt")
 scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Glint")
 scalacOptions in (Compile, doc) ++= Seq("-skip-packages", "akka")
 

@@ -1,0 +1,20 @@
+site_name: Glint 
+site_url: "http://rjagerman.github.com/glint/"
+site_description: "Glint: A high-performance parameter server in Scala"
+site_author: "Rolf Jagerman"
+repo_url: "https://github.com/rjagerman/glint/"
+pages:
+- Home: index.md
+- 'Getting Started':
+    - 'Introduction': 'gettingstarted/index.md'
+    - 'Project setup': 'gettingstarted/setup.md'
+    - 'Constructing models': 'gettingstarted/constructing.md'
+    - 'Pulling values': 'gettingstarted/pull.md'
+    - 'Pushing values': 'gettingstarted/push.md'
+    - 'Spark integration': 'gettingstarted/spark.md'
+- 'Deployment Guide':
+    - 'Introduction': 'deploymentguide/index.md'
+    - 'Localhost': 'deploymentguide/localhost.md'
+    - 'Cluster': 'deploymentguide/cluster.md'
+- 'Examples': 'examples/index.md'
+theme: yeti
