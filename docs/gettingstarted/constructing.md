@@ -1,6 +1,6 @@
 # Constructing models
 
-In order to construct models on the parameter servers we first need to start a master node and at least one parameter server. Refer to the [localhost deployment guide](../../deploymentguide/localhost/) how to start these nodes on your localhost. Make sure you have a master node and one or more server nodes up and running in separate terminal windows before continuing.
+In order to construct models on the parameter servers we first need to start a master node and at least one parameter server. Refer to the [localhost deployment guide](../deploymentguide/localhost/) how to start these nodes on your localhost. Make sure you have a master node and one or more server nodes up and running in separate terminal windows before continuing.
 
 ## Connect to master
 
