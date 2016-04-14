@@ -36,64 +36,139 @@
             "title": "Where to go next?"
         },
         {
-            "location": "/programmingguide/",
-            "text": "Programming Guide\n\n\nIn this programming guide we will build a simple Scala application. It will do the following things:\n\n\n\n\nConstruct a distributed matrix on the parameter servers\n\n\nPush some values to the matrix\n\n\nPull some values from the matrix\n\n\nDestroy the matrix when we are done.\n\n\n\n\nContinue reading:\n\n\n\n\nProject setup\n\n\nConstructing and destroying a distributed matrix/vector\n\n\nPushing/Updating values in the matrix/vector\n\n\nPulling/Querying values in the matrix/vector",
+            "location": "/gettingstarted/",
+            "text": "Programming Guide\n\n\nIn this programming guide we will go over the basic functionality of the parameter server within an interactive Scala console. We will:\n\n\n\n\nConstruct a distributed matrix on the parameter servers\n\n\nPush some values to the matrix\n\n\nPull some values from the matrix\n\n\nDestroy the matrix when we are done.\n\n\n\n\nContinue reading:\n\n\n\n\nProject setup\n\n\nConstructing and destroying a distributed matrix/vector\n\n\nPulling/Querying values in the matrix/vector\n\n\nPushing/Updating values in the matrix/vector\n\n\nSpark integration",
             "title": "Introduction"
         },
         {
-            "location": "/programmingguide/#programming-guide",
-            "text": "In this programming guide we will build a simple Scala application. It will do the following things:   Construct a distributed matrix on the parameter servers  Push some values to the matrix  Pull some values from the matrix  Destroy the matrix when we are done.   Continue reading:   Project setup  Constructing and destroying a distributed matrix/vector  Pushing/Updating values in the matrix/vector  Pulling/Querying values in the matrix/vector",
+            "location": "/gettingstarted/#programming-guide",
+            "text": "In this programming guide we will go over the basic functionality of the parameter server within an interactive Scala console. We will:   Construct a distributed matrix on the parameter servers  Push some values to the matrix  Pull some values from the matrix  Destroy the matrix when we are done.   Continue reading:   Project setup  Constructing and destroying a distributed matrix/vector  Pulling/Querying values in the matrix/vector  Pushing/Updating values in the matrix/vector  Spark integration",
             "title": "Programming Guide"
         },
         {
-            "location": "/programmingguide/setup/",
-            "text": "Project setup\n\n\nUnder construction...",
+            "location": "/gettingstarted/setup/",
+            "text": "Project setup\n\n\nBefore we start we need to setup a new scala project and add the correct dependencies. In this example we will use the Scala build tool (sbt) to do this.\n\n\nCreating an SBT project\n\n\nLet's first create a directory for the project and initialize sbt there.\n\n\nmkdir glint-tutorial\ncd glint-tutorial\nsbt initialize\n\n\n\nAdd a \nbuild.sbt\n file with the following contents:\n\n\nname := \"GlintTutorial\"\n\nversion := \"0.1-SNAPSHOT\"\n\nscalaVersion := \"2.10.6\"\n\nlibraryDependencies += \"ch.ethz.inf.da\" %% \"glint\" % \"0.1-SNAPSHOT\"\n\n\n\nAdding Glint dependency\n\n\nThe listed glint dependency is not publicly available on a central repository yet since the software is still in alpha. This will change in future versions. For now you will have to compile glint manually and publish its package locally.\n\n\nGrab the latest version of glint from the github repository:\n\n\ncd ../\ngit clone git@github.com:rjagerman/glint.git\ncd glint\nsbt compile assembly publish-local\n\n\n\nThis will compile a version of Glint and publish the binaries to a local ivy2 repository. After this step, the sbt dependency should work.\n\n\nOpening a console\n\n\nNow, run \nsbt console\n to open an interactive console with sbt:\n\n\n$ sbt console\nscala>\n\n\n\nThe next steps in the guide will be executed from this console.\n\n\nContinue to Constructing Models",
             "title": "Project setup"
         },
         {
-            "location": "/programmingguide/setup/#project-setup",
-            "text": "Under construction...",
+            "location": "/gettingstarted/setup/#project-setup",
+            "text": "Before we start we need to setup a new scala project and add the correct dependencies. In this example we will use the Scala build tool (sbt) to do this.",
             "title": "Project setup"
         },
         {
-            "location": "/programmingguide/constructing/",
-            "text": "Constructing a distributed matrix\n\n\nUnder construction...",
+            "location": "/gettingstarted/setup/#creating-an-sbt-project",
+            "text": "Let's first create a directory for the project and initialize sbt there.  mkdir glint-tutorial\ncd glint-tutorial\nsbt initialize  Add a  build.sbt  file with the following contents:  name := \"GlintTutorial\"\n\nversion := \"0.1-SNAPSHOT\"\n\nscalaVersion := \"2.10.6\"\n\nlibraryDependencies += \"ch.ethz.inf.da\" %% \"glint\" % \"0.1-SNAPSHOT\"",
+            "title": "Creating an SBT project"
+        },
+        {
+            "location": "/gettingstarted/setup/#adding-glint-dependency",
+            "text": "The listed glint dependency is not publicly available on a central repository yet since the software is still in alpha. This will change in future versions. For now you will have to compile glint manually and publish its package locally.  Grab the latest version of glint from the github repository:  cd ../\ngit clone git@github.com:rjagerman/glint.git\ncd glint\nsbt compile assembly publish-local  This will compile a version of Glint and publish the binaries to a local ivy2 repository. After this step, the sbt dependency should work.",
+            "title": "Adding Glint dependency"
+        },
+        {
+            "location": "/gettingstarted/setup/#opening-a-console",
+            "text": "Now, run  sbt console  to open an interactive console with sbt:  $ sbt console\nscala>  The next steps in the guide will be executed from this console.  Continue to Constructing Models",
+            "title": "Opening a console"
+        },
+        {
+            "location": "/gettingstarted/constructing/",
+            "text": "Constructing models\n\n\nIn order to construct models on the parameter servers we first need to start a master node and at least one parameter server. Refer to the \nlocalhost deployment guide\n how to start these nodes on your localhost. Make sure you have a master node and one or more server nodes up and running in separate terminal windows before continuing.\n\n\nConnect to master\n\n\nBefore we can spawn distributed models on the parameter server, we first need to connect to the running master node. We assume that this is running on localhost. Let's create a configuration file for our project first. Call it \nglint.conf\n and place it in the project's root directory. Give it the following contents:\n\n\nglint.master.host = \"127.0.0.1\"\nglint.master.port = 13370\nglint.client.timeout = 30s\n\n\n\nOpen the sbt console if you had closed it, and enter the following commands:\n\n\nimport com.typesafe.config.ConfigFactory\nimport glint.Client\n\nval client = Client(ConfigFactory.parseFile(new java.io.File(\"glint.conf\")))\n\n\n\nThis will construct a client object that acts as an interface to the parameter servers. We can now use this client object to construct distributed matrices and vectors on the parameter server.\n\n\nConstruct a matrix\n\n\nNow that the Client object is connected to the Master node we can try to construct a distributed matrix. Let's create a distributed matrix that stores \nDouble\n values and has 10000 rows with 2000 columns:\n\n\nval matrix = client.matrix[Double](10000, 2000)\n\n\n\nBefore we can interact with this matrix we need to define an execution context and timeout for the requests. Here we use the default global execution context and a timeout of 30 seconds:\n\n\nimport scala.concurrent.duration._\nimport akka.util.Timeout\nimplicit val ec = scala.concurrent.ExecutionContext.Implicits.global\nimplicit val timeout = new Timeout(30 seconds)\n\n\n\nTo destroy the matrix and release the allocated resources on the parameter servers, run:\n\n\nval result = matrix.destroy()\n\n\n\nThis method is asynchronous and returns a \nFuture[Boolean]\n object immediately. This future indicates the eventual success or failure of the operation. Let's attach a callback to verify if the operation succeeded:\n\n\nresult.onSuccess {\n    case true => println(\"Succesfully destroyed the matrix\")\n}\n\n\n\nConstruct a vector\n\n\nA vector can be constructed almost analogously. For example a vector that stores \nLong\n values with 100,000 dimensions, would look like this:\n\n\nval vector = client.vector[Long](100000)\n\n\n\nAnd indeed, we can destroy this vector in a similar way:\n\n\nval result = vector.destroy()\nresult.onSuccess {\n    case true => println(\"Succesfully destroyed the vector\")\n}\n\n\n\nContinue to Pulling values",
             "title": "Constructing models"
         },
         {
-            "location": "/programmingguide/constructing/#constructing-a-distributed-matrix",
-            "text": "Under construction...",
-            "title": "Constructing a distributed matrix"
+            "location": "/gettingstarted/constructing/#constructing-models",
+            "text": "In order to construct models on the parameter servers we first need to start a master node and at least one parameter server. Refer to the  localhost deployment guide  how to start these nodes on your localhost. Make sure you have a master node and one or more server nodes up and running in separate terminal windows before continuing.",
+            "title": "Constructing models"
         },
         {
-            "location": "/programmingguide/pull/",
-            "text": "Pulling values\n\n\nUnder construction...",
+            "location": "/gettingstarted/constructing/#connect-to-master",
+            "text": "Before we can spawn distributed models on the parameter server, we first need to connect to the running master node. We assume that this is running on localhost. Let's create a configuration file for our project first. Call it  glint.conf  and place it in the project's root directory. Give it the following contents:  glint.master.host = \"127.0.0.1\"\nglint.master.port = 13370\nglint.client.timeout = 30s  Open the sbt console if you had closed it, and enter the following commands:  import com.typesafe.config.ConfigFactory\nimport glint.Client\n\nval client = Client(ConfigFactory.parseFile(new java.io.File(\"glint.conf\")))  This will construct a client object that acts as an interface to the parameter servers. We can now use this client object to construct distributed matrices and vectors on the parameter server.",
+            "title": "Connect to master"
+        },
+        {
+            "location": "/gettingstarted/constructing/#construct-a-matrix",
+            "text": "Now that the Client object is connected to the Master node we can try to construct a distributed matrix. Let's create a distributed matrix that stores  Double  values and has 10000 rows with 2000 columns:  val matrix = client.matrix[Double](10000, 2000)  Before we can interact with this matrix we need to define an execution context and timeout for the requests. Here we use the default global execution context and a timeout of 30 seconds:  import scala.concurrent.duration._\nimport akka.util.Timeout\nimplicit val ec = scala.concurrent.ExecutionContext.Implicits.global\nimplicit val timeout = new Timeout(30 seconds)  To destroy the matrix and release the allocated resources on the parameter servers, run:  val result = matrix.destroy()  This method is asynchronous and returns a  Future[Boolean]  object immediately. This future indicates the eventual success or failure of the operation. Let's attach a callback to verify if the operation succeeded:  result.onSuccess {\n    case true => println(\"Succesfully destroyed the matrix\")\n}",
+            "title": "Construct a matrix"
+        },
+        {
+            "location": "/gettingstarted/constructing/#construct-a-vector",
+            "text": "A vector can be constructed almost analogously. For example a vector that stores  Long  values with 100,000 dimensions, would look like this:  val vector = client.vector[Long](100000)  And indeed, we can destroy this vector in a similar way:  val result = vector.destroy()\nresult.onSuccess {\n    case true => println(\"Succesfully destroyed the vector\")\n}  Continue to Pulling values",
+            "title": "Construct a vector"
+        },
+        {
+            "location": "/gettingstarted/pull/",
+            "text": "Pulling values\n\n\nIn this section of the guide we will pull some values from the parameter server. Make sure your \nsbt console\n is still open and enter the following command to construct a distributed matrix\n\n\nval matrix = client.matrix[Double](10000, 2000)\n\n\n\nThis will have created a matrix with 10000 rows and 2000 columns that stores \nDouble\n values.\n\n\nNow in order to pull the current values let's use the pull method:\n\n\nval result = matrix.pull(Array(0L, 1L, 2L), Array(100, 200, 300))\n\n\n\nThis will pull the following values:\n\n\n\n\nrow 0, column 100\n\n\nrow 1, column 200\n\n\nrow 2, column 300\n\n\n\n\nSupplying arrays of primitives to the function is done for performance reasons as they have minimal memory overhead. Once again the method is asynchronous and it returns a \nFuture[Array[Double]]\n immediately. This is a placeholder for future values that will eventually (once the request completes) contain the resulting values for the specified rows and columns. Attach an \nonSuccess\n callback to print these values:\n\n\nresult.onSuccess {\n    case values => println(values.mkString(\", \"))\n}\n\n\n\nThis should return three values of exactly 0.0 (which is the default with which the matrix is initialized).\n\n\n0.0, 0.0, 0.0\n\n\n\nIn the following section we will show how to push new values to the parameter server so we can get some more interesting values from the parameter server.\n\n\nContinue to Pushing values",
             "title": "Pulling values"
         },
         {
-            "location": "/programmingguide/pull/#pulling-values",
-            "text": "Under construction...",
+            "location": "/gettingstarted/pull/#pulling-values",
+            "text": "In this section of the guide we will pull some values from the parameter server. Make sure your  sbt console  is still open and enter the following command to construct a distributed matrix  val matrix = client.matrix[Double](10000, 2000)  This will have created a matrix with 10000 rows and 2000 columns that stores  Double  values.  Now in order to pull the current values let's use the pull method:  val result = matrix.pull(Array(0L, 1L, 2L), Array(100, 200, 300))  This will pull the following values:   row 0, column 100  row 1, column 200  row 2, column 300   Supplying arrays of primitives to the function is done for performance reasons as they have minimal memory overhead. Once again the method is asynchronous and it returns a  Future[Array[Double]]  immediately. This is a placeholder for future values that will eventually (once the request completes) contain the resulting values for the specified rows and columns. Attach an  onSuccess  callback to print these values:  result.onSuccess {\n    case values => println(values.mkString(\", \"))\n}  This should return three values of exactly 0.0 (which is the default with which the matrix is initialized).  0.0, 0.0, 0.0  In the following section we will show how to push new values to the parameter server so we can get some more interesting values from the parameter server.  Continue to Pushing values",
             "title": "Pulling values"
         },
         {
-            "location": "/programmingguide/push/",
-            "text": "Pushing values\n\n\nUnder construction...",
+            "location": "/gettingstarted/push/",
+            "text": "Pushing values\n\n\nIn this section of the guide we will push some values from the parameter server. Make sure your \nsbt console\n is still open and the matrix from the previous pull section is still available\n\n\nNow let's push some values to the matrix\n\n\nval result = matrix.push(Array(0L, 1L, 2L), Array(100, 200, 300), Array(0.1, 3.1415, 9.999))\n\n\n\nThis will push the following values:\n\n\n\n\nAdd 0.1 to the current value of row 0, column 100\n\n\nAdd 3.1415 to the current value of row 1, column 200\n\n\nAdd 9.999 to the current value row 2, column 300\n\n\n\n\nThis method is asynchronous and it returns a \nFuture[Boolean]\n immediately. Attach a callback to verify that the process completed\n\n\nresult.onSuccess {\n    case true => println(\"Push successfull\")\n}\n\n\n\nNow let's check whether these new values are indeed on the parameter server by pulling the values:\n\n\nmatrix.pull(Array(0L, 1L, 2L), Array(100, 200, 300)).onSuccess {\n    case values => println(values.mkString(\", \"))\n}\n\n\n\nThis should indeed print out the values:\n\n\n0.1, 3.1415, 9.999\n\n\n\nNow we will show the additive nature of updates of the parameter server. Let's add 0.1 to row 0, column 100 to turn the current value of \n0.1\n into \n0.2\n. Let's wait for that update to complete by using Scala's \nAwait\n concurrency method to block execution:\n\n\nimport scala.concurrent.Await\nAwait.result(matrix.push(Array(0L), Array(100), Array(0.1)), 30 seconds)\n\n\n\nNow verify the result on the parameter server:\n\n\nmatrix.pull(Array(0L), Array(100)).onSuccess {\n    case values => println(values.mkString(\", \"))\n}\n\n\n\nAnd we should observe the expected result:\n\n\n0.2\n\n\n\nContinue to Spark Integration",
             "title": "Pushing values"
         },
         {
-            "location": "/programmingguide/push/#pushing-values",
-            "text": "Under construction...",
+            "location": "/gettingstarted/push/#pushing-values",
+            "text": "In this section of the guide we will push some values from the parameter server. Make sure your  sbt console  is still open and the matrix from the previous pull section is still available  Now let's push some values to the matrix  val result = matrix.push(Array(0L, 1L, 2L), Array(100, 200, 300), Array(0.1, 3.1415, 9.999))  This will push the following values:   Add 0.1 to the current value of row 0, column 100  Add 3.1415 to the current value of row 1, column 200  Add 9.999 to the current value row 2, column 300   This method is asynchronous and it returns a  Future[Boolean]  immediately. Attach a callback to verify that the process completed  result.onSuccess {\n    case true => println(\"Push successfull\")\n}  Now let's check whether these new values are indeed on the parameter server by pulling the values:  matrix.pull(Array(0L, 1L, 2L), Array(100, 200, 300)).onSuccess {\n    case values => println(values.mkString(\", \"))\n}  This should indeed print out the values:  0.1, 3.1415, 9.999  Now we will show the additive nature of updates of the parameter server. Let's add 0.1 to row 0, column 100 to turn the current value of  0.1  into  0.2 . Let's wait for that update to complete by using Scala's  Await  concurrency method to block execution:  import scala.concurrent.Await\nAwait.result(matrix.push(Array(0L), Array(100), Array(0.1)), 30 seconds)  Now verify the result on the parameter server:  matrix.pull(Array(0L), Array(100)).onSuccess {\n    case values => println(values.mkString(\", \"))\n}  And we should observe the expected result:  0.2  Continue to Spark Integration",
             "title": "Pushing values"
+        },
+        {
+            "location": "/gettingstarted/spark/",
+            "text": "Spark integration\n\n\nSo far you have seen a very short introduction to programming with the Glint parameter server. At its core you will construct a client that will construct either matrices or vectors. You then use the \npull\n and \npush\n methods on these matrices or vectors to query and update the current state of the matrix. Now how does this relate to spark?\n\n\nThe main idea is that the \nBigMatrix\n and \nBigVector\n objects that you obtain from the client are serializable and are safe to be used within Spark closures. So let's give a quick example:\n\n\nval rdd = sc.parallelize(Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)) // Some spark RDD\nval vector = client.vector[Double](10)\n\nrdd.foreach {\n    case value => vector.push(Array(value), Array(12)) // Add 12 to every index of the vector\n}\n\nval result = vector.pull((0L until 10).toArray)\nresult.onSuccess {\n    case values => println(values.mkString(\", \"))\n}\nresult.onComplete {\n    case _ => vector.destroy()\n}",
+            "title": "Spark integration"
+        },
+        {
+            "location": "/gettingstarted/spark/#spark-integration",
+            "text": "So far you have seen a very short introduction to programming with the Glint parameter server. At its core you will construct a client that will construct either matrices or vectors. You then use the  pull  and  push  methods on these matrices or vectors to query and update the current state of the matrix. Now how does this relate to spark?  The main idea is that the  BigMatrix  and  BigVector  objects that you obtain from the client are serializable and are safe to be used within Spark closures. So let's give a quick example:  val rdd = sc.parallelize(Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)) // Some spark RDD\nval vector = client.vector[Double](10)\n\nrdd.foreach {\n    case value => vector.push(Array(value), Array(12)) // Add 12 to every index of the vector\n}\n\nval result = vector.pull((0L until 10).toArray)\nresult.onSuccess {\n    case values => println(values.mkString(\", \"))\n}\nresult.onComplete {\n    case _ => vector.destroy()\n}",
+            "title": "Spark integration"
         },
         {
             "location": "/deploymentguide/",
-            "text": "Deployment Guide\n\n\nUnder construction...",
+            "text": "Deployment Guide\n\n\nIn this guide we will show how to deploy the system in two settings:\n\n\n\n\nLocalhost\n: How to run the system on your localhost for easy development and testing\n\n\nCluster\n: How to run the system on a cluster as stand-alone software",
             "title": "Introduction"
         },
         {
             "location": "/deploymentguide/#deployment-guide",
-            "text": "Under construction...",
+            "text": "In this guide we will show how to deploy the system in two settings:   Localhost : How to run the system on your localhost for easy development and testing  Cluster : How to run the system on a cluster as stand-alone software",
             "title": "Deployment Guide"
+        },
+        {
+            "location": "/deploymentguide/localhost/",
+            "text": "Localhost Deployment\n\n\nTo run the system on a single computer is quite simple. The default configuration uses localhost and thus no modifications are necessary.\n\n\nMake sure you have a recent version of glint from github and that you have the \nScala build tool\n installed\n\n\nRun a master node\n\n\nTo run a single master node (by default on port 13370), use sbt:\n\n\nsbt \"run master\"\n\n\n\nRun a parameter server\n\n\nOpen a new terminal window and start a parameter server by running\n\n\nsbt \"run server\"\n\n\n\nYou can repeat this multiple times to start multiple parameter servers.\n\n\nSpecifying custom configuration\n\n\nSometimes you will want to specify different configuration. For example, when you want to send very large messages and increase Akka's message size limit or if you want to use a different port number. You can create a configuration file and load it as follows:\n\n\nsbt \"run master -c /path/to/configuration/file.conf\"\nsbt \"run server -c /path/to/configuration/file.conf\"\n\n\n\nFor most scenarios where you want to run a localhost version of the parameter server this is not necessary and the default configuration will suffice.",
+            "title": "Localhost"
+        },
+        {
+            "location": "/deploymentguide/localhost/#localhost-deployment",
+            "text": "To run the system on a single computer is quite simple. The default configuration uses localhost and thus no modifications are necessary.  Make sure you have a recent version of glint from github and that you have the  Scala build tool  installed",
+            "title": "Localhost Deployment"
+        },
+        {
+            "location": "/deploymentguide/localhost/#run-a-master-node",
+            "text": "To run a single master node (by default on port 13370), use sbt:  sbt \"run master\"",
+            "title": "Run a master node"
+        },
+        {
+            "location": "/deploymentguide/localhost/#run-a-parameter-server",
+            "text": "Open a new terminal window and start a parameter server by running  sbt \"run server\"  You can repeat this multiple times to start multiple parameter servers.",
+            "title": "Run a parameter server"
+        },
+        {
+            "location": "/deploymentguide/localhost/#specifying-custom-configuration",
+            "text": "Sometimes you will want to specify different configuration. For example, when you want to send very large messages and increase Akka's message size limit or if you want to use a different port number. You can create a configuration file and load it as follows:  sbt \"run master -c /path/to/configuration/file.conf\"\nsbt \"run server -c /path/to/configuration/file.conf\"  For most scenarios where you want to run a localhost version of the parameter server this is not necessary and the default configuration will suffice.",
+            "title": "Specifying custom configuration"
+        },
+        {
+            "location": "/deploymentguide/cluster/",
+            "text": "Cluster Deployment\n\n\nUnder construction...",
+            "title": "Cluster"
+        },
+        {
+            "location": "/deploymentguide/cluster/#cluster-deployment",
+            "text": "Under construction...",
+            "title": "Cluster Deployment"
         },
         {
             "location": "/examples/",

@@ -5,11 +5,11 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
-        
-        
+        <meta name="author" content="Rolf Jagerman">
+        <link rel="canonical" href="http://rjagerman.github.com/glint/gettingstarted/pull/">
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
-	<title>Constructing models - Glint</title>
+	<title>Pulling values - Glint</title>
 
         <link href="../../css/bootstrap-custom.min.css" rel="stylesheet">
         <link href="../../css/font-awesome-4.0.3.css" rel="stylesheet">
@@ -57,7 +57,7 @@
             
             
                 <li class="dropdown active">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Programming Guide <b class="caret"></b></a>
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Getting Started <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
                         
@@ -73,20 +73,26 @@
 
                     
                         
-<li class="active">
-    <a href="./">Constructing models</a>
+<li >
+    <a href="../constructing/">Constructing models</a>
 </li>
 
                     
                         
-<li >
-    <a href="../pull/">Pulling values</a>
+<li class="active">
+    <a href="./">Pulling values</a>
 </li>
 
                     
                         
 <li >
     <a href="../push/">Pushing values</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../spark/">Spark integration</a>
 </li>
 
                     
@@ -102,6 +108,18 @@
                         
 <li >
     <a href="../../deploymentguide/">Introduction</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../../deploymentguide/localhost/">Localhost</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../../deploymentguide/cluster/">Cluster</a>
 </li>
 
                     
@@ -125,13 +143,22 @@
                     </a>
                 </li>
                 <li >
-                    <a rel="next" href="../setup/">
+                    <a rel="next" href="../constructing/">
                         <i class="fa fa-arrow-left"></i> Previous
                     </a>
                 </li>
                 <li >
-                    <a rel="prev" href="../pull/">
+                    <a rel="prev" href="../push/">
                         Next <i class="fa fa-arrow-right"></i>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="https://github.com/rjagerman/glint/">
+                        
+                            <i class="fa fa-github"></i>
+                        
+                        GitHub
                     </a>
                 </li>
                 
@@ -144,15 +171,37 @@
             <div class="col-md-3"><div class="bs-sidebar hidden-print affix well" role="complementary">
     <ul class="nav bs-sidenav">
     
-        <li class="main active"><a href="#constructing-a-distributed-matrix">Constructing a distributed matrix</a></li>
+        <li class="main active"><a href="#pulling-values">Pulling values</a></li>
         
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
-<h1 id="constructing-a-distributed-matrix">Constructing a distributed matrix</h1>
-<p>Under construction...</p></div>
+<h1 id="pulling-values">Pulling values</h1>
+<p>In this section of the guide we will pull some values from the parameter server. Make sure your <code>sbt console</code> is still open and enter the following command to construct a distributed matrix</p>
+<pre><code>val matrix = client.matrix[Double](10000, 2000)
+</code></pre>
+<p>This will have created a matrix with 10000 rows and 2000 columns that stores <code>Double</code> values.</p>
+<p>Now in order to pull the current values let's use the pull method:</p>
+<pre><code>val result = matrix.pull(Array(0L, 1L, 2L), Array(100, 200, 300))
+</code></pre>
+<p>This will pull the following values:</p>
+<ul>
+<li>row 0, column 100</li>
+<li>row 1, column 200</li>
+<li>row 2, column 300</li>
+</ul>
+<p>Supplying arrays of primitives to the function is done for performance reasons as they have minimal memory overhead. Once again the method is asynchronous and it returns a <code>Future[Array[Double]]</code> immediately. This is a placeholder for future values that will eventually (once the request completes) contain the resulting values for the specified rows and columns. Attach an <code>onSuccess</code> callback to print these values:</p>
+<pre><code>result.onSuccess {
+    case values =&gt; println(values.mkString(", "))
+}
+</code></pre>
+<p>This should return three values of exactly 0.0 (which is the default with which the matrix is initialized).</p>
+<pre><code>0.0, 0.0, 0.0
+</code></pre>
+<p>In the following section we will show how to push new values to the parameter server so we can get some more interesting values from the parameter server.</p>
+<p><a href="../push/">Continue to Pushing values</a></p></div>
         </div>
 
         <footer class="col-md-12">

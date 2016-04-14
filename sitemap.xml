@@ -3,8 +3,8 @@
 
     
     <url>
-     <loc>None/</loc>
-     <lastmod>2016-04-12</lastmod>
+     <loc>http://rjagerman.github.com/glint//</loc>
+     <lastmod>2016-04-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     
@@ -12,51 +12,69 @@
     
         
     <url>
-     <loc>None/programmingguide/</loc>
-     <lastmod>2016-04-12</lastmod>
+     <loc>http://rjagerman.github.com/glint//gettingstarted/</loc>
+     <lastmod>2016-04-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/programmingguide/setup/</loc>
-     <lastmod>2016-04-12</lastmod>
+     <loc>http://rjagerman.github.com/glint//gettingstarted/setup/</loc>
+     <lastmod>2016-04-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/programmingguide/constructing/</loc>
-     <lastmod>2016-04-12</lastmod>
+     <loc>http://rjagerman.github.com/glint//gettingstarted/constructing/</loc>
+     <lastmod>2016-04-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/programmingguide/pull/</loc>
-     <lastmod>2016-04-12</lastmod>
+     <loc>http://rjagerman.github.com/glint//gettingstarted/pull/</loc>
+     <lastmod>2016-04-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     <url>
-     <loc>None/programmingguide/push/</loc>
-     <lastmod>2016-04-12</lastmod>
+     <loc>http://rjagerman.github.com/glint//gettingstarted/push/</loc>
+     <lastmod>2016-04-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
-    
-
-    
-        
     <url>
-     <loc>None/deploymentguide/</loc>
-     <lastmod>2016-04-12</lastmod>
+     <loc>http://rjagerman.github.com/glint//gettingstarted/spark/</loc>
+     <lastmod>2016-04-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
         
     
 
     
+        
     <url>
-     <loc>None/examples/</loc>
-     <lastmod>2016-04-12</lastmod>
+     <loc>http://rjagerman.github.com/glint//deploymentguide/</loc>
+     <lastmod>2016-04-14</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>http://rjagerman.github.com/glint//deploymentguide/localhost/</loc>
+     <lastmod>2016-04-14</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    <url>
+     <loc>http://rjagerman.github.com/glint//deploymentguide/cluster/</loc>
+     <lastmod>2016-04-14</lastmod>
+     <changefreq>daily</changefreq>
+    </url>
+        
+    
+
+    
+    <url>
+     <loc>http://rjagerman.github.com/glint//examples/</loc>
+     <lastmod>2016-04-14</lastmod>
      <changefreq>daily</changefreq>
     </url>
     

@@ -5,8 +5,8 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         
-        
-        
+        <meta name="author" content="Rolf Jagerman">
+        <link rel="canonical" href="http://rjagerman.github.com/glint/gettingstarted/setup/">
         <link rel="shortcut icon" href="../../img/favicon.ico">
 
 	<title>Project setup - Glint</title>
@@ -57,7 +57,7 @@
             
             
                 <li class="dropdown active">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Programming Guide <b class="caret"></b></a>
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown">Getting Started <b class="caret"></b></a>
                     <ul class="dropdown-menu">
                     
                         
@@ -90,6 +90,12 @@
 </li>
 
                     
+                        
+<li >
+    <a href="../spark/">Spark integration</a>
+</li>
+
+                    
                     </ul>
                 </li>
             
@@ -102,6 +108,18 @@
                         
 <li >
     <a href="../../deploymentguide/">Introduction</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../../deploymentguide/localhost/">Localhost</a>
+</li>
+
+                    
+                        
+<li >
+    <a href="../../deploymentguide/cluster/">Cluster</a>
 </li>
 
                     
@@ -135,6 +153,15 @@
                     </a>
                 </li>
                 
+                <li>
+                    <a href="https://github.com/rjagerman/glint/">
+                        
+                            <i class="fa fa-github"></i>
+                        
+                        GitHub
+                    </a>
+                </li>
+                
             </ul>
         </div>
     </div>
@@ -146,13 +173,50 @@
     
         <li class="main active"><a href="#project-setup">Project setup</a></li>
         
+            <li><a href="#creating-an-sbt-project">Creating an SBT project</a></li>
+        
+            <li><a href="#adding-glint-dependency">Adding Glint dependency</a></li>
+        
+            <li><a href="#opening-a-console">Opening a console</a></li>
+        
     
     </ul>
 </div></div>
             <div class="col-md-9" role="main">
 
 <h1 id="project-setup">Project setup</h1>
-<p>Under construction...</p></div>
+<p>Before we start we need to setup a new scala project and add the correct dependencies. In this example we will use the Scala build tool (sbt) to do this.</p>
+<h2 id="creating-an-sbt-project">Creating an SBT project</h2>
+<p>Let's first create a directory for the project and initialize sbt there.</p>
+<pre><code>mkdir glint-tutorial
+cd glint-tutorial
+sbt initialize
+</code></pre>
+<p>Add a <code>build.sbt</code> file with the following contents:</p>
+<pre><code>name := "GlintTutorial"
+
+version := "0.1-SNAPSHOT"
+
+scalaVersion := "2.10.6"
+
+libraryDependencies += "ch.ethz.inf.da" %% "glint" % "0.1-SNAPSHOT"
+</code></pre>
+<h2 id="adding-glint-dependency">Adding Glint dependency</h2>
+<p>The listed glint dependency is not publicly available on a central repository yet since the software is still in alpha. This will change in future versions. For now you will have to compile glint manually and publish its package locally.</p>
+<p>Grab the latest version of glint from the github repository:</p>
+<pre><code>cd ../
+git clone git@github.com:rjagerman/glint.git
+cd glint
+sbt compile assembly publish-local
+</code></pre>
+<p>This will compile a version of Glint and publish the binaries to a local ivy2 repository. After this step, the sbt dependency should work.</p>
+<h2 id="opening-a-console">Opening a console</h2>
+<p>Now, run <code>sbt console</code> to open an interactive console with sbt:</p>
+<pre><code>$ sbt console
+scala&gt;
+</code></pre>
+<p>The next steps in the guide will be executed from this console.</p>
+<p><a href="../constructing/">Continue to Constructing Models</a></p></div>
         </div>
 
         <footer class="col-md-12">
