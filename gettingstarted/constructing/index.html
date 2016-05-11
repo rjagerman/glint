@@ -201,7 +201,7 @@ different hostname or IP), you can create a <code>glint.conf</code> file. See <a
 for a comprehensive example. To load a custom configuration file, use the following:</p>
 <pre><code>import com.typesafe.config.ConfigFactory
 import glint.Client
-val client = Client(ConfigFactory.parseFile(new java.io.File("glint.conf")))
+val client = Client(ConfigFactory.parseFile(new java.io.File("/path/to/glint.conf")))
 </code></pre>
 <h2 id="construct-a-matrix">Construct a matrix</h2>
 <p>Now that the Client object is connected to the Master node we can try to construct a distributed matrix. Let's create a 
