@@ -256,6 +256,15 @@ class Client(val config: Config,
 object Client {
 
   /**
+    * Constructs a client with the default configuration
+    *
+    * @return The client
+    */
+  def apply(): Client = {
+    this(ConfigFactory.empty())
+  }
+
+  /**
     * Constructs a client
     *
     * @param config The configuration
@@ -264,7 +273,7 @@ object Client {
   def apply(config: Config): Client = {
     val default = ConfigFactory.parseResourcesAnySyntax("glint")
     val conf = config.withFallback(default).resolve()
-    Await.result(start(conf), config.getDuration("glint.client.timeout", TimeUnit.MILLISECONDS) milliseconds)
+    Await.result(start(conf), conf.getDuration("glint.client.timeout", TimeUnit.MILLISECONDS) milliseconds)
   }
 
   /**

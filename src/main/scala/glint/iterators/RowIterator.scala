@@ -11,8 +11,9 @@ import scala.concurrent.ExecutionContext
   *
   * @param matrix The underlying matrix to iterate over
   * @param blockSize The number of rows to pull per request (default: 100)
+  * @param ec The implicit execution context in which to execute requests
   */
-class RowIterator[V](matrix: BigMatrix[V], blockSize: Int = 100)(implicit val ec: ExecutionContext, timeout: Timeout)
+class RowIterator[V](matrix: BigMatrix[V], blockSize: Int = 100)(implicit val ec: ExecutionContext)
   extends Iterator[Vector[V]] {
 
   // Row progress

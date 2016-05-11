@@ -37,22 +37,20 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
     * Pulls a set of rows using the underlying BigMatrix implementation
     *
     * @param rows The indices of the rows
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the vectors representing the rows
     */
-  override def pull(rows: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[Vector[V]]] = {
+  override def pull(rows: Array[Long])(implicit ec: ExecutionContext): Future[Array[Vector[V]]] = {
     underlying.pull(rows)
   }
 
   /**
     * Destroys the underlying big matrix and its resources on the parameter server
     *
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future whether the matrix was successfully destroyed
     */
-  override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = underlying.destroy()
+  override def destroy()(implicit ec: ExecutionContext): Future[Boolean] = underlying.destroy()
 
   /**
     * Pushes a set of values using the underlying BigMatrix implementation
@@ -60,13 +58,12 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
     * @param rows The indices of the rows
     * @param cols The indices of the columns
     * @param values The values to update
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing either the success or failure of the operation
     */
   override def push(rows: Array[Long],
                     cols: Array[Int],
-                    values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+                    values: Array[V])(implicit ec: ExecutionContext): Future[Boolean] = {
     underlying.push(rows, cols, values)
   }
 
@@ -93,11 +90,10 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
   /**
     * Flushes the buffer to the parameter server.
     *
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the success or failure of the operation
     */
-  def flush()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+  def flush()(implicit ec: ExecutionContext): Future[Boolean] = {
     if (bufferIndex == 0) {
       Future {
         true
@@ -131,12 +127,11 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
     *
     * @param rows The indices of the rows
     * @param cols The corresponding indices of the columns
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the values of the elements at given rows, columns
     */
   override def pull(rows: Array[Long],
-                    cols: Array[Int])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[V]] = {
+                    cols: Array[Int])(implicit ec: ExecutionContext): Future[Array[V]] = {
     underlying.pull(rows, cols)
   }
 }

@@ -14,7 +14,8 @@ import scala.concurrent.duration._
   */
 trait SystemTest extends ScalaFutures {
 
-  val testConfig = ConfigFactory.parseString(
+  val testConfig = ConfigFactory.load("glint")
+  /*val testConfig = ConfigFactory.parseString(
     """
       |glint {
       |  master {
@@ -50,6 +51,19 @@ trait SystemTest extends ScalaFutures {
       |      hostname = ${glint.client.host}
       |      port = ${glint.client.port}
       |    }
+      |  }
+      |  pull {
+      |    maximum-attempts = 10
+      |    initial-timeout = 5 seconds
+      |    maximum-timeout = 5 minutes
+      |    backoff-multiplier = 1.6
+      |  }
+      |  push {
+      |    maximum-attempts = 10
+      |    maximum-logic-attempts = 100
+      |    initial-timeout = 5 seconds
+      |    maximum-timeout = 5 minutes
+      |    backoff-multiplier = 1.6
       |  }
       |  default {
       |    akka {
@@ -96,11 +110,9 @@ trait SystemTest extends ScalaFutures {
       |  }
       |}
     """.stripMargin
-  ).resolve()
+  ).resolve()*/
 
   implicit val ec = ExecutionContext.Implicits.global
-
-  implicit val timeout = Timeout(10 seconds)
 
   implicit val defaultPatience =
     PatienceConfig(timeout = Span(10, Seconds), interval = Span(50, Millis))

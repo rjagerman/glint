@@ -22,11 +22,10 @@ class RetryBigMatrix[@specialized V](underlying: BigMatrix[V], val attempts: Int
     * Pulls a set of rows
     *
     * @param rows The indices of the rows
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the vectors representing the rows
     */
-  override def pull(rows: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[Vector[V]]] = {
+  override def pull(rows: Array[Long])(implicit ec: ExecutionContext): Future[Array[Vector[V]]] = {
     implicit val success = Success.always
     retry.Directly(attempts) { () =>
       underlying.pull(rows)
@@ -36,11 +35,10 @@ class RetryBigMatrix[@specialized V](underlying: BigMatrix[V], val attempts: Int
   /**
     * Destroys the big matrix and its resources on the parameter server
     *
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future whether the matrix was successfully destroyed
     */
-  override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+  override def destroy()(implicit ec: ExecutionContext): Future[Boolean] = {
     implicit val success = Success.apply[Boolean](identity)
     retry.Directly(attempts) { () =>
       underlying.destroy()
@@ -53,13 +51,12 @@ class RetryBigMatrix[@specialized V](underlying: BigMatrix[V], val attempts: Int
     * @param rows The indices of the rows
     * @param cols The indices of the columns
     * @param values The values to update
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing either the success or failure of the operation
     */
   override def push(rows: Array[Long],
                     cols: Array[Int],
-                    values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+                    values: Array[V])(implicit ec: ExecutionContext): Future[Boolean] = {
     implicit val success = Success[Boolean](identity)
     retry.Directly(attempts) { () =>
       underlying.push(rows, cols, values)
@@ -71,12 +68,11 @@ class RetryBigMatrix[@specialized V](underlying: BigMatrix[V], val attempts: Int
     *
     * @param rows The indices of the rows
     * @param cols The corresponding indices of the columns
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the values of the elements at given rows, columns
     */
   override def pull(rows: Array[Long],
-                    cols: Array[Int])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[V]] = {
+                    cols: Array[Int])(implicit ec: ExecutionContext): Future[Array[V]] = {
     implicit val success = Success.always
     retry.Directly(attempts) { () =>
       underlying.pull(rows, cols)

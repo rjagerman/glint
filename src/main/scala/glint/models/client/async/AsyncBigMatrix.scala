@@ -2,10 +2,9 @@ package glint.models.client.async
 
 import java.io.{IOException, ObjectInputStream, ObjectOutputStream}
 
-import akka.actor.{ActorRef, ActorSystem, ExtendedActorSystem}
+import akka.actor.{ActorRef, ExtendedActorSystem}
 import akka.pattern.Patterns.gracefulStop
 import akka.serialization.JavaSerializer
-import akka.util.Timeout
 import breeze.linalg.{DenseVector, Vector}
 import breeze.math.Semiring
 import com.typesafe.config.Config
@@ -41,23 +40,24 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
                                                                                              val cols: Int)
   extends BigMatrix[V] {
 
+  PullFSM.initialize(config)
+  PushFSM.initialize(config)
+
   /**
     * Pulls a set of rows
     *
     * @param rows The indices of the rows
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the vectors representing the rows
     */
-  override def pull(rows: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[Vector[V]]] = {
+  override def pull(rows: Array[Long])(implicit ec: ExecutionContext): Future[Array[Vector[V]]] = {
 
     // Send pull request of the list of keys
     val pulls = rows.groupBy(partitioner.partition).map {
       case (partition, partitionKeys) =>
         val pullMessage = PullMatrixRows(partitionKeys)
-        val fsm = new PullFSM[PullMatrixRows, R](pullMessage, matrices(partition.index))
+        val fsm = PullFSM[PullMatrixRows, R](pullMessage, matrices(partition.index))
         fsm.run()
-        //(matrices(partition.index) ? PullMatrixRows(partitionKeys)).mapTo[R]
     }
 
     // Obtain key indices after partitioning so we can place the results in a correctly ordered array
@@ -90,19 +90,17 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     *
     * @param rows The indices of the rows
     * @param cols The corresponding indices of the columns
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the values of the elements at given rows, columns
     */
-  override def pull(rows: Array[Long], cols: Array[Int])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[V]] = {
+  override def pull(rows: Array[Long], cols: Array[Int])(implicit ec: ExecutionContext): Future[Array[V]] = {
 
     // Send pull request of the list of keys
     val pulls = mapPartitions(rows) {
       case (partition, indices) =>
         val pullMessage = PullMatrix(indices.map(rows).toArray, indices.map(cols).toArray)
-        val fsm = new PullFSM[PullMatrix, R](pullMessage, matrices(partition.index))
+        val fsm = PullFSM[PullMatrix, R](pullMessage, matrices(partition.index))
         fsm.run()
-        //(matrices(partition.index) ? pullMessage).mapTo[R]
     }
 
     // Obtain key indices after partitioning so we can place the results in a correctly ordered array
@@ -137,11 +135,10 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     * @param rows The indices of the rows
     * @param cols The indices of the columns
     * @param values The values to update
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing either the success or failure of the operation
     */
-  override def push(rows: Array[Long], cols: Array[Int], values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+  override def push(rows: Array[Long], cols: Array[Int], values: Array[V])(implicit ec: ExecutionContext): Future[Boolean] = {
 
     // Send push requests
     val pushes = mapPartitions(rows) {
@@ -149,10 +146,8 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
         val rs = indices.map(rows).toArray
         val cs = indices.map(cols).toArray
         val vs = indices.map(values).toArray
-        val fsm = new PushFSM[P](id => toPushMessage(id, rs, cs, vs), matrices(partition.index))
+        val fsm = PushFSM[P](id => toPushMessage(id, rs, cs, vs), matrices(partition.index))
         fsm.run()
-        //(matrices(partition.index) ? toPushMessage(indices.map(rows).toArray, indices.map(cols).toArray, indices.map
-        //(values).toArray)).mapTo[Boolean]
     }
 
     // Combine and aggregate futures
@@ -179,7 +174,7 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     *
     * @return A future whether the matrix was successfully destroyed
     */
-  override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+  override def destroy()(implicit ec: ExecutionContext): Future[Boolean] = {
     val partitionFutures = partitioner.all().map {
       case partition => gracefulStop(matrices(partition.index), 60 seconds)
     }.toIterator

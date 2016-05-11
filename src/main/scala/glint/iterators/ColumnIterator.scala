@@ -11,10 +11,9 @@ import scala.concurrent.{ExecutionContext, Future}
   *
   * @param matrix The matrix
   * @param ec The implicit execution context in which to execute requests
-  * @param timeout The timeout
   * @tparam V The type of values
   */
-class ColumnIterator[V](val matrix: BigMatrix[V])(implicit ec: ExecutionContext, timeout: Timeout)
+class ColumnIterator[V](val matrix: BigMatrix[V])(implicit ec: ExecutionContext)
   extends PipelineIterator[Array[V]] {
 
   total = if (matrix.cols == 0 || matrix.rows == 0) {
