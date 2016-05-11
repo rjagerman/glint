@@ -210,8 +210,8 @@ $ sbt "run server"
 <pre><code>val vector = client.vector[Double](10)
 </code></pre>
 <p>The main code will use the constructed <code>vector</code> object within a spark closure such as <code>rdd.foreach { ... }</code>. There is 
-some additional boilerplate to deal with the execution context and timeouts. This is, however, a small price to pay 
-for the gained flexibility and customizability of the concurrency of your code.</p>
+some additional boilerplate to deal with the execution context. This is, however, a small price to pay for the gained 
+flexibility and customizability of the concurrency of your code.</p>
 <pre><code>import scala.concurrent.ExecutionContext
 rdd.foreach {
     case (index, value) =&gt;
