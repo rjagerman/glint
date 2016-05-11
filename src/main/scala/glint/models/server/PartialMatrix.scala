@@ -1,7 +1,8 @@
 package glint.models.server
 
 import akka.actor.{Actor, ActorLogging}
-import spire.algebra.Semiring
+import glint.models.server.aggregate.Aggregate
+import spire.algebra.{Order, Semiring}
 import spire.implicits._
 import glint.partitioning.Partition
 
@@ -12,11 +13,13 @@ import scala.reflect.ClassTag
   *
   * @param partition The partition of data this partial matrix represents
   * @param cols The number of columns
+  * @param aggregate The type of aggregation to apply
   * @tparam V The type of value to store
   */
-private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag](val partition: Partition,
-                                                                                 val cols: Int) extends Actor
-  with ActorLogging with PushLogic {
+private[glint] abstract class PartialMatrix[@specialized V: Semiring : Order : ClassTag](val partition: Partition,
+                                                                                         val cols: Int,
+                                                                                         val aggregate: Aggregate)
+  extends Actor with ActorLogging with PushLogic {
 
   /**
     * The size of this partial matrix in number of rows
@@ -76,7 +79,7 @@ private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag]
     while (i < rows.length) {
       val row = partition.globalToLocal(rows(i))
       val col = cols(i)
-      data(row)(col) += values(i)
+      data(row)(col) = aggregate.aggregate[V](data(row)(col), values(i))
       i += 1
     }
     true

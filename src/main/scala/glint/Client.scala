@@ -12,6 +12,7 @@ import glint.messages.master.{RegisterClient, ServerList}
 import glint.models.client.async._
 import glint.models.client.{BigMatrix, BigVector}
 import glint.models.server._
+import glint.models.server.aggregate.{AggregateAdd, Aggregate}
 import glint.partitioning.cyclic.CyclicPartitioner
 import glint.partitioning.range.RangePartitioner
 import glint.partitioning.{Partition, Partitioner}
@@ -99,11 +100,15 @@ class Client(val config: Config,
     * @param rows The number of rows
     * @param cols The number of columns
     * @param modelsPerServer The number of partial models to store per parameter server (default: 1)
+    * @param aggregate The type of aggregation to perform on this model (default: AggregateAdd)
     * @tparam V The type of values to store, must be one of the following: Int, Long, Double or Float
     * @return The constructed [[glint.models.client.BigMatrix BigMatrix]]
     */
-  def matrix[V: breeze.math.Semiring : TypeTag](rows: Long, cols: Int, modelsPerServer: Int = 1): BigMatrix[V] = {
-    matrix[V](rows, cols, modelsPerServer, (partitions: Int, keys: Long) => RangePartitioner(partitions, keys))
+  def matrix[V: breeze.math.Semiring : TypeTag](rows: Long,
+                                                cols: Int,
+                                                modelsPerServer: Int = 1,
+                                                aggregate: Aggregate = AggregateAdd()): BigMatrix[V] = {
+    matrix[V](rows, cols, modelsPerServer, aggregate, (partitions: Int, keys: Long) => RangePartitioner(partitions, keys))
   }
 
   /**
@@ -120,13 +125,14 @@ class Client(val config: Config,
   def matrix[V: breeze.math.Semiring : TypeTag](rows: Long,
                                                 cols: Int,
                                                 modelsPerServer: Int,
+                                                aggregate: Aggregate,
                                                 createPartitioner: (Int, Long) => Partitioner): BigMatrix[V] = {
 
     val propFunction = numberType[V] match {
-      case "Int" => (partition: Partition) => Props(classOf[PartialMatrixInt], partition, cols)
-      case "Long" => (partition: Partition) => Props(classOf[PartialMatrixLong], partition, cols)
-      case "Float" => (partition: Partition) => Props(classOf[PartialMatrixFloat], partition, cols)
-      case "Double" => (partition: Partition) => Props(classOf[PartialMatrixDouble], partition, cols)
+      case "Int" => (partition: Partition) => Props(classOf[PartialMatrixInt], partition, cols, aggregate)
+      case "Long" => (partition: Partition) => Props(classOf[PartialMatrixLong], partition, cols, aggregate)
+      case "Float" => (partition: Partition) => Props(classOf[PartialMatrixFloat], partition, cols, aggregate)
+      case "Double" => (partition: Partition) => Props(classOf[PartialMatrixDouble], partition, cols, aggregate)
       case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
     }
 

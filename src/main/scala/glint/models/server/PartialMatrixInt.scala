@@ -3,6 +3,7 @@ package glint.models.server
 import breeze.linalg.{DenseMatrix, Matrix}
 import glint.messages.server.request.{PullMatrix, PullMatrixRows, PushMatrixInt}
 import glint.messages.server.response.{ResponseRowsInt, ResponseInt}
+import glint.models.server.aggregate.Aggregate
 import glint.partitioning.Partition
 import spire.implicits._
 
@@ -13,7 +14,8 @@ import spire.implicits._
   * @param cols The number of columns
   */
 private[glint] class PartialMatrixInt(partition: Partition,
-                                      cols: Int) extends PartialMatrix[Int](partition, cols) {
+                                      cols: Int,
+                                      aggregate: Aggregate) extends PartialMatrix[Int](partition, cols, aggregate) {
 
   //override val data: Matrix[Int] = DenseMatrix.zeros[Int](rows, cols)
   override val data: Array[Array[Int]] = Array.fill(rows)(Array.fill[Int](cols)(0))

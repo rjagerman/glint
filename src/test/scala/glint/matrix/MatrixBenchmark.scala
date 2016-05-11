@@ -2,6 +2,7 @@ package glint.matrix
 
 import akka.actor.ActorSystem
 import glint.SystemTest
+import glint.models.server.aggregate.AggregateAdd
 import glint.models.server.{PartialMatrixDouble, PartialMatrix}
 import glint.partitioning.cyclic.CyclicPartition
 import glint.partitioning.range.RangePartition
@@ -26,9 +27,9 @@ class MatrixBenchmark extends Bench.OfflineReport {
   val cyclicPartition = new CyclicPartition(3, 10, 100000) // 10000 elements
 
   // Construct matrices for range and cyclic partitions
-  val rangeMatrixDoubleRef = TestActorRef(new PartialMatrixDouble(rangePartition, 300))
+  val rangeMatrixDoubleRef = TestActorRef(new PartialMatrixDouble(rangePartition, 300, AggregateAdd()))
   val rangeMatrixDouble = rangeMatrixDoubleRef.underlyingActor
-  val cyclicMatrixDoubleRef = TestActorRef(new PartialMatrixDouble(cyclicPartition, 300))
+  val cyclicMatrixDoubleRef = TestActorRef(new PartialMatrixDouble(cyclicPartition, 300, AggregateAdd()))
   val cyclicMatrixDouble = cyclicMatrixDoubleRef.underlyingActor
 
   // Sizes and data
