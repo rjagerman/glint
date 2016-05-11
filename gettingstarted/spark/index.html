@@ -221,7 +221,7 @@ rdd.foreach {
 </code></pre>
 <p>Finally, let's verify the result by pulling the values from the parameter server:</p>
 <pre><code>@transient implicit val ec = ExecutionContext.Implicits.global
-vector.pull((0L until 10).toArray).onSuccess {
+vector.pull((00L until 10).toArray).onSuccess {
     case values =&gt; println(values.mkString(", "))
 }
 </code></pre>
