@@ -47,7 +47,7 @@ class MockBigMatrix[V: ClassTag](nrOfRows: Int, val cols: Int, default: V,
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the vectors representing the rows
     */
-  override def pull(rows: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[Vector[V]]] = {
+  override def pull(rows: Array[Long])(implicit ec: ExecutionContext): Future[Array[Vector[V]]] = {
     if (failNextPull || destroyed) {
       failNextPulls -= 1
       fail()
@@ -71,7 +71,7 @@ class MockBigMatrix[V: ClassTag](nrOfRows: Int, val cols: Int, default: V,
     * @param ec The implicit execution context in which to execute the request
     * @return A future whether the matrix was successfully destroyed
     */
-  override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+  override def destroy()(implicit ec: ExecutionContext): Future[Boolean] = {
     destroyed = true
     Future { true }
   }
@@ -88,7 +88,7 @@ class MockBigMatrix[V: ClassTag](nrOfRows: Int, val cols: Int, default: V,
     */
   override def push(rows: Array[Long],
                     cols: Array[Int],
-                    values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+                    values: Array[V])(implicit ec: ExecutionContext): Future[Boolean] = {
     if (failNextPush || destroyed) {
       failNextPushes -= 1
       fail()
@@ -116,7 +116,7 @@ class MockBigMatrix[V: ClassTag](nrOfRows: Int, val cols: Int, default: V,
     * @return A future containing the values of the elements at given rows, columns
     */
   override def pull(rows: Array[Long],
-                    cols: Array[Int])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[V]] = {
+                    cols: Array[Int])(implicit ec: ExecutionContext): Future[Array[V]] = {
     if (failNextPull || destroyed) {
       failNextPulls -= 1
       fail()

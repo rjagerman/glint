@@ -12,10 +12,9 @@ import scala.concurrent.{ExecutionContext, Future}
   * @param matrix The big matrix to iterate over
   * @param blockSize How many rows to retrieve per iteration
   * @param ec The implicit execution context in which to execute requests
-  * @param timeout The timeout on requests before they are considered lost
   */
 class RowBlockIterator[V](val matrix: BigMatrix[V],
-                          val blockSize: Int)(implicit ec: ExecutionContext, timeout: Timeout)
+                          val blockSize: Int)(implicit ec: ExecutionContext)
   extends PipelineIterator[Array[Vector[V]]] {
 
   if (matrix.cols == 0 || matrix.rows == 0) {

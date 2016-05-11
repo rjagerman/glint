@@ -43,7 +43,7 @@ class MockBigVector[V: ClassTag](keys: Int, cols: Int, default: V, aggregate: (V
     * @param ec The implicit execution context in which to execute the request
     * @return A future whether the Vector was successfully destroyed
     */
-  override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+  override def destroy()(implicit ec: ExecutionContext): Future[Boolean] = {
     destroyed = true
     Future { true }
   }
@@ -58,7 +58,7 @@ class MockBigVector[V: ClassTag](keys: Int, cols: Int, default: V, aggregate: (V
     * @return A future containing either the success or failure of the operation
     */
   override def push(keys: Array[Long],
-                    values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+                    values: Array[V])(implicit ec: ExecutionContext): Future[Boolean] = {
     if (failNextPush || destroyed) {
       failNextPushes -= 1
       fail()
@@ -82,7 +82,7 @@ class MockBigVector[V: ClassTag](keys: Int, cols: Int, default: V, aggregate: (V
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the values of the elements at given rows, columns
     */
-  override def pull(keys: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[V]] = {
+  override def pull(keys: Array[Long])(implicit ec: ExecutionContext): Future[Array[V]] = {
     if (failNextPull || destroyed) {
       failNextPulls -= 1
       fail()

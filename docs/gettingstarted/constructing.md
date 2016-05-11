@@ -4,33 +4,36 @@ In order to construct models on the parameter servers we first need to start a m
 
 ## Connect to master
 
-Before we can spawn distributed models on the parameter server, we first need to connect to the running master node. We assume that this is running on localhost. Let's create a configuration file for our project first. Call it `glint.conf` and place it in the project's root directory. Give it the following contents:
+Before we can spawn distributed models on the parameter server, we first need to connect to the running master node. 
+This is accomplished by constructing a client object that loads a configuration file that contains all the information 
+to communicate with the master node and parameter servers. For a localhost test, the default configuration will suffice.
+Open the SBT console if you had closed it, and enter the following: 
 
-    glint.master.host = "127.0.0.1"
-    glint.master.port = 13370
-    glint.client.timeout = 30s
+    import glint.Client    
+    val client = Client()
+  
+This will construct a client object that acts as an interface to the parameter servers. We can now use this client 
+object to construct distributed matrices and vectors on the parameter server.
 
-Open the sbt console if you had closed it, and enter the following commands:
+If you need to change the default configuration (for example if your master node is not on localhost but has a 
+different hostname or IP), you can create a `glint.conf` file. See [src/main/resources/glint.conf](https://github.com/rjagerman/glint/blob/master/src/main/resources/glint.conf)
+for a comprehensive example. To load a custom configuration file, use the following:
 
     import com.typesafe.config.ConfigFactory
     import glint.Client
-
-    val client = Client(ConfigFactory.parseFile(new java.io.File("glint.conf")))
-
-This will construct a client object that acts as an interface to the parameter servers. We can now use this client object to construct distributed matrices and vectors on the parameter server.
+    val client = Client(ConfigFactory.parseFile(new java.io.File("/path/to/glint.conf")))
 
 ## Construct a matrix
 
-Now that the Client object is connected to the Master node we can try to construct a distributed matrix. Let's create a distributed matrix that stores `Double` values and has 10000 rows with 2000 columns:
+Now that the Client object is connected to the Master node we can try to construct a distributed matrix. Let's create a 
+distributed matrix that stores `Double` values and has 10000 rows with 2000 columns:
 
     val matrix = client.matrix[Double](10000, 2000)
 
-Before we can interact with this matrix we need to define an execution context and timeout for the requests. Here we use the default global execution context and a timeout of 30 seconds:
+Before we can interact with this matrix we need to define an execution context for the requests. Here we use the 
+default global execution context:
 
-    import scala.concurrent.duration._
-    import akka.util.Timeout
     implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
-    implicit val timeout = new Timeout(30 seconds)
 
 To destroy the matrix and release the allocated resources on the parameter servers, run:
 

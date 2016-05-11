@@ -2,11 +2,9 @@ package glint.models.client.async
 
 import java.io.{IOException, ObjectInputStream, ObjectOutputStream}
 
-import akka.actor.{ActorRef, ActorSystem, ExtendedActorSystem}
+import akka.actor.{ActorRef, ExtendedActorSystem}
 import akka.pattern.Patterns.gracefulStop
-import akka.pattern.ask
 import akka.serialization.JavaSerializer
-import akka.util.Timeout
 import breeze.linalg.DenseVector
 import breeze.math.Semiring
 import com.typesafe.config.Config
@@ -39,19 +37,22 @@ abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, 
                                                                                              val size: Long)
   extends BigVector[V] {
 
+  PullFSM.initialize(config)
+  PushFSM.initialize(config)
+
   /**
     * Pulls a set of elements
     *
     * @param keys The indices of the keys
     * @return A future containing the values of the elements at given rows, columns
     */
-  override def pull(keys: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[V]] = {
+  override def pull(keys: Array[Long])(implicit ec: ExecutionContext): Future[Array[V]] = {
 
     // Send pull request of the list of keys
     val pulls = mapPartitions(keys) {
       case (partition, indices) =>
         val pullMessage = PullVector(indices.map(keys).toArray)
-        val fsm = new PullFSM[PullVector, R](pullMessage, models(partition.index))
+        val fsm = PullFSM[PullVector, R](pullMessage, models(partition.index))
         fsm.run()
         //(models(partition.index) ? pullMessage).mapTo[R]
     }
@@ -103,17 +104,15 @@ abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, 
     * @param values The values to update
     * @return A future containing either the success or failure of the operation
     */
-  override def push(keys: Array[Long], values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+  override def push(keys: Array[Long], values: Array[V])(implicit ec: ExecutionContext): Future[Boolean] = {
 
     // Send push requests
     val pushes = mapPartitions(keys) {
       case (partition, indices) =>
         val ks = indices.map(keys).toArray
         val vs = indices.map(values).toArray
-        val fsm = new PushFSM[P]((id) => toPushMessage(id, ks, vs), models(partition.index), 5)
+        val fsm = PushFSM[P]((id) => toPushMessage(id, ks, vs), models(partition.index))
         fsm.run()
-        //(models(partition.index) ? toPushMessage(0, indices.map(keys).toArray, indices.map(values).toArray))
-        //.mapTo[Boolean]
     }
 
     // Combine and aggregate futures
@@ -133,7 +132,7 @@ abstract class AsyncBigVector[@specialized V: Semiring : ClassTag, R: ClassTag, 
     *
     * @return A future whether the matrix was successfully destroyed
     */
-  override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+  override def destroy()(implicit ec: ExecutionContext): Future[Boolean] = {
     val partitionFutures = partitioner.all().map {
       case partition => gracefulStop(models(partition.index), 60 seconds)
     }.toIterator

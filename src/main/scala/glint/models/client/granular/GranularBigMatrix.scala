@@ -32,11 +32,10 @@ class GranularBigMatrix[V: ClassTag](underlying: BigMatrix[V],
     * Pulls a set of rows while attempting to keep individual network messages smaller than `maximumMessageSize`
     *
     * @param rows The indices of the rows
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the vectors representing the rows
     */
-  override def pull(rows: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[Vector[V]]] = {
+  override def pull(rows: Array[Long])(implicit ec: ExecutionContext): Future[Array[Vector[V]]] = {
     if (rows.length * cols <= maximumMessageSize) {
       underlying.pull(rows)
     } else {
@@ -63,11 +62,10 @@ class GranularBigMatrix[V: ClassTag](underlying: BigMatrix[V],
   /**
     * Destroys the big matrix and its resources on the parameter server
     *
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future whether the matrix was successfully destroyed
     */
-  override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = underlying.destroy()
+  override def destroy()(implicit ec: ExecutionContext): Future[Boolean] = underlying.destroy()
 
   /**
     * Pushes a set of values while keeping individual network messages smaller than `maximumMessageSize`
@@ -75,13 +73,12 @@ class GranularBigMatrix[V: ClassTag](underlying: BigMatrix[V],
     * @param rows The indices of the rows
     * @param cols The indices of the columns
     * @param values The values to update
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing either the success or failure of the operation
     */
   override def push(rows: Array[Long],
                     cols: Array[Int],
-                    values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
+                    values: Array[V])(implicit ec: ExecutionContext): Future[Boolean] = {
     if (rows.length <= maximumMessageSize) {
       underlying.push(rows, cols, values)
     } else {
@@ -102,12 +99,11 @@ class GranularBigMatrix[V: ClassTag](underlying: BigMatrix[V],
     *
     * @param rows The indices of the rows
     * @param cols The corresponding indices of the columns
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the values of the elements at given rows, columns
     */
   override def pull(rows: Array[Long],
-                    cols: Array[Int])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[V]] = {
+                    cols: Array[Int])(implicit ec: ExecutionContext): Future[Array[V]] = {
     if (rows.length <= maximumMessageSize) {
       underlying.pull(rows, cols)
     } else {
