@@ -5,7 +5,7 @@ import java.io.{ByteArrayInputStream, ByteArrayOutputStream, ObjectInputStream, 
 import breeze.linalg.DenseVector
 import glint.SystemTest
 import glint.models.client.BigMatrix
-import glint.models.server.aggregate.{AggregateMin, AggregateMax}
+import glint.models.server.aggregate.{AggregateMin, AggregateMax, AggregateReplace}
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -172,6 +172,27 @@ class BigMatrixSpec extends FlatSpec with SystemTest with Matchers {
           identity
         }
         value should equal(Array(0, -1, -999, 0))
+      }
+    }
+  }
+
+  it should "aggregate values through replacement when specified" in withMaster { _ =>
+    withServers(2) { _ =>
+      withClient { client =>
+        val model = client.matrix[Int](9, 100, 1, AggregateReplace())
+        val result1 = whenReady(model.push(Array(0L, 2L, 5L, 8L), Array(0, 10, 99, 80), Array(100, 100, -999, 30))) {
+          identity
+        }
+        val result2 = whenReady(model.push(Array(0L, 2L, 5L, 8L), Array(0, 10, 99, 80), Array(1, -1, 20, 300))) {
+          identity
+        }
+        assert(result1)
+        assert(result2)
+        val future = model.pull(Array(0L, 2L, 5L, 8L), Array(0, 10, 99, 80))
+        val value = whenReady(future) {
+          identity
+        }
+        value should equal(Array(1, -1, 20, 300))
       }
     }
   }
