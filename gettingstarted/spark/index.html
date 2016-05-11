@@ -188,7 +188,7 @@ BigMatrix and BigVector objects will need access to the implicit execution conte
 objects are not serializable which can cause problems when running a closure naively. Instead glint provides an easy 
 to use wrapper object for use with spark: the <code>SparkBigMatrix</code> and <code>SparkBigVector</code>.</p>
 <p>Let's try an example with the <code>spark-shell</code> command-line tool:</p>
-<pre><code>$ spark-shell
+<pre><code>$ spark-shell --jars ./target/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar
 </code></pre>
 <p>Make sure the parameter servers are up and running and enter the following code:</p>
 <pre><code>import com.typesafe.config.ConfigFactory
@@ -203,18 +203,22 @@ val vector = client.vector[Double](10)
 import glint.models.client.spark.SparkBigVector
 val sparkvector = new SparkBigVector[Double](vector)
 </code></pre>
-<p>Now we have created an RDD and a SparkBigVector to use. Let's try to add the value 12 to every entry of the matrix by
-using our RDD. Our <code>SparkBigVector</code> is serializable and thus safe to be used in typical spark closures such as foreach:</p>
+<p>We have created an RDD and a SparkBigVector. Let's try to use these objects and add the value 12 to every entry of the 
+matrix by using our RDD. Our <code>SparkBigVector</code> is serializable and thus safe to be used in typical spark closures such
+ as foreach:</p>
 <pre><code>rdd.foreach {
     case value =&gt; sparkvector.push(Array(value), Array(12))
 }
 </code></pre>
-<p>Let's verify the result:</p>
+<p>Finally, let's verify the result:</p>
 <pre><code>import scala.concurrent.ExecutionContext
 @transient implicit val ec = ExecutionContext.Implicits.global
 sparkvector.pull((0L until 10).toArray).onSuccess {
     case values =&gt; println(values.mkString(", "))
 }
+</code></pre>
+<p>We should observe the expected output</p>
+<pre><code>12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0
 </code></pre></div>
         </div>
 
