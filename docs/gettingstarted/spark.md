@@ -36,8 +36,8 @@ And a distributed vector:
     val vector = client.vector[Double](10)
     
 The main code will use the constructed `vector` object within a spark closure such as `rdd.foreach { ... }`. There is 
-some additional boilerplate to deal with the execution context and timeouts. This is, however, a small price to pay 
-for the gained flexibility and customizability of the concurrency of your code.
+some additional boilerplate to deal with the execution context. This is, however, a small price to pay for the gained 
+flexibility and customizability of the concurrency of your code.
 
     import scala.concurrent.ExecutionContext
     rdd.foreach {
