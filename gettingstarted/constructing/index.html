@@ -188,8 +188,8 @@
 <p>In order to construct models on the parameter servers we first need to start a master node and at least one parameter server. Refer to the <a href="../../deploymentguide/localhost/">localhost deployment guide</a> how to start these nodes on your localhost. Make sure you have a master node and one or more server nodes up and running in separate terminal windows before continuing.</p>
 <h2 id="connect-to-master">Connect to master</h2>
 <p>Before we can spawn distributed models on the parameter server, we first need to connect to the running master node. 
-This is accomplished by constructing a client object that loads a configuration will all the information to 
-communicate with the master node and parameter servers. For a localhost test, the default configuration will suffice.
+This is accomplished by constructing a client object that loads a configuration file that contains all the information 
+to communicate with the master node and parameter servers. For a localhost test, the default configuration will suffice.
 Open the SBT console if you had closed it, and enter the following: </p>
 <pre><code>import glint.Client    
 val client = Client()
