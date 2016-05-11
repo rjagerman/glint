@@ -200,10 +200,8 @@ $ sbt "run server"
 $ sbt "run server"
 </code></pre>
 <p>Let's construct a client (make sure to mark it as transient so the spark-shell doesn't try to serialize it):</p>
-<pre><code>import com.typesafe.config.ConfigFactory
-import glint.Client
-
-@transient val client = Client(ConfigFactory.parseFile(new java.io.File("/path/to/your/glint.conf")))
+<pre><code>import glint.Client
+@transient val client = Client()
 </code></pre>
 <p>Now, let's create our data of (key, value) pairs as an RDD:</p>
 <pre><code>val rdd = sc.parallelize(Array((0, 0.0), (1, 2.0), (2, -9.0), (3, 5.5), (4, 3.14), (5, 55.5), (6, 0.01), (7, 10.0), (8, 100.0), (9, 1000.0)))
@@ -214,21 +212,15 @@ import glint.Client
 <p>The main code will use the constructed <code>vector</code> object within a spark closure such as <code>rdd.foreach { ... }</code>. There is 
 some additional boilerplate to deal with the execution context and timeouts. This is, however, a small price to pay 
 for the gained flexibility and customizability of the concurrency of your code.</p>
-<pre><code>import akka.util.Timeout
-import scala.concurrent.duration._
-import scala.concurrent.ExecutionContext
-import java.util.concurrent.Executors
+<pre><code>import scala.concurrent.ExecutionContext
 rdd.foreach {
     case (index, value) =&gt;
-        implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(4))
-        implicit val timeout = new Timeout(30 seconds)
+        implicit val ec = ExecutionContext.Implicits.global
         vector.push(Array(index), Array(value))
 }
 </code></pre>
 <p>Finally, let's verify the result by pulling the values from the parameter server:</p>
-<pre><code>import scala.concurrent.ExecutionContext
-@transient implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(4))
-@transient implicit val timeout = new Timeout(30 seconds)
+<pre><code>@transient implicit val ec = ExecutionContext.Implicits.global
 vector.pull((0L until 10).toArray).onSuccess {
     case values =&gt; println(values.mkString(", "))
 }
