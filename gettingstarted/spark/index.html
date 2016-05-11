@@ -179,21 +179,41 @@
             <div class="col-md-9" role="main">
 
 <h1 id="spark-integration">Spark integration</h1>
-<p>So far you have seen a very short introduction to programming with the Glint parameter server. At its core you will construct a client that will construct either matrices or vectors. You then use the <code>pull</code> and <code>push</code> methods on these matrices or vectors to query and update the current state of the matrix. Now how does this relate to spark?</p>
-<p>The main idea is that the <code>BigMatrix</code> and <code>BigVector</code> objects that you obtain from the client are serializable and are safe to be used within Spark closures. So let's give a quick example:</p>
-<pre><code>val rdd = sc.parallelize(Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9)) // Some spark RDD
+<p>So far you have seen a very short introduction to programming with the Glint parameter server. At its core you will
+construct a client that will construct either matrices or vectors. You then use the <code>pull</code> and <code>push</code> methods on these
+matrices or vectors to query and update the current state of the matrix. Now how does this relate to spark?</p>
+<p>The main idea is that the <code>BigMatrix</code> and <code>BigVector</code> objects that you obtain from the client are serializable and 
+are safe to be used within Spark closures. It should be noted that operations such as <code>push</code> and <code>pull</code> on the 
+BigMatrix and BigVector objects will need access to the implicit execution context and the implicit timeout. These 
+objects are not serializable which can cause problems when running a closure naively. Instead glint provides an easy 
+to use wrapper object for use with spark: the <code>SparkBigMatrix</code> and <code>SparkBigVector</code>.</p>
+<p>Let's try an example with the <code>spark-shell</code> command-line tool:</p>
+<pre><code>$ spark-shell
+</code></pre>
+<p>Make sure the parameter servers are up and running and enter the following code:</p>
+<pre><code>import com.typesafe.config.ConfigFactory
+import glint.Client
+
+@transient val client = Client(ConfigFactory.parseFile(new java.io.File("/path/to/your/glint.conf")))
+
+val rdd = sc.parallelize(Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9))
+
 val vector = client.vector[Double](10)
 
-rdd.foreach {
-    case value =&gt; vector.push(Array(value), Array(12)) // Add 12 to every index of the vector
+import glint.models.client.spark.SparkBigVector
+val sparkvector = new SparkBigVector[Double](vector)
+</code></pre>
+<p>Now we have created an RDD and a SparkBigVector to use. Let's try to add the value 12 to every entry of the matrix by
+using our RDD. Our <code>SparkBigVector</code> is serializable and thus safe to be used in typical spark closures such as foreach:</p>
+<pre><code>rdd.foreach {
+    case value =&gt; sparkvector.push(Array(value), Array(12))
 }
-
-val result = vector.pull((0L until 10).toArray)
-result.onSuccess {
+</code></pre>
+<p>Let's verify the result:</p>
+<pre><code>import scala.concurrent.ExecutionContext
+@transient implicit val ec = ExecutionContext.Implicits.global
+sparkvector.pull((0L until 10).toArray).onSuccess {
     case values =&gt; println(values.mkString(", "))
-}
-result.onComplete {
-    case _ =&gt; vector.destroy()
 }
 </code></pre></div>
         </div>
