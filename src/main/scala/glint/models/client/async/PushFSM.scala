@@ -1,13 +1,17 @@
 package glint.models.client.async
 
+import java.util.concurrent.TimeUnit
+
 import akka.pattern.{AskTimeoutException, ask}
 import akka.actor.ActorRef
 import akka.util.Timeout
+import com.typesafe.config.Config
 import glint.exceptions.PushFailedException
 import glint.messages.server.logic._
 
 import scala.concurrent.{Future, ExecutionContext, Promise}
 import scala.concurrent.duration._
+import scala.reflect.ClassTag
 
 /**
   * A push-mechanism using a finite state machine to guarantee exactly-once delivery with multiple attempts
@@ -17,18 +21,18 @@ import scala.concurrent.duration._
   * @param maximumAttempts The maximum number of attempts
   * @param maximumLogicAttempts The maximum number of attempts to establish communication through logic channels
   * @param initialTimeout The initial timeout for the request
-  * @param backoff The backoff multiplier
-  * @param backoffCeiling The limit on the backoff timeout
+  * @param maximumTimeout The maximum timeout for the request
+  * @param backoffMultiplier The backoff multiplier
   * @param ec The execution context
   * @tparam T The type of message to send
   */
 class PushFSM[T](message: Int => T,
                  actorRef: ActorRef,
-                 maximumAttempts: Int = 10,
-                 maximumLogicAttempts: Int = 100,
-                 initialTimeout: FiniteDuration = 1 second,
-                 backoff: Double = 1.6,
-                 backoffCeiling: FiniteDuration = 10 minutes)(implicit ec: ExecutionContext) {
+                 maximumAttempts: Int,
+                 maximumLogicAttempts: Int,
+                 initialTimeout: FiniteDuration,
+                 maximumTimeout: FiniteDuration,
+                 backoffMultiplier: Double)(implicit ec: ExecutionContext) {
 
   private implicit var timeout: Timeout = new Timeout(initialTimeout)
 
@@ -140,10 +144,10 @@ class PushFSM[T](message: Int => T,
     * Increase the timeout with an exponential backoff
     */
   private def timeBackoff(): Unit = {
-    if (timeout.duration.toMillis * backoff > backoffCeiling.toMillis) {
-      timeout = new Timeout(backoffCeiling)
+    if (timeout.duration.toMillis * backoffMultiplier > maximumTimeout.toMillis) {
+      timeout = new Timeout(maximumTimeout)
     } else {
-      timeout = new Timeout((timeout.duration.toMillis * backoff) millis)
+      timeout = new Timeout((timeout.duration.toMillis * backoffMultiplier) millis)
     }
   }
 
@@ -163,3 +167,44 @@ class PushFSM[T](message: Int => T,
   }
 
 }
+
+
+object PushFSM {
+
+  private var maximumAttempts: Int = 10
+  private var maximumLogicAttempts: Int = 100
+  private var initialTimeout: FiniteDuration = 5 seconds
+  private var maximumTimeout: FiniteDuration = 5 minutes
+  private var backoffMultiplier: Double = 1.6
+
+  /**
+    * Initializes the FSM default parameters with those specified in given config
+    *
+    * @param config The configuration to use
+    */
+  def initialize(config: Config): Unit = {
+    maximumAttempts = config.getInt("glint.push.maximum-attempts")
+    maximumLogicAttempts = config.getInt("glint.push.maximum-logic-attempts")
+    initialTimeout = new FiniteDuration(config.getDuration("glint.push.initial-timeout", TimeUnit.MILLISECONDS),
+      TimeUnit.MILLISECONDS)
+    maximumTimeout = new FiniteDuration(config.getDuration("glint.push.maximum-timeout", TimeUnit.MILLISECONDS),
+      TimeUnit.MILLISECONDS)
+    backoffMultiplier = config.getInt("glint.push.backoff-multiplier")
+  }
+
+  /**
+    * Constructs a new FSM for given message and actor
+    *
+    * @param message A function that takes an identifier and generates a message of type T
+    * @param actorRef The actor to send to
+    * @param ec The execution context
+    * @tparam T The type of message to send
+    * @return An new and initialized PushFSM
+    */
+  def apply[T](message: Int => T, actorRef: ActorRef)(implicit ec: ExecutionContext): PushFSM[T] = {
+    new PushFSM[T](message, actorRef, maximumAttempts, maximumLogicAttempts, initialTimeout, maximumTimeout,
+      backoffMultiplier)
+  }
+
+}
+
