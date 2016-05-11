@@ -173,6 +173,8 @@
     
         <li class="main active"><a href="#spark-integration">Spark integration</a></li>
         
+            <li><a href="#example-add-values-of-an-rdd-to-a-distributed-vector">Example: add values of an RDD to a distributed vector</a></li>
+        
     
     </ul>
 </div></div>
@@ -185,40 +187,51 @@ matrices or vectors to query and update the current state of the matrix. Now how
 <p>The main idea is that the <code>BigMatrix</code> and <code>BigVector</code> objects that you obtain from the client are serializable and 
 are safe to be used within Spark closures. It should be noted that operations such as <code>push</code> and <code>pull</code> on the 
 BigMatrix and BigVector objects will need access to the implicit execution context and the implicit timeout. These 
-objects are not serializable which can cause problems when running a closure naively. Instead glint provides an easy 
-to use wrapper object for use with spark: the <code>SparkBigMatrix</code> and <code>SparkBigVector</code>.</p>
-<p>Let's try an example with the <code>spark-shell</code> command-line tool:</p>
+objects are not serializable which can cause problems when running a closure naively.</p>
+<h2 id="example-add-values-of-an-rdd-to-a-distributed-vector">Example: add values of an RDD to a distributed vector</h2>
+<p>In this example we will have an RDD that contains tuples of (Int, Double). The Int represents the key (or index) of a 
+vector and the Double represents the corresponding value. We want to add these values to a distributed vector that is 
+stored on the parameter servers. First, let's open the spark-shell and add the Glint jar dependency:</p>
 <pre><code>$ spark-shell --jars ./target/scala-2.10/Glint-assembly-0.1-SNAPSHOT.jar
 </code></pre>
-<p>Make sure the parameter servers are up and running and enter the following code:</p>
+<p>Meanwhile, make sure the parameter servers are up and running in separate terminal windows:</p>
+<pre><code>$ sbt "run master"
+$ sbt "run server"
+$ sbt "run server"
+</code></pre>
+<p>Let's construct a client (make sure to mark it as transient so the spark-shell doesn't try to serialize it):</p>
 <pre><code>import com.typesafe.config.ConfigFactory
 import glint.Client
 
 @transient val client = Client(ConfigFactory.parseFile(new java.io.File("/path/to/your/glint.conf")))
-
-val rdd = sc.parallelize(Array(0, 1, 2, 3, 4, 5, 6, 7, 8, 9))
-
-val vector = client.vector[Double](10)
-
-import glint.models.client.spark.SparkBigVector
-val sparkvector = new SparkBigVector[Double](vector)
 </code></pre>
-<p>We have created an RDD and a SparkBigVector. Let's try to use these objects and add the value 12 to every entry of the 
-matrix by using our RDD. Our <code>SparkBigVector</code> is serializable and thus safe to be used in typical spark closures such
- as foreach:</p>
-<pre><code>rdd.foreach {
-    case value =&gt; sparkvector.push(Array(value), Array(12))
+<p>Now, let's create our data of (key, value) pairs as an RDD:</p>
+<pre><code>val rdd = sc.parallelize(Array((0, 0.0), (1, 2.0), (2, -9.0), (3, 5.5), (4, 3.14), (5, 55.5), (6, 0.01), (7, 10.0), (8, 100.0), (9, 1000.0)))
+</code></pre>
+<p>And a distributed vector:</p>
+<pre><code>val vector = client.vector[Double](10)
+</code></pre>
+<p>The main code will use the constructed <code>vector</code> object within a spark closure such as <code>rdd.foreach { ... }</code>. There is 
+some additional boilerplate to deal with the execution context and timeouts. This is, however, a small price to pay 
+for the gained flexibility and customizability of the concurrency of your code.</p>
+<pre><code>import akka.util.Timeout
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
+import java.util.concurrent.Executors
+rdd.foreach {
+    case (index, value) =&gt;
+        implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(4))
+        implicit val timeout = new Timeout(30 seconds)
+        vector.push(Array(index), Array(value))
 }
 </code></pre>
-<p>Finally, let's verify the result:</p>
+<p>Finally, let's verify the result by pulling the values from the parameter server:</p>
 <pre><code>import scala.concurrent.ExecutionContext
-@transient implicit val ec = ExecutionContext.Implicits.global
-sparkvector.pull((0L until 10).toArray).onSuccess {
+@transient implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(4))
+@transient implicit val timeout = new Timeout(30 seconds)
+vector.pull((0L until 10).toArray).onSuccess {
     case values =&gt; println(values.mkString(", "))
 }
-</code></pre>
-<p>We should observe the expected output</p>
-<pre><code>12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0, 12.0
 </code></pre></div>
         </div>
 
