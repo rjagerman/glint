@@ -24,10 +24,8 @@ Meanwhile, make sure the parameter servers are up and running in separate termin
  
 Let's construct a client (make sure to mark it as transient so the spark-shell doesn't try to serialize it):
 
-    import com.typesafe.config.ConfigFactory
     import glint.Client
-    
-    @transient val client = Client(ConfigFactory.parseFile(new java.io.File("/path/to/your/glint.conf")))
+    @transient val client = Client()
     
 Now, let's create our data of (key, value) pairs as an RDD:
     
@@ -41,22 +39,16 @@ The main code will use the constructed `vector` object within a spark closure su
 some additional boilerplate to deal with the execution context and timeouts. This is, however, a small price to pay 
 for the gained flexibility and customizability of the concurrency of your code.
 
-    import akka.util.Timeout
-    import scala.concurrent.duration._
     import scala.concurrent.ExecutionContext
-    import java.util.concurrent.Executors
     rdd.foreach {
         case (index, value) =>
-            implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(4))
-            implicit val timeout = new Timeout(30 seconds)
+            implicit val ec = ExecutionContext.Implicits.global
             vector.push(Array(index), Array(value))
     }
     
 Finally, let's verify the result by pulling the values from the parameter server:
 
-    import scala.concurrent.ExecutionContext
-    @transient implicit val ec = ExecutionContext.fromExecutor(Executors.newFixedThreadPool(4))
-    @transient implicit val timeout = new Timeout(30 seconds)
+    @transient implicit val ec = ExecutionContext.Implicits.global
     vector.pull((0L until 10).toArray).onSuccess {
         case values => println(values.mkString(", "))
     }
