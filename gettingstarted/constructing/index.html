@@ -197,9 +197,8 @@ val client = Client()
 <p>This will construct a client object that acts as an interface to the parameter servers. We can now use this client 
 object to construct distributed matrices and vectors on the parameter server.</p>
 <p>If you need to change the default configuration (for example if your master node is not on localhost but has a 
-different hostname or IP), you can create a <code>glint.conf</code> file. See <a href="../src/main/resources/glint.conf">https://github
-.com/rjagerman/glint/blob/master/src/main/resources/glint.conf</a> for an comprehensive 
-example. To load a custom configuration file, use the following:</p>
+different hostname or IP), you can create a <code>glint.conf</code> file. See <a href="https://github.com/rjagerman/glint/blob/master/src/main/resources/glint.conf">src/main/resources/glint.conf</a>
+for a comprehensive example. To load a custom configuration file, use the following:</p>
 <pre><code>import com.typesafe.config.ConfigFactory
 import glint.Client
 val client = Client(ConfigFactory.parseFile(new java.io.File("glint.conf")))
