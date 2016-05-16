@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/rjagerman/glint.svg?branch=add-ci-testing)](https://travis-ci.org/rjagerman/glint)
 
 Glint is a high performance [Scala](http://www.scala-lang.org/) parameter server built using [Akka](http://akka.io/).
-The aim is to make it easy to develop performant distributed machine learning algorithms using the parameter server architecture as a consistency model. One of the major goals is compatibility with [Spark](http://spark.apache.org/).
+The aim is to make it easy to develop performant distributed machine learning algorithms using the parameter server architecture. One of the major goals is compatibility with [Spark](http://spark.apache.org/).
 
 ## Compile
 To use the current version you should compile the system manually, publish it to a local repository and include it in your project through sbt. Clone this repository and run:
