@@ -1,20 +1,21 @@
 package glint
 
+import java.net.InetAddress
 import java.util.concurrent.TimeUnit
 
 import akka.actor._
 import akka.pattern.ask
 import akka.remote.RemoteScope
 import akka.util.Timeout
-import com.typesafe.config.{Config, ConfigFactory}
+import com.typesafe.config.{Config, ConfigFactory, ConfigValueFactory}
 import glint.exceptions.ModelCreationException
 import glint.messages.master.{RegisterClient, ServerList}
 import glint.models.client.async._
 import glint.models.client.{BigMatrix, BigVector}
 import glint.models.server._
-import glint.partitioning.cyclic.CyclicPartitioner
 import glint.partitioning.range.RangePartitioner
 import glint.partitioning.{Partition, Partitioner}
+import org.apache.spark.SparkContext
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -268,6 +269,68 @@ object Client {
     val default = ConfigFactory.parseResourcesAnySyntax("glint")
     val conf = config.withFallback(default).resolve()
     Await.result(start(conf), conf.getDuration("glint.client.timeout", TimeUnit.MILLISECONDS) milliseconds)
+  }
+
+
+  /**
+    * Starts a standalone glint cluster integrated in Spark
+    *
+    * @param sc The spark context
+    * @return A future Glint client
+    */
+  def standalone(sc: SparkContext): Client = {
+    standalone(sc, "")
+  }
+
+  /**
+    * Starts a standalone glint cluster integrated in Spark
+    *
+    * @param sc The spark context
+    * @param host The master host name
+    * @return A future Glint client
+    */
+  def standalone(sc: SparkContext, host: String): Client = {
+    val default = ConfigFactory.parseResourcesAnySyntax("glint").resolve()
+    val config = if (host.isEmpty) {
+      default.withValue("glint.master.host", ConfigValueFactory.fromAnyRef(InetAddress.getLocalHost.getHostAddress))
+    } else {
+      default.withValue("glint.master.host", ConfigValueFactory.fromAnyRef(host))
+    }
+    standalone(sc, config)
+  }
+
+  /**
+    * Starts a standalone glint cluster integrated in Spark
+    *
+    * @param sc The spark context
+    * @param config The configuration
+    * @return A future Glint client
+    */
+  def standalone(sc: SparkContext, config: Config): Client = {
+    implicit val ec = ExecutionContext.Implicits.global
+
+    // Start master
+    val (masterSystem, masterActor) = Await.result(Master.run(config), config.getDuration("glint.client.timeout", TimeUnit.MILLISECONDS) milliseconds)
+    sys.addShutdownHook {
+      masterSystem.shutdown()
+      masterSystem.awaitTermination()
+    }
+
+    // Start parameter servers on workers
+    val nrOfExecutors = sc.getExecutorMemoryStatus.size
+    sc.range(0, nrOfExecutors).repartition(nrOfExecutors).foreachPartition {
+      case _ => Server.runOnce(config)
+    }
+
+    // Construct client
+    try {
+      Client(config)
+    } catch {
+      case ex: Throwable =>
+        masterSystem.shutdown()
+        masterSystem.awaitTermination()
+        throw ex
+    }
   }
 
   /**

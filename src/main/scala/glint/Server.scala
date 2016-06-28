@@ -1,6 +1,6 @@
 package glint
 
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.{Semaphore, TimeUnit}
 
 import akka.actor._
 import akka.pattern.ask
@@ -28,6 +28,9 @@ private[glint] class Server extends Actor with ActorLogging {
   */
 private[glint] object Server extends StrictLogging {
 
+  private val lock = new Semaphore(1)
+  private var started = false
+
   /**
     * Starts a parameter server ready to receive commands
     *
@@ -54,11 +57,35 @@ private[glint] object Server extends StrictLogging {
     val master = system.actorSelection(s"akka.tcp://${masterSystem}@${masterHost}:${masterPort}/user/${masterName}")
     val registration = master ? RegisterServer(server)
 
+    registration.onFailure {
+      case _ => system.shutdown()
+    }
     registration.map {
       case a =>
         logger.info("Server successfully registered with master")
         (system, server)
     }
 
+  }
+
+  /**
+    * Starts a parameter server once per JVM, even if this method is called multiple times
+    *
+    * @param config The configuration
+    * @return A future containing the started actor system and reference to the server actor
+    */
+  def runOnce(config: Config): Option[Future[(ActorSystem, ActorRef)]] = {
+    lock.acquire()
+    implicit val ec = ExecutionContext.Implicits.global
+    val future = if (!started) {
+      started = true
+      val future = run(config)
+      future.onFailure { case _ => started = false }
+      Option(future)
+    } else {
+      Option.empty[Future[(ActorSystem, ActorRef)]]
+    }
+    lock.release()
+    future
   }
 }
