@@ -278,8 +278,8 @@ object Client {
     * @param sc The spark context
     * @return A future Glint client
     */
-  def standalone(sc: SparkContext): Client = {
-    standalone(sc, "")
+  def runOnSpark(sc: SparkContext): Client = {
+    runOnSpark(sc, "")
   }
 
   /**
@@ -289,14 +289,14 @@ object Client {
     * @param host The master host name
     * @return A future Glint client
     */
-  def standalone(sc: SparkContext, host: String): Client = {
+  def runOnSpark(sc: SparkContext, host: String): Client = {
     val default = ConfigFactory.parseResourcesAnySyntax("glint").resolve()
     val config = if (host.isEmpty) {
       default.withValue("glint.master.host", ConfigValueFactory.fromAnyRef(InetAddress.getLocalHost.getHostAddress))
     } else {
       default.withValue("glint.master.host", ConfigValueFactory.fromAnyRef(host))
     }
-    standalone(sc, config)
+    runOnSpark(sc, config)
   }
 
   /**
@@ -306,7 +306,7 @@ object Client {
     * @param config The configuration
     * @return A future Glint client
     */
-  def standalone(sc: SparkContext, config: Config): Client = {
+  def runOnSpark(sc: SparkContext, config: Config): Client = {
     implicit val ec = ExecutionContext.Implicits.global
 
     // Start master
