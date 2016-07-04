@@ -115,7 +115,7 @@ trait SystemTest extends ScalaFutures {
   implicit val ec = ExecutionContext.Implicits.global
 
   implicit val defaultPatience =
-    PatienceConfig(timeout = Span(10, Seconds), interval = Span(50, Millis))
+    PatienceConfig(timeout = Span(60, Seconds), interval = Span(500, Millis))
 
   /**
     * Fixture that starts a master when running test code and cleans up where necessary
