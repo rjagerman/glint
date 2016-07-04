@@ -1,6 +1,7 @@
 package glint.serialization
 
-import akka.serialization.JavaSerializer
+import akka.actor.ActorSystem
+import akka.serialization.{JavaSerializer, SerializationExtension}
 import glint.SystemTest
 import glint.messages.server.request.PullMatrix
 import glint.messages.server.response.ResponseLong
@@ -20,7 +21,7 @@ object SerializationBenchmark extends Bench.OfflineReport with SystemTest {
   // Construct serializers
   val requestSerializer = new RequestSerializer()
   val responseSerializer = new ResponseSerializer()
-  val defaultJavaSerializer = new JavaSerializer(JavaSerializer.currentSystem.value)
+  val defaultJavaSerializer = SerializationExtension(ActorSystem()).findSerializerFor("")
 
   // Defines number of iterations to test (test size)
   val sizes = Gen.range("size")(1000, 9000, 2000)
