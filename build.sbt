@@ -6,7 +6,7 @@ organization := "ch.ethz.inf.da"
 
 scalaVersion := "2.10.6"
 
-crossScalaVersions := Seq("2.10.6", "2.11.7")
+crossScalaVersions := Seq("2.10.6", "2.11.8")
 
 fork in Test := true
 
@@ -20,16 +20,21 @@ libraryDependencies <+= scalaVersion {
 
 // Akka
 
-libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.14"
-
-libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.3.14"
-
 libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.10") => "com.typesafe.akka" % "akka-stream-experimental_2.10" % "2.0.2"
-  case x if x.startsWith("2.11") => "com.typesafe.akka" % "akka-stream-experimental_2.11" % "2.0.2"
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-actor" % "2.4.7"
+  case _ => "com.typesafe.akka" %% "akka-actor" % "2.3.15"
 }
 
-libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.3.14"
+libraryDependencies <+= scalaVersion {
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-remote" % "2.4.7"
+  case _ => "com.typesafe.akka" %% "akka-remote" % "2.3.15"
+}
+
+libraryDependencies <+= scalaVersion {
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-testkit" % "2.4.7"
+  case _ => "com.typesafe.akka" %% "akka-testkit" % "2.3.15"
+}
+
 
 // Retry
 
