@@ -12,29 +12,20 @@ fork in Test := true
 
 // Spark
 
-libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.10") => "org.apache.spark" % "spark-core_2.10" % "1.6.0" % "provided"
-  case x if x.startsWith("2.11") => "org.apache.spark" % "spark-core_2.11" % "1.6.0" % "provided"
-}
-
+libraryDependencies += "org.apache.spark" %% "spark-core" % "1.6.0" % "provided"
 
 // Akka
 
-libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-actor" % "2.4.7"
-  case _ => "com.typesafe.akka" %% "akka-actor" % "2.3.15"
+val akkaVersion = scalaVersion {
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "2.4.7"
+  case _ => "2.3.15"
 }
 
-libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-remote" % "2.4.7"
-  case _ => "com.typesafe.akka" %% "akka-remote" % "2.3.15"
-}
+libraryDependencies += "com.typesafe.akka" %% "akka-actor" % akkaVersion.value
 
-libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-testkit" % "2.4.7"
-  case _ => "com.typesafe.akka" %% "akka-testkit" % "2.3.15"
-}
+libraryDependencies += "com.typesafe.akka" %% "akka-remote" % akkaVersion.value
 
+libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % akkaVersion.value
 
 // Retry
 
@@ -60,10 +51,7 @@ libraryDependencies += "me.lessis" %% "retry" % "0.2.0"
 
 // Unit tests
 
-libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.10") => "org.scalatest" % "scalatest_2.10" % "2.2.4" % "test"
-  case x if x.startsWith("2.11") => "org.scalatest" % "scalatest_2.11" % "2.2.4" % "test"
-}
+libraryDependencies += "org.scalatest" %% "scalatest" % "2.2.4" % "test"
 
 // Performance benchmarking
 
@@ -75,14 +63,7 @@ libraryDependencies += "com.github.scopt" %% "scopt" % "3.3.0"
 
 // Logging
 
-libraryDependencies <+= scalaVersion {
-  case "2.10.6" =>  "com.typesafe.scala-logging" % "scala-logging-slf4j_2.10" % "2.1.2"
-  case _ => "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
-}
-
-libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.1"
-
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.3"
+libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
 
 // Resolvers
 
