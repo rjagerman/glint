@@ -1,5 +1,0 @@
-This is the documentation for the [[https://github.com/rjagerman/glint Glint]] project.
-
-To learn more about how to start Glint parameter servers and master nodes check out [[glint.Main]]
-
-To learn more about how to use Glint in your code to access the parameter servers, check out [[glint.Client]]
