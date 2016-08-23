@@ -1,6 +1,5 @@
 package glint.iterators
 
-import akka.util.Timeout
 import glint.models.client.BigMatrix
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -23,6 +22,9 @@ class ColumnIterator[V](val matrix: BigMatrix[V])(implicit ec: ExecutionContext)
   }
 
   override protected def fetchNextFuture(): Future[Array[V]] = {
+    if (matrix.rows > Integer.MAX_VALUE) {
+      return Future.failed[Array[V]](new UnsupportedOperationException("Cannot iterate over columns when the number of rows exceeds Integer.MAX_VALUE"))
+    }
     val rows = (0L until matrix.rows).toArray
     val cols = Array.fill[Int](matrix.rows.toInt)(index)
     matrix.pull(rows, cols)
