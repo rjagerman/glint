@@ -24,7 +24,7 @@ class ColumnIterator[V](val matrix: BigMatrix[V])(implicit ec: ExecutionContext)
 
   override protected def fetchNextFuture(): Future[Array[V]] = {
     val rows = (0L until matrix.rows).toArray
-    val cols = Array.fill[Int](matrix.cols)(index)
+    val cols = Array.fill[Int](matrix.rows.toInt)(index)
     matrix.pull(rows, cols)
   }
 
