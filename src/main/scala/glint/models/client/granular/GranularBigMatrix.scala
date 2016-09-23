@@ -1,12 +1,11 @@
 package glint.models.client.granular
 
-import akka.util.Timeout
-import breeze.linalg.Vector
-import glint.models.client.BigMatrix
-
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
+
+import breeze.linalg.Vector
+import glint.models.client.BigMatrix
 
 /**
   * A [[glint.models.client.BigMatrix BigMatrix]] whose messages are limited to a specific maximum message size. This
