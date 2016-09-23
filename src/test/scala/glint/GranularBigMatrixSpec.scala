@@ -36,4 +36,18 @@ class GranularBigMatrixSpec extends FlatSpec with SystemTest with Matchers {
     }
   }
 
+  it should "have non-zero max message size" in withMaster { _ =>
+    withServers(2) { _ =>
+      withClient { client =>
+        val model = client.matrix[Double](1000, 1000)
+        intercept[IllegalArgumentException] {
+          new GranularBigMatrix(model, 1000, 0)
+        }
+        intercept[IllegalArgumentException] {
+          new GranularBigMatrix(model, 1000, -1)
+        }
+      }
+    }
+  }
+
 }

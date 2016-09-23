@@ -1,6 +1,6 @@
 name := "Glint"
 
-version := "0.1-SNAPSHOT"
+version := "0.1-SNAPSHOT-np"
 
 organization := "ch.ethz.inf.da"
 

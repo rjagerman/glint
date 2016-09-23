@@ -26,6 +26,7 @@ import scala.reflect.ClassTag
 class GranularBigMatrix[V: ClassTag](underlying: BigMatrix[V],
                                      cols: Int,
                                      maximumMessageSize: Int) extends BigMatrix[V] {
+  require(maximumMessageSize > 0, "Max message size must be non-zero")
 
   /**
     * Pulls a set of rows while attempting to keep individual network messages smaller than `maximumMessageSize`
