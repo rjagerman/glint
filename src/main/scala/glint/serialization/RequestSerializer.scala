@@ -36,48 +36,56 @@ class RequestSerializer extends Serializer {
         PullVector(keys)
 
       case SerializationConstants.pushMatrixDoubleByte =>
+        val id = fpd.readInt()
         val rows = fpd.readArrayLong(objectSize)
         val cols = fpd.readArrayInt(objectSize)
         val values = fpd.readArrayDouble(objectSize)
-        PushMatrixDouble(rows, cols, values)
+        PushMatrixDouble(id, rows, cols, values)
 
       case SerializationConstants.pushMatrixFloatByte =>
+        val id = fpd.readInt()
         val rows = fpd.readArrayLong(objectSize)
         val cols = fpd.readArrayInt(objectSize)
         val values = fpd.readArrayFloat(objectSize)
-        PushMatrixFloat(rows, cols, values)
+        PushMatrixFloat(id, rows, cols, values)
 
       case SerializationConstants.pushMatrixIntByte =>
+        val id = fpd.readInt()
         val rows = fpd.readArrayLong(objectSize)
         val cols = fpd.readArrayInt(objectSize)
         val values = fpd.readArrayInt(objectSize)
-        PushMatrixInt(rows, cols, values)
+        PushMatrixInt(id, rows, cols, values)
 
       case SerializationConstants.pushMatrixLongByte =>
+        val id = fpd.readInt()
         val rows = fpd.readArrayLong(objectSize)
         val cols = fpd.readArrayInt(objectSize)
         val values = fpd.readArrayLong(objectSize)
-        PushMatrixLong(rows, cols, values)
+        PushMatrixLong(id, rows, cols, values)
 
       case SerializationConstants.pushVectorDoubleByte =>
+        val id = fpd.readInt()
         val keys = fpd.readArrayLong(objectSize)
         val values = fpd.readArrayDouble(objectSize)
-        PushVectorDouble(keys, values)
+        PushVectorDouble(id, keys, values)
 
       case SerializationConstants.pushVectorFloatByte =>
+        val id = fpd.readInt()
         val keys = fpd.readArrayLong(objectSize)
         val values = fpd.readArrayFloat(objectSize)
-        PushVectorFloat(keys, values)
+        PushVectorFloat(id, keys, values)
 
       case SerializationConstants.pushVectorIntByte =>
+        val id = fpd.readInt()
         val keys = fpd.readArrayLong(objectSize)
         val values = fpd.readArrayInt(objectSize)
-        PushVectorInt(keys, values)
+        PushVectorInt(id, keys, values)
 
       case SerializationConstants.pushVectorLongByte =>
+        val id = fpd.readInt()
         val keys = fpd.readArrayLong(objectSize)
         val values = fpd.readArrayLong(objectSize)
-        PushVectorLong(keys, values)
+        PushVectorLong(id, keys, values)
     }
   }
 
@@ -107,81 +115,89 @@ class RequestSerializer extends Serializer {
         fps.bytes
 
       case x: PushMatrixDouble =>
-        val fps = new FastPrimitiveSerializer(5 + x.rows.length * SerializationConstants.sizeOfLong +
+        val fps = new FastPrimitiveSerializer(9 + x.rows.length * SerializationConstants.sizeOfLong +
           x.rows.length * SerializationConstants.sizeOfInt +
           x.rows.length * SerializationConstants.sizeOfDouble)
         fps.writeByte(SerializationConstants.pushMatrixDoubleByte)
         fps.writeInt(x.rows.length)
+        fps.writeInt(x.id)
         fps.writeArrayLong(x.rows)
         fps.writeArrayInt(x.cols)
         fps.writeArrayDouble(x.values)
         fps.bytes
 
       case x: PushMatrixFloat =>
-        val fps = new FastPrimitiveSerializer(5 + x.rows.length * SerializationConstants.sizeOfLong +
+        val fps = new FastPrimitiveSerializer(9 + x.rows.length * SerializationConstants.sizeOfLong +
           x.rows.length * SerializationConstants.sizeOfInt +
           x.rows.length * SerializationConstants.sizeOfFloat)
         fps.writeByte(SerializationConstants.pushMatrixFloatByte)
         fps.writeInt(x.rows.length)
+        fps.writeInt(x.id)
         fps.writeArrayLong(x.rows)
         fps.writeArrayInt(x.cols)
         fps.writeArrayFloat(x.values)
         fps.bytes
 
       case x: PushMatrixInt =>
-        val fps = new FastPrimitiveSerializer(5 + x.rows.length * SerializationConstants.sizeOfLong +
+        val fps = new FastPrimitiveSerializer(9 + x.rows.length * SerializationConstants.sizeOfLong +
           x.rows.length * SerializationConstants.sizeOfInt +
           x.rows.length * SerializationConstants.sizeOfInt)
         fps.writeByte(SerializationConstants.pushMatrixIntByte)
         fps.writeInt(x.rows.length)
+        fps.writeInt(x.id)
         fps.writeArrayLong(x.rows)
         fps.writeArrayInt(x.cols)
         fps.writeArrayInt(x.values)
         fps.bytes
 
       case x: PushMatrixLong =>
-        val fps = new FastPrimitiveSerializer(5 + x.rows.length * SerializationConstants.sizeOfLong +
+        val fps = new FastPrimitiveSerializer(9 + x.rows.length * SerializationConstants.sizeOfLong +
           x.rows.length * SerializationConstants.sizeOfInt +
           x.rows.length * SerializationConstants.sizeOfLong)
         fps.writeByte(SerializationConstants.pushMatrixLongByte)
         fps.writeInt(x.rows.length)
+        fps.writeInt(x.id)
         fps.writeArrayLong(x.rows)
         fps.writeArrayInt(x.cols)
         fps.writeArrayLong(x.values)
         fps.bytes
 
       case x: PushVectorDouble =>
-        val fps = new FastPrimitiveSerializer(5 + x.keys.length * SerializationConstants.sizeOfLong +
+        val fps = new FastPrimitiveSerializer(9 + x.keys.length * SerializationConstants.sizeOfLong +
           x.keys.length * SerializationConstants.sizeOfDouble)
         fps.writeByte(SerializationConstants.pushVectorDoubleByte)
         fps.writeInt(x.keys.length)
+        fps.writeInt(x.id)
         fps.writeArrayLong(x.keys)
         fps.writeArrayDouble(x.values)
         fps.bytes
 
       case x: PushVectorFloat =>
-        val fps = new FastPrimitiveSerializer(5 + x.keys.length * SerializationConstants.sizeOfLong +
+        val fps = new FastPrimitiveSerializer(9 + x.keys.length * SerializationConstants.sizeOfLong +
           x.keys.length * SerializationConstants.sizeOfFloat)
         fps.writeByte(SerializationConstants.pushVectorFloatByte)
         fps.writeInt(x.keys.length)
+        fps.writeInt(x.id)
         fps.writeArrayLong(x.keys)
         fps.writeArrayFloat(x.values)
         fps.bytes
 
       case x: PushVectorInt =>
-        val fps = new FastPrimitiveSerializer(5 + x.keys.length * SerializationConstants.sizeOfLong +
+        val fps = new FastPrimitiveSerializer(9 + x.keys.length * SerializationConstants.sizeOfLong +
           x.keys.length * SerializationConstants.sizeOfInt)
         fps.writeByte(SerializationConstants.pushVectorIntByte)
         fps.writeInt(x.keys.length)
+        fps.writeInt(x.id)
         fps.writeArrayLong(x.keys)
         fps.writeArrayInt(x.values)
         fps.bytes
 
       case x: PushVectorLong =>
-        val fps = new FastPrimitiveSerializer(5 + x.keys.length * SerializationConstants.sizeOfLong +
+        val fps = new FastPrimitiveSerializer(9 + x.keys.length * SerializationConstants.sizeOfLong +
           x.keys.length * SerializationConstants.sizeOfLong)
         fps.writeByte(SerializationConstants.pushVectorLongByte)
         fps.writeInt(x.keys.length)
+        fps.writeInt(x.id)
         fps.writeArrayLong(x.keys)
         fps.writeArrayLong(x.values)
         fps.bytes

@@ -2,7 +2,7 @@
 [![Build Status](https://travis-ci.org/rjagerman/glint.svg?branch=add-ci-testing)](https://travis-ci.org/rjagerman/glint)
 
 Glint is a high performance [Scala](http://www.scala-lang.org/) parameter server built using [Akka](http://akka.io/).
-The aim is to make it easy to develop performant distributed machine learning algorithms using the parameter server architecture as a consistency model. One of the major goals is compatibility with [Spark](http://spark.apache.org/).
+The aim is to make it easy to develop performant distributed machine learning algorithms using the parameter server architecture. One of the major goals is compatibility with [Spark](http://spark.apache.org/).
 
 ## Compile
 To use the current version you should compile the system manually, publish it to a local repository and include it in your project through sbt. Clone this repository and run:
@@ -13,55 +13,19 @@ The `+` indicates that it should compile for all scala versions defined in the `
 
     libraryDependencies += "ch.ethz.inf.da" %% "glint" % "0.1-SNAPSHOT"
 
-## Starting parameter servers
+## Documentation
 
-The parameter server is designed to be ran stand alone as a separate java process.
+Refer to the [documentation](http://rjagerman.github.io/glint/) for instructions and examples on how to use the software.
 
-The first thing you have to do is configure the parameter server for your cluster. The default configuration is sufficient for running a simple localhost test. An example configuration can be found in [src/main/resources/glint.conf](src/main/resources/glint.conf). Most importantly you would want to set the master's hostname and port. This ensures that every parameter server and client interface knows where to find the master node.
+## Citation
 
-After having created a `.conf` file we can run a master and multiple parameter servers:
+If you find this project useful in your research, please cite the following paper in your publication(s):
 
-    # On your master machine
-    java -jar target/scala-2.11/Glint-assembly-0.1-SNAPSHOT.jar master -c your-conf-file.conf
+Rolf Jagerman, Carsten Eickhoff. **"Web-scale Topic Models in Spark: An Asynchronous Parameter Server"** *arXiv preprint 	arXiv:1605.07422 (2016).*
 
-    # On your worker machines (e.g. worker1 and worker2)
-    java -jar target/scala-2.11/Glint-assembly-0.1-SNAPSHOT.jar server -h localhost -c your-conf-file.conf
-    java -jar target/scala-2.11/Glint-assembly-0.1-SNAPSHOT.jar server -h localhost -c your-conf-file.conf
-
-The `-c your-conf-file.conf` is optional and you can omit it to use the default settings when just running a test on localhost.
-
-Alternatively you can use the provided scripts in the `sbin` folder in combination with several settings in the `conf` folder to automatically start a stand-alone cluster of parameter server on your machines. These scripts require passwordless ssh access to the machines on which you wish to start the parameter servers.
-
-## Example usage
-
-With your parameter servers up and running you can use the library to connect to the parameter servers, construct distributed matrices/vectors and pull/push data.
-
-The parameter server is designed to be highly asynchronous. The code uses common concurrency methods from scala. If you are unfamiliar with the concepts of Futures, ExecutionContext, etc. it is best to read up on those first.
-
-The first thing you want to do is construct a Client that is connected to the master:
-
-    import glint.Client
-    val client = Client(ConfigFactory.parseFile(new java.io.File("<config-file>.conf")))
-
-Now we can use this client object to construct a large model distributed over the parameter servers. The example below constructs a large matrix storing integers with 10000 rows and 10 columns:
-
-    val model = client.matrix[Int](10000, 10)
-    
-Next, this model can be used to pull/push data to and from the parameter server:
-
-    // First construct an execution context and timeout for the requests
-    import scala.concurrent.duration._
-    import akka.util.Timeout
-    implicit val ec = scala.concurrent.ExecutionContext.Implicits.global
-    implicit val timeout = new Timeout(30 seconds)
-    
-    // Push new data to row 999 and column 5
-    // The parameter server aggregates pushes by adding it to the old value.
-    // In this case we are adding 109 to the old value of (999, 5)
-    model.push(Array(999L), Array(5), Array(109))
-
-    // Pull row 999 from the parameter server, this will return the entire row (all 10 values)
-    model.pull(Array(999L)).onSuccess { case values => println(values(0)) }
-
-Note that both of the above operations happen asynchronously and return a `Future[...]` immediately. You can manually wait for this future by using `Await.result(...)` or you can provide a callback such as `onSuccess { }`.
-
+    @article{jagerman2016web,
+      title={Web-scale Topic Models in Spark: An Asynchronous Parameter Server},
+      author={Jagerman, Rolf and Eickhoff, Carsten},
+      journal={arXiv preprint arXiv:1605.07422},
+      year={2016}
+    }

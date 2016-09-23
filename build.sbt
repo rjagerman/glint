@@ -4,22 +4,35 @@ version := "0.1-SNAPSHOT-np"
 
 organization := "ch.ethz.inf.da"
 
-scalaVersion := "2.11.7"
+scalaVersion := "2.10.6"
 
-crossScalaVersions := Seq("2.10.6", "2.11.7")
+crossScalaVersions := Seq("2.10.6", "2.11.8")
 
 fork in Test := true
 
 // Akka
 
-libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.3.14"
-
-libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.3.14"
+libraryDependencies <+= scalaVersion {
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-actor" % "2.4.7"
+  case _ => "com.typesafe.akka" %% "akka-actor" % "2.3.15"
+}
 
 libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.10") => "com.typesafe.akka" % "akka-stream-experimental_2.10" % "2.0.2"
-  case x if x.startsWith("2.11") => "com.typesafe.akka" % "akka-stream-experimental_2.11" % "2.0.2"
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-remote" % "2.4.7"
+  case _ => "com.typesafe.akka" %% "akka-remote" % "2.3.15"
 }
+
+libraryDependencies <+= scalaVersion {
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-testkit" % "2.4.7"
+  case _ => "com.typesafe.akka" %% "akka-testkit" % "2.3.15"
+}
+
+
+// Retry
+
+resolvers += "softprops-maven" at "http://dl.bintray.com/content/softprops/maven"
+
+libraryDependencies += "me.lessis" %% "retry" % "0.2.0"
 
 // Spire (generic fast numerics)
 
@@ -30,6 +43,12 @@ libraryDependencies += "org.spire-math" %% "spire" % "0.7.4"
 libraryDependencies += "org.scalanlp" %% "breeze" % "0.11.2"
 
 libraryDependencies += "org.scalanlp" %% "breeze-natives" % "0.11.2"
+
+// Retry
+
+resolvers += "softprops-maven" at "http://dl.bintray.com/content/softprops/maven"
+
+libraryDependencies += "me.lessis" %% "retry" % "0.2.0"
 
 // Unit tests
 
@@ -78,6 +97,13 @@ logBuffered := false
 parallelExecution in Test := false
 
 // Scala documentation
-scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value+"/doc/root.txt")
+scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value+"/docs/root.txt")
 scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Glint")
 scalacOptions in (Compile, doc) ++= Seq("-skip-packages", "akka")
+
+ghpages.settings
+
+git.remoteRepo := "git@github.com:rjagerman/glint.git"
+
+site.includeScaladoc()
+

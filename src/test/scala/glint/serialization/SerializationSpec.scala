@@ -1,8 +1,7 @@
-package glint
+package glint.serialization
 
 import glint.messages.server.request._
 import glint.messages.server.response._
-import glint.serialization.{RequestSerializer, ResponseSerializer}
 import org.scalatest.{FlatSpec, Matchers}
 
 /**
@@ -40,7 +39,7 @@ class SerializationSpec extends FlatSpec with Matchers {
 
   it should "serialize and deserialize a PushMatrixDouble" in {
     val requestSerializer = new RequestSerializer()
-    val bytes = requestSerializer.toBinary(PushMatrixDouble(Array(0L, 5L, 9L), Array(2, 10, 3), Array(0.0, 0.5, 0.99)))
+    val bytes = requestSerializer.toBinary(PushMatrixDouble(2, Array(0L, 5L, 9L), Array(2, 10, 3), Array(0.0, 0.5, 0.99)))
     val reconstruction = requestSerializer.fromBinary(bytes)
     assert(reconstruction.isInstanceOf[PushMatrixDouble])
     val pushMatrixDouble = reconstruction.asInstanceOf[PushMatrixDouble]
@@ -51,7 +50,7 @@ class SerializationSpec extends FlatSpec with Matchers {
 
   it should "serialize and deserialize a PushMatrixFloat" in {
     val requestSerializer = new RequestSerializer()
-    val bytes = requestSerializer.toBinary(PushMatrixFloat(Array(0L, 5L, 9L), Array(2, 10, 3), Array(0.3f, 0.6f, 10.314f)))
+    val bytes = requestSerializer.toBinary(PushMatrixFloat(32, Array(0L, 5L, 9L), Array(2, 10, 3), Array(0.3f, 0.6f, 10.314f)))
     val reconstruction = requestSerializer.fromBinary(bytes)
     assert(reconstruction.isInstanceOf[PushMatrixFloat])
     val pushMatrixFloat = reconstruction.asInstanceOf[PushMatrixFloat]
@@ -62,7 +61,7 @@ class SerializationSpec extends FlatSpec with Matchers {
 
   it should "serialize and deserialize a PushMatrixInt" in {
     val requestSerializer = new RequestSerializer()
-    val bytes = requestSerializer.toBinary(PushMatrixInt(Array(1L, 2L, 100000000000L), Array(10000, 10, 1), Array(99, -20, -3500)))
+    val bytes = requestSerializer.toBinary(PushMatrixInt(16, Array(1L, 2L, 100000000000L), Array(10000, 10, 1), Array(99, -20, -3500)))
     val reconstruction = requestSerializer.fromBinary(bytes)
     assert(reconstruction.isInstanceOf[PushMatrixInt])
     val pushMatrixInt = reconstruction.asInstanceOf[PushMatrixInt]
@@ -73,7 +72,7 @@ class SerializationSpec extends FlatSpec with Matchers {
 
   it should "serialize and deserialize a PushMatrixLong" in {
     val requestSerializer = new RequestSerializer()
-    val bytes = requestSerializer.toBinary(PushMatrixLong(Array(1L, 2L, 100000000000L), Array(10000, 10, 1), Array(5000300200100L, -9000100200300L, 0L)))
+    val bytes = requestSerializer.toBinary(PushMatrixLong(0, Array(1L, 2L, 100000000000L), Array(10000, 10, 1), Array(5000300200100L, -9000100200300L, 0L)))
     val reconstruction = requestSerializer.fromBinary(bytes)
     assert(reconstruction.isInstanceOf[PushMatrixLong])
     val pushMatrixLong = reconstruction.asInstanceOf[PushMatrixLong]
@@ -84,7 +83,7 @@ class SerializationSpec extends FlatSpec with Matchers {
 
   it should "serialize and deserialize a PushVectorDouble" in {
     val requestSerializer = new RequestSerializer()
-    val bytes = requestSerializer.toBinary(PushVectorDouble(Array(0L, 5L, 9L), Array(0.0, 0.5, 0.99)))
+    val bytes = requestSerializer.toBinary(PushVectorDouble(123, Array(0L, 5L, 9L), Array(0.0, 0.5, 0.99)))
     val reconstruction = requestSerializer.fromBinary(bytes)
     assert(reconstruction.isInstanceOf[PushVectorDouble])
     val pushMatrixDouble = reconstruction.asInstanceOf[PushVectorDouble]
@@ -94,7 +93,7 @@ class SerializationSpec extends FlatSpec with Matchers {
 
   it should "serialize and deserialize a PushVectorFloat" in {
     val requestSerializer = new RequestSerializer()
-    val bytes = requestSerializer.toBinary(PushVectorFloat(Array(0L, 5L, 9L), Array(0.3f, 0.6f, 10.314f)))
+    val bytes = requestSerializer.toBinary(PushVectorFloat(9999, Array(0L, 5L, 9L), Array(0.3f, 0.6f, 10.314f)))
     val reconstruction = requestSerializer.fromBinary(bytes)
     assert(reconstruction.isInstanceOf[PushVectorFloat])
     val pushMatrixFloat = reconstruction.asInstanceOf[PushVectorFloat]
@@ -104,7 +103,7 @@ class SerializationSpec extends FlatSpec with Matchers {
 
   it should "serialize and deserialize a PushVectorInt" in {
     val requestSerializer = new RequestSerializer()
-    val bytes = requestSerializer.toBinary(PushVectorInt(Array(1L, 2L, 100000000000L), Array(99, -20, -3500)))
+    val bytes = requestSerializer.toBinary(PushVectorInt(231, Array(1L, 2L, 100000000000L), Array(99, -20, -3500)))
     val reconstruction = requestSerializer.fromBinary(bytes)
     assert(reconstruction.isInstanceOf[PushVectorInt])
     val pushMatrixInt = reconstruction.asInstanceOf[PushVectorInt]
@@ -114,7 +113,7 @@ class SerializationSpec extends FlatSpec with Matchers {
 
   it should "serialize and deserialize a PushVectorLong" in {
     val requestSerializer = new RequestSerializer()
-    val bytes = requestSerializer.toBinary(PushVectorLong(Array(1L, 2L, 100000000000L), Array(5000300200100L, -9000100200300L, 0L)))
+    val bytes = requestSerializer.toBinary(PushVectorLong(213, Array(1L, 2L, 100000000000L), Array(5000300200100L, -9000100200300L, 0L)))
     val reconstruction = requestSerializer.fromBinary(bytes)
     assert(reconstruction.isInstanceOf[PushVectorLong])
     val pushMatrixLong = reconstruction.asInstanceOf[PushVectorLong]

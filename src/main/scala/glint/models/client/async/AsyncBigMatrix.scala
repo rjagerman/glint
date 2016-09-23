@@ -2,18 +2,15 @@ package glint.models.client.async
 
 import java.io.{IOException, ObjectInputStream, ObjectOutputStream}
 
-import akka.actor.{ActorRef, ActorSystem, ExtendedActorSystem}
+import akka.actor.{ActorRef, ExtendedActorSystem}
 import akka.pattern.Patterns.gracefulStop
-import akka.pattern.ask
 import akka.serialization.JavaSerializer
-import akka.util.Timeout
 import breeze.linalg.{DenseVector, Vector}
 import breeze.math.Semiring
 import com.typesafe.config.Config
-import glint.indexing.Indexer
 import glint.messages.server.request.{PullMatrix, PullMatrixRows}
 import glint.models.client.BigMatrix
-import glint.partitioning.Partitioner
+import glint.partitioning.{Partition, Partitioner}
 import spire.implicits.cforRange
 
 import scala.concurrent.duration._
@@ -27,8 +24,8 @@ import scala.reflect.ClassTag
   *   client.matrix[Double](rows, columns)
   * }}}
   *
-  * @param partitioner A partitioner to map rows to parameter servers
-  * @param indexer An indexer to remap rows
+  * @param partitioner A partitioner to map rows to partitions
+  * @param matrices The references to the partial matrices on the parameter servers
   * @param config The glint configuration (used for serialization/deserialization construction of actorsystems)
   * @param rows The number of rows
   * @param cols The number of columns
@@ -36,34 +33,35 @@ import scala.reflect.ClassTag
   * @tparam R The type of responses we expect to get from the parameter servers
   * @tparam P The type of push requests we should send to the parameter servers
   */
-abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, P: ClassTag](partitioner: Partitioner[ActorRef],
-                                                                                             indexer: Indexer[Long],
+abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, P: ClassTag](partitioner: Partitioner,
+                                                                                             matrices: Array[ActorRef],
                                                                                              config: Config,
-                                                                                             rows: Long,
-                                                                                             cols: Int)
+                                                                                             val rows: Long,
+                                                                                             val cols: Int)
   extends BigMatrix[V] {
+
+  PullFSM.initialize(config)
+  PushFSM.initialize(config)
 
   /**
     * Pulls a set of rows
     *
     * @param rows The indices of the rows
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the vectors representing the rows
     */
-  override def pull(rows: Array[Long])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[Vector[V]]] = {
-
-    // Reindex keys appropriately
-    val indexedRows = rows.map(indexer.index)
+  override def pull(rows: Array[Long])(implicit ec: ExecutionContext): Future[Array[Vector[V]]] = {
 
     // Send pull request of the list of keys
-    val pulls = indexedRows.groupBy(partitioner.partition).map {
+    val pulls = rows.groupBy(partitioner.partition).map {
       case (partition, partitionKeys) =>
-        (partition ? PullMatrixRows(partitionKeys)).mapTo[R]
+        val pullMessage = PullMatrixRows(partitionKeys)
+        val fsm = PullFSM[PullMatrixRows, R](pullMessage, matrices(partition.index))
+        fsm.run()
     }
 
     // Obtain key indices after partitioning so we can place the results in a correctly ordered array
-    val indices = indexedRows.zipWithIndex.groupBy {
+    val indices = rows.zipWithIndex.groupBy {
       case (k, i) => partitioner.partition(k)
     }.map {
       case (_, arr) => arr.map(_._2)
@@ -92,24 +90,21 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     *
     * @param rows The indices of the rows
     * @param cols The corresponding indices of the columns
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing the values of the elements at given rows, columns
     */
-  override def pull(rows: Array[Long], cols: Array[Int])(implicit timeout: Timeout, ec: ExecutionContext): Future[Array[V]] = {
-
-    // Reindex keys appropriately
-    val indexedRows = rows.map(indexer.index)
+  override def pull(rows: Array[Long], cols: Array[Int])(implicit ec: ExecutionContext): Future[Array[V]] = {
 
     // Send pull request of the list of keys
-    val pulls = mapPartitions(indexedRows) {
+    val pulls = mapPartitions(rows) {
       case (partition, indices) =>
-        val pullMessage = PullMatrix(indices.map(indexedRows).toArray, indices.map(cols).toArray)
-        (partition ? pullMessage).mapTo[R]
+        val pullMessage = PullMatrix(indices.map(rows).toArray, indices.map(cols).toArray)
+        val fsm = PullFSM[PullMatrix, R](pullMessage, matrices(partition.index))
+        fsm.run()
     }
 
     // Obtain key indices after partitioning so we can place the results in a correctly ordered array
-    val indices = indexedRows.zipWithIndex.groupBy {
+    val indices = rows.zipWithIndex.groupBy {
       case (k, i) => partitioner.partition(k)
     }.map {
       case (_, arr) => arr.map(_._2)
@@ -140,19 +135,19 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     * @param rows The indices of the rows
     * @param cols The indices of the columns
     * @param values The values to update
-    * @param timeout The timeout for this request
     * @param ec The implicit execution context in which to execute the request
     * @return A future containing either the success or failure of the operation
     */
-  override def push(rows: Array[Long], cols: Array[Int], values: Array[V])(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
-
-    // Reindex rows appropriately
-    val indexedRows = rows.map(indexer.index)
+  override def push(rows: Array[Long], cols: Array[Int], values: Array[V])(implicit ec: ExecutionContext): Future[Boolean] = {
 
     // Send push requests
-    val pushes = mapPartitions(indexedRows) {
+    val pushes = mapPartitions(rows) {
       case (partition, indices) =>
-        (partition ? toPushMessage(indices.map(indexedRows).toArray, indices.map(cols).toArray, indices.map(values).toArray)).mapTo[Boolean]
+        val rs = indices.map(rows).toArray
+        val cs = indices.map(cols).toArray
+        val vs = indices.map(values).toArray
+        val fsm = PushFSM[P](id => toPushMessage(id, rs, cs, vs), matrices(partition.index))
+        fsm.run()
     }
 
     // Combine and aggregate futures
@@ -170,7 +165,7 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     * @return An iterable over the partitioned results
     */
   @inline
-  private def mapPartitions[T](rows: Seq[Long])(func: (ActorRef, Seq[Int]) => T): Iterable[T] = {
+  private def mapPartitions[T](rows: Seq[Long])(func: (Partition, Seq[Int]) => T): Iterable[T] = {
     rows.indices.groupBy(i => partitioner.partition(rows(i))).map { case (a, b) => func(a, b) }
   }
 
@@ -179,10 +174,10 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     *
     * @return A future whether the matrix was successfully destroyed
     */
-  override def destroy()(implicit timeout: Timeout, ec: ExecutionContext): Future[Boolean] = {
-    val partitionFutures = partitioner.partitions.map {
-      case partition => gracefulStop(partition, 60 seconds)
-    }
+  override def destroy()(implicit ec: ExecutionContext): Future[Boolean] = {
+    val partitionFutures = partitioner.all().map {
+      case partition => gracefulStop(matrices(partition.index), 60 seconds)
+    }.toIterator
     Future.sequence(partitionFutures).transform(successes => successes.forall(success => success), err => err)
   }
 
@@ -190,7 +185,7 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     * @return The number of partitions this big matrix's data is spread across
     */
   def nrOfPartitions: Int = {
-    partitioner.partitions.length
+    partitioner.all().length
   }
 
   /**
@@ -217,13 +212,14 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
   /**
     * Creates a push message from given sequence of rows, columns and values
     *
+    * @param id The identifier
     * @param rows The rows
     * @param cols The columns
     * @param values The values
     * @return A PushMatrix message for type V
     */
   @inline
-  protected def toPushMessage(rows: Array[Long], cols: Array[Int], values: Array[V]): P
+  protected def toPushMessage(id: Int, rows: Array[Long], cols: Array[Int], values: Array[V]): P
 
   /**
     * Deserializes this instance. This starts an ActorSystem with appropriate configuration before attempting to
@@ -235,7 +231,7 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
   @throws(classOf[IOException])
   private def readObject(in: ObjectInputStream): Unit = {
     val config = in.readObject().asInstanceOf[Config]
-    val as = ActorSystem("AsyncBigMatrix", config.getConfig("glint.client"))
+    val as = DeserializationHelper.getActorSystem(config.getConfig("glint.client"))
     JavaSerializer.currentSystem.withValue(as.asInstanceOf[ExtendedActorSystem]) {
       in.defaultReadObject()
     }

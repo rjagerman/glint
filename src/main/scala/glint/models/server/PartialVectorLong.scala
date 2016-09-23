@@ -1,25 +1,25 @@
 package glint.models.server
 
-import breeze.linalg.{DenseVector, Vector}
 import glint.messages.server.request.{PullVector, PushVectorLong}
 import glint.messages.server.response.ResponseLong
+import glint.partitioning.Partition
+import spire.implicits._
 
 /**
   * A partial vector holding longs
   *
-  * @param start The start index
-  * @param end The end index
+  * @param partition The partition
   */
-private[glint] class PartialVectorLong(start: Long, end: Long) extends PartialVector[Long](start, end) {
+private[glint] class PartialVectorLong(partition: Partition) extends PartialVector[Long](partition) {
 
-  override val data: Vector[Long] = DenseVector.zeros[Long](size)
-
-  @inline
-  override def aggregate(value1: Long, value2: Long): Long = value1 + value2
+  override val data: Array[Long] = new Array[Long](size)
 
   override def receive: Receive = {
     case pull: PullVector => sender ! ResponseLong(get(pull.keys))
-    case push: PushVectorLong => sender ! update(push.keys, push.values)
+    case push: PushVectorLong =>
+      update(push.keys, push.values)
+      updateFinished(push.id)
+    case x => handleLogic(x, sender)
   }
 
 }

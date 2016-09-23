@@ -2,28 +2,29 @@ package glint.models.server
 
 import breeze.linalg.{DenseMatrix, Matrix}
 import glint.messages.server.request.{PullMatrix, PullMatrixRows, PushMatrixDouble}
-import glint.messages.server.response.ResponseDouble
+import glint.messages.server.response.{ResponseRowsDouble, ResponseDouble}
+import glint.partitioning.Partition
+import spire.implicits._
 
 /**
   * A partial matrix holding doubles
   *
-  * @param start The row start index
-  * @param end The row end index
+  * @param partition The partition
   * @param cols The number of columns
   */
-private[glint] class PartialMatrixDouble(start: Long,
-                                        end: Long,
-                                        cols: Int) extends PartialMatrix[Double](start, end, cols) {
+private[glint] class PartialMatrixDouble(partition: Partition,
+                                         cols: Int) extends PartialMatrix[Double](partition, cols) {
 
-  override val data: Matrix[Double] = DenseMatrix.zeros[Double](rows, cols)
-
-  @inline
-  override def aggregate(value1: Double, value2: Double): Double = value1 + value2
+  //DenseMatrix.zeros[Double](rows, cols)
+  override val data: Array[Array[Double]] = Array.fill(rows)(Array.fill[Double](cols)(0.0))
 
   override def receive: Receive = {
     case pull: PullMatrix => sender ! ResponseDouble(get(pull.rows, pull.cols))
-    case pull: PullMatrixRows => sender ! ResponseDouble(getRows(pull.rows))
-    case push: PushMatrixDouble => sender ! update(push.rows, push.cols, push.values)
+    case pull: PullMatrixRows => sender ! ResponseRowsDouble(getRows(pull.rows), cols)
+    case push: PushMatrixDouble =>
+      update(push.rows, push.cols, push.values)
+      updateFinished(push.id)
+    case x => handleLogic(x, sender)
   }
 
 }
