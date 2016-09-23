@@ -1,7 +1,8 @@
-package glint
+package glint.vector
 
 import scala.util.Random
 
+import glint.SystemTest
 import glint.models.client.granular.GranularBigVector
 import org.scalatest.{FlatSpec, Matchers}
 
@@ -13,7 +14,7 @@ class GranularBigVectorSpec extends FlatSpec with SystemTest with Matchers {
   "A GranularBigVector" should "handle large push/pull requests" in withMaster { _ =>
     withServers(2) { _ =>
       withClient { client =>
-        val size = 1000000
+        val size = 1e6.toInt
         val rng = new Random()
         rng.setSeed(42)
         val model = client.vector[Double](size)
@@ -36,7 +37,7 @@ class GranularBigVectorSpec extends FlatSpec with SystemTest with Matchers {
   it should "have non-zero max message size" in withMaster { _ =>
     withServers(2) { _ =>
       withClient { client =>
-        val model = client.vector[Double](1000)
+        val model = client.vector[Double](10)
         intercept[IllegalArgumentException] {
           val granularModel = new GranularBigVector(model, 0)
         }
