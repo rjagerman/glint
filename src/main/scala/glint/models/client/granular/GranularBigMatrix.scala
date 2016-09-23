@@ -14,7 +14,7 @@ import scala.reflect.ClassTag
   *
   * {{{
   *   matrix = client.matrix[Double](1000000, 100)
-  *   granularMatrix = new GranularBigMatrix[Double](matrix, 100, 1000)
+  *   granularMatrix = new GranularBigMatrix[Double](matrix, 1000)
   *   granularMatrix.pull(veryLargeArrayOfRowIndices)
   * }}}
   *
