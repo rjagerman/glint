@@ -1,12 +1,11 @@
 package glint.models.client.granular
 
-import akka.util.Timeout
-import breeze.linalg.Vector
-import glint.models.client.BigMatrix
-
 import scala.collection.mutable.ArrayBuffer
 import scala.concurrent.{ExecutionContext, Future}
 import scala.reflect.ClassTag
+
+import breeze.linalg.Vector
+import glint.models.client.BigMatrix
 
 /**
   * A [[glint.models.client.BigMatrix BigMatrix]] whose messages are limited to a specific maximum message size. This
@@ -14,7 +13,7 @@ import scala.reflect.ClassTag
   *
   * {{{
   *   matrix = client.matrix[Double](1000000, 100)
-  *   granularMatrix = new GranularBigMatrix[Double](matrix, 100, 1000)
+  *   granularMatrix = new GranularBigMatrix[Double](matrix, 1000)
   *   granularMatrix.pull(veryLargeArrayOfRowIndices)
   * }}}
   *
@@ -24,6 +23,8 @@ import scala.reflect.ClassTag
   */
 class GranularBigMatrix[V: ClassTag](underlying: BigMatrix[V],
                                      maximumMessageSize: Int) extends BigMatrix[V] {
+
+  require(maximumMessageSize > 0, "Max message size must be non-zero")
 
   val rows: Long = underlying.rows
   val cols: Int = underlying.cols
