@@ -16,14 +16,20 @@ libraryDependencies += "org.apache.spark" %% "spark-core" % "1.4.0" % "provided"
 
 // Akka
 
-val akkaVersion = scalaVersion {
-  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "2.4.7"
-  case _ => "2.3.15"
+libraryDependencies <+= scalaVersion {
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-actor" % "2.4.12"
+  case _ => "com.typesafe.akka" %% "akka-actor" % "2.3.15"
 }
 
-libraryDependencies += "com.typesafe.akka" %% "akka-actor" % akkaVersion.value
+libraryDependencies <+= scalaVersion {
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-remote" % "2.4.12"
+  case _ => "com.typesafe.akka" %% "akka-remote" % "2.3.15"
+}
 
-libraryDependencies += "com.typesafe.akka" %% "akka-remote" % akkaVersion.value
+libraryDependencies <+= scalaVersion {
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-testkit" % "2.4.12"
+  case _ => "com.typesafe.akka" %% "akka-testkit" % "2.3.15"
+}
 
 libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % akkaVersion.value
 

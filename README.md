@@ -16,3 +16,16 @@ The `+` indicates that it should compile for all scala versions defined in the `
 ## Documentation
 
 Refer to the [documentation](http://rjagerman.github.io/glint/) for instructions and examples on how to use the software.
+
+## Citation
+
+If you find this project useful in your research, please cite the following paper in your publication(s):
+
+Rolf Jagerman, Carsten Eickhoff. **"Web-scale Topic Models in Spark: An Asynchronous Parameter Server"** *arXiv preprint 	arXiv:1605.07422 (2016).*
+
+    @article{jagerman2016web,
+      title={Web-scale Topic Models in Spark: An Asynchronous Parameter Server},
+      author={Jagerman, Rolf and Eickhoff, Carsten},
+      journal={arXiv preprint arXiv:1605.07422},
+      year={2016}
+    }
