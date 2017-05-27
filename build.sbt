@@ -76,6 +76,12 @@ libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.1"
 
 libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.3"
 
+// Hadoop
+libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.2"
+
+libraryDependencies += "org.apache.hadoop" % "hadoop-yarn-client" % "2.7.2"
+
+
 // Resolvers
 
 resolvers += Resolver.sonatypeRepo("public")
