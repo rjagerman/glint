@@ -214,12 +214,9 @@ object AppMaster extends StrictLogging {
                                     jarPath: String = "",
                                     number: Int = 0) {
     def conf: Config = {
-      val config = new File(getClass.getClassLoader.getResource("glint.conf").getFile)
-      val default = ConfigFactory
-        .parseFile(config)
       ConfigFactory
-        .parseString(s"glint.master.host=${master.getOrElse("")}")
-        .withFallback(default)
+        .parseResourcesAnySyntax("glint")
+        .resolve()
     }
   }
 

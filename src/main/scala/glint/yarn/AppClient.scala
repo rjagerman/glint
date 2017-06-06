@@ -333,7 +333,7 @@ object AppClient extends StrictLogging {
       head("glint-yarn-client", "0.1")
       opt[File]('c', "config") valueName "<file>" action { (x, c) =>
         c.copy(config = x)
-      } text "The .conf file for glint"
+      } optional() text "The .conf file for glint"
       /** Not Used Yet
       opt[String]('m', "master") valueName "<master>" action { (x, c) =>
         c.copy(master = Some(x))
@@ -376,10 +376,11 @@ object AppClient extends StrictLogging {
                                     number: Int = 0) {
     def conf: Config = {
       val default = ConfigFactory
-        .parseFile(config)
+        .parseResourcesAnySyntax("glint")
       ConfigFactory
-        .parseString(s"glint.master.host=${master.getOrElse("")}")
+        .parseFile(config)
         .withFallback(default)
+        .resolve()
     }
   }
 
