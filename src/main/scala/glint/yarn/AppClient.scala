@@ -210,9 +210,9 @@ private[glint] class AppClient(conf: Config,
   }
 
   /** TODO Automatic Upload jar file to HDFS, and clear this jar **/
+  // TODO
   def cleanUpResources(appId: ApplicationId): Unit = {
-    // TODO
-    ???
+    ()
   }
 
   /** Set up a ContainerLaunch Context to launch our ApplicationMaster container */
