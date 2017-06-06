@@ -42,9 +42,9 @@ HADOOP_CMD="$HADOOP_BIN/hadoop"
 
 # Upload Jar to HDFS
 HADOOP_JAR_PATH="/tmp/$GLINT_JAR_NAME"
-HADOOP_CMD fs -rm ${HADOOP_JAR_PATH}
-HADOOP_CMD fs -put ${GLINT_JAR_PATH} ${HADOOP_JAR_PATH}
+${HADOOP_CMD} fs -rm ${HADOOP_JAR_PATH}
+${HADOOP_CMD} fs -put ${GLINT_JAR_PATH} ${HADOOP_JAR_PATH}
 
 # Start on Yarn
-hadoop jar ${GLINT_JAR_PATH} glint.yarn.AppClient ${CONFIG_OPTION} -n ${INSTANCE_NUMBER} --path ${HADOOP_JAR_PATH}
-hadoop fs -rm ${HADOOP_JAR_PATH}
+${HADOOP_CMD} jar ${GLINT_JAR_PATH} glint.yarn.AppClient ${CONFIG_OPTION} -n ${INSTANCE_NUMBER} --path ${HADOOP_JAR_PATH}
+${HADOOP_CMD} fs -rm ${HADOOP_JAR_PATH}
