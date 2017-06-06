@@ -30,11 +30,11 @@ class AppMaster(conf: Config,
   private val yarnConf = new YarnConfiguration(hadoopConf.getOrElse(new Configuration()))
   private val yarnNMClient = NMClient.createNMClient()
 
-  private val maxNumContainerFailures = conf.getInt("yarn.max-number-container-failures")
-  private val initialAllocationInterval = conf.getInt("yarn.initial-allocation-interval")
+  private val maxNumContainerFailures = conf.getInt("glint.yarn.max-number-container-failures")
+  private val initialAllocationInterval = conf.getInt("glint.yarn.initial-allocation-interval")
 
-  private val memory = options.memory.getOrElse(conf.getInt("yarn.container-memory"))
-  private val vcores = options.cores.getOrElse(conf.getInt("yarn.container-vcores"))
+  private val memory = options.memory.getOrElse(conf.getInt("glint.yarn.container-memory"))
+  private val vcores = options.cores.getOrElse(conf.getInt("glint.yarn.container-vcores"))
 
   private val masterClass = "glint.yarn.YarnMaster"
   private val serverClass = "glint.yarn.YarnServer"
