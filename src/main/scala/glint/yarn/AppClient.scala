@@ -35,20 +35,22 @@ private[glint] class AppClient(conf: Config,
   private val yarnClient = YarnClient.createYarnClient()
   private val yarnConf = new YarnConfiguration(hadoopConf.getOrElse(new Configuration()))
 
-  private val amMemory = conf.getLong("yarn.am-memory")
-  private val amMemoryOverhead = conf.getLong("yarn.am-memory-overhead")
-  private val amVcores = conf.getInt("yarn.am-vcores")
+  // AM Settings
+  private val amMemory = conf.getLong("glint.yarn.am-memory")
+  private val amMemoryOverhead = conf.getLong("glint.yarn.am-memory-overhead")
+  private val amVcores = conf.getInt("glint.yarn.am-vcores")
 
-  private val containerMemory = conf.getLong("yarn.container-memory")
-  private val containerMemoryOverhead = conf.getLong("yarn.container-memory-overhead")
-  private val containerVcores = conf.getInt("yarn.container-vcores")
+  // Container Settings
+  private val containerMemory = conf.getLong("glint.yarn.container-memory")
+  private val containerMemoryOverhead = conf.getLong("glint.yarn.container-memory-overhead")
+  private val containerVcores = conf.getInt("glint.yarn.container-vcores")
 
-  private val minimumContainers = conf.getInt("minimum-server-number")
+  private val minimumContainers = conf.getInt("glint.yarn.minimum-server-number")
   private val numberOfContainers = Math.max(minimumContainers, options.number)
 
-  private val userClass = conf.getString("yarn.app-master-class")
+  private val userClass = "glint.yarn.AppMaster"
 
-  private val interval = conf.getInt("yarn.monitor-interval")
+  private val interval = conf.getInt("glint.yarn.monitor-interval")
 
   private var appId: ApplicationId = null
 

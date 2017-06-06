@@ -22,9 +22,9 @@ if [ ${INSTANCE_NUMBER} -lt 2 ]; then
     exit 1
 fi
 
-CONFIG_OPTION = ""
+CONFIG_OPTION=""
 if [ "$CONFIG_FILE" != "" ]; then
-    CONFIG_OPTION = "-c ${CONFIG_FILE}"
+    CONFIG_OPTION="-c ${CONFIG_FILE}"
 fi
 
 # Set script path and load configuration
@@ -41,7 +41,7 @@ HADOOP_BIN="$HADOOP_HOME/bin"
 HADOOP_CMD="$HADOOP_BIN/hadoop"
 
 # Upload Jar to HDFS
-HADOOP_JAR_PATH="/tmp/$GLINT_JAR_NAME"
+HADOOP_JAR_PATH="/user/tuoyu/$GLINT_JAR_NAME"
 ${HADOOP_CMD} fs -rm ${HADOOP_JAR_PATH}
 ${HADOOP_CMD} fs -put ${GLINT_JAR_PATH} ${HADOOP_JAR_PATH}
 
