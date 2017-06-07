@@ -279,7 +279,7 @@ private[glint] class AppClient(conf: Config,
     appContext.setApplicationName(AppClient.default_app_name)
     appContext.setQueue("default")
     appContext.setAMContainerSpec(containerContext)
-    appContext.setApplicationType("Yarn-Application-WeiPS")
+    appContext.setApplicationType("Yarn-Application")
 
     val capability = Records.newRecord(classOf[Resource])
     capability.setMemory((amMemory + amMemoryOverhead).toInt)
