@@ -91,7 +91,7 @@ private[glint] class AppMaster(conf: Config,
         val appJar = Records.newRecord(classOf[LocalResource])
         setUpLocalResource(yarnConf, new Path(options.jarPath), appJar)
 
-        val env = setupLaunchEnv(yarnConf)
+        val launchEnv = setupLaunchEnv(yarnConf)
 
         responseId += 1
         val response = yarnRMClient.allocate(responseId)
@@ -114,7 +114,7 @@ private[glint] class AppMaster(conf: Config,
           val containerLaunchContext = Records.newRecord(classOf[ContainerLaunchContext])
           containerLaunchContext.setCommands(commands.asJava)
           containerLaunchContext.setLocalResources(Collections.singletonMap(AppClient.default_app_jar, appJar))
-          containerLaunchContext.setEnvironment(env.asJava)
+          containerLaunchContext.setEnvironment(launchEnv.asJava)
 
           var result = mutable.Map[String, ByteBuffer]()
           logger.info(s"Launching Container ${container}")

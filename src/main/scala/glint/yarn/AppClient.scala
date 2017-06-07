@@ -15,7 +15,7 @@ import org.apache.hadoop.yarn.api.records.{ContainerLaunchContext, _}
 import org.apache.hadoop.yarn.client.api.{YarnClient, YarnClientApplication}
 import org.apache.hadoop.yarn.conf.YarnConfiguration
 import org.apache.hadoop.yarn.exceptions.ApplicationNotFoundException
-import org.apache.hadoop.yarn.util.{ConverterUtils, Records}
+import org.apache.hadoop.yarn.util.{Apps, ConverterUtils, Records}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -306,26 +306,20 @@ object AppClient extends StrictLogging {
   }
 
   /** Setting AM Container Launcher Environment **/
-  def setupLaunchEnv(yarnConf: Configuration): mutable.HashMap[String, String] = {
-    val env = new mutable.HashMap[String, String]()
-
-    val classPath = yarnConf.getStrings(
-      YarnConfiguration.YARN_APPLICATION_CLASSPATH,
-      YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH: _*
-    )
-
-    def updateClassPath(v: String) = {
-      env.get(Environment.CLASSPATH.name) match {
-        case Some(pre) => env(Environment.CLASSPATH.name()) = s"$pre;${v.trim}"
-        case None => env(Environment.CLASSPATH.name()) = s"${v.trim}"
+  def setupLaunchEnv(yarnConf: YarnConfiguration): collection.mutable.Map[String, String] = {
+    def setUpEnv(env: collection.mutable.Map[String, String], conf: YarnConfiguration) = {
+      val classPath = conf.getStrings(YarnConfiguration.YARN_APPLICATION_CLASSPATH, YarnConfiguration.DEFAULT_YARN_APPLICATION_CLASSPATH: _*)
+      for (c <- classPath) {
+        Apps.addToEnvironment(env.asJava, Environment.CLASSPATH.name(), c.trim())
       }
+
+      Apps.addToEnvironment(env.asJava,
+        Environment.CLASSPATH.name(),
+        Environment.PWD.$() + File.separator + "*")
     }
 
-    for (cp <- classPath) {
-      updateClassPath(cp)
-    }
-
-    updateClassPath(Environment.PWD.$() + File.separator + "*")
+    val env = collection.mutable.Map[String, String]()
+    setUpEnv(env, yarnConf)
     env
   }
 
