@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 function usage {
-    echo "usage: -c <config file> -n <number Glint Instance> -H <hdfs://hdfs-addresss:port"
+    echo "usage: -c <config file> -n <number Glint Instance> -H <hdfs://hdfs-addresss:port>"
 }
 
 CONFIG_FILE=""
