@@ -20,5 +20,5 @@ This package code is to help glint running on Hadoop Yarn as an Yarn Application
 	![Application](glint-on-yarn-1.png)
     * And please check the Application Defail Page
     ![Application Detail](glint-on-yarn-2.png)
-	* And this container will run Glint Master, and you can specific this hostname as master host.
+	* And this container will run Glint Master, and you can specific this hostname as master host(h107710044.cluster.ds.weibo.com).
 	![Master Host Container](glint-on-yarn-3.png)
