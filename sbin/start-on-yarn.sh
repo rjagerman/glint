@@ -1,21 +1,20 @@
 #!/usr/bin/env bash
 
 function usage {
-    echo "usage: -c <config file> -n <number Glint Instance>"
+    echo "usage: -c <config file> -n <number Glint Instance> -H <hdfs://hdfs-addresss:port"
 }
 
 CONFIG_FILE=""
 INSTANCE_NUMBER=0
 HDFS_PREFIX=""
 
-while getopts "h?:n:v:c:" arg
+while getopts "h?:n:c:H:" arg
 do
     case ${arg} in
         h) usage;;
         H) HDFS_PREFIX=${OPTARG};;
         c) CONFIG_FILE=${OPTARG};;
         n) INSTANCE_NUMBER=${OPTARG};;
-
         \?) usage
     esac
 done
@@ -30,7 +29,7 @@ if [ "$CONFIG_FILE" != "" ]; then
     CONFIG_OPTION="-c ${CONFIG_FILE}"
 fi
 
-if [ "$HDFS_PREFIX" != "" ]; then
+if [ "$HDFS_PREFIX" == "" ]; then
     echo "Not Specific HDFS Prefix"
     exit 1
 fi
@@ -48,11 +47,14 @@ fi
 HADOOP_BIN="$HADOOP_HOME/bin"
 HADOOP_CMD="$HADOOP_BIN/hadoop"
 
+# Prepare Logs
+mkdir -p $GLINT_PATH/pids
+mkdir -p $GLINT_PATH/logs
+
 # Upload Jar to HDFS
 HADOOP_JAR_PATH="$HDFS_PREFIX/$GLINT_JAR_NAME"
-${HADOOP_CMD} fs -rm ${HADOOP_JAR_PATH}
-${HADOOP_CMD} fs -put ${GLINT_JAR_PATH} ${HADOOP_JAR_PATH}
+${HADOOP_CMD} fs -rm ${HADOOP_JAR_PATH} > $GLINT_PATH/logs/glint-on-yarn-out.log 2> $GLINT_PATH/logs/glint-on-yarn-err.log
+${HADOOP_CMD} fs -put ${GLINT_JAR_PATH} ${HADOOP_JAR_PATH} > $GLINT_PATH/logs/glint-on-yarn-out.log 2> $GLINT_PATH/logs/glint-on-yarn-err.log
 
 # Start on Yarn
-${HADOOP_CMD} jar ${GLINT_JAR_PATH} glint.yarn.AppClient ${CONFIG_OPTION} -n ${INSTANCE_NUMBER} --path ${HADOOP_JAR_PATH}
-${HADOOP_CMD} fs -rm ${HADOOP_JAR_PATH}
+${HADOOP_CMD} jar ${GLINT_JAR_PATH} glint.yarn.AppClient ${CONFIG_OPTION} -n ${INSTANCE_NUMBER} --path ${HADOOP_JAR_PATH} > $GLINT_PATH/logs/glint-on-yarn-out.log 2> $GLINT_PATH/logs/glint-on-yarn-err.log &
