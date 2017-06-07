@@ -124,7 +124,7 @@ private[glint] class AppMaster(conf: Config,
             case ex: Throwable =>
               ex.printStackTrace()
           } finally {
-            if (result.isEmpty) {
+            if (result.nonEmpty) {
               launchedContainers += 1
               logger.info(s"Launched $launchedContainers")
               if (launchedContainers == 1 && options.master.isEmpty) {
