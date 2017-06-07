@@ -21,7 +21,7 @@ import scala.util.Try
 import scala.collection.JavaConverters._
 import scala.collection.mutable
 
-class AppMaster(conf: Config,
+private[glint] class AppMaster(conf: Config,
                 options: Options,
                 hadoopConf: Option[Configuration] = None
                ) extends StrictLogging {
