@@ -17,8 +17,8 @@ This package code is to help glint running on Hadoop Yarn as an Yarn Application
 * There are some other parameters for Yarn Application and Yarn Containers, you can find them in glint.conf file which localtion is under resources file.
 * The Application will choose the first Yarn container as Glint Master and other containers will be registed themselves as Glint server. And you can find it in your Yarn Page. The Glint Master will be located on the second Yarn Container, and this container's hostname will be the master hostname.
 	* For example, it is my yarn application.
-	![glint-on-yarn-1.png](Application)
+	![Application](glint-on-yarn-1.png)
     * And please check the Application Defail Page
-    ![glint-on-yarn-2.png](Application Detail)
+    ![Application Detail](glint-on-yarn-2.png)
 	* And this container will run Glint Master, and you can specific this hostname as master host.
-	![glint-on-yarn-3.png](Master Host Container)
+	![Master Host Container](glint-on-yarn-3.png)
