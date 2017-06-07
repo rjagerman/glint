@@ -6,13 +6,16 @@ function usage {
 
 CONFIG_FILE=""
 INSTANCE_NUMBER=0
+HDFS_PREFIX=""
 
 while getopts "h?:n:v:c:" arg
 do
     case ${arg} in
         h) usage;;
+        H) HDFS_PREFIX=${OPTARG};;
         c) CONFIG_FILE=${OPTARG};;
         n) INSTANCE_NUMBER=${OPTARG};;
+
         \?) usage
     esac
 done
@@ -25,6 +28,11 @@ fi
 CONFIG_OPTION=""
 if [ "$CONFIG_FILE" != "" ]; then
     CONFIG_OPTION="-c ${CONFIG_FILE}"
+fi
+
+if [ "$HDFS_PREFIX" != "" ]; then
+    echo "Not Specific HDFS Prefix"
+    exit 1
 fi
 
 # Set script path and load configuration
@@ -41,7 +49,7 @@ HADOOP_BIN="$HADOOP_HOME/bin"
 HADOOP_CMD="$HADOOP_BIN/hadoop"
 
 # Upload Jar to HDFS
-HADOOP_JAR_PATH="/user/tuoyu/$GLINT_JAR_NAME"
+HADOOP_JAR_PATH="$HDFS_PREFIX/$GLINT_JAR_NAME"
 ${HADOOP_CMD} fs -rm ${HADOOP_JAR_PATH}
 ${HADOOP_CMD} fs -put ${GLINT_JAR_PATH} ${HADOOP_JAR_PATH}
 
