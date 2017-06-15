@@ -1,5 +1,7 @@
 package glint.models.server
 
+import java.io.{DataOutputStream, PrintWriter}
+
 import akka.actor.ActorRef
 import glint.messages.server.logic._
 
@@ -65,4 +67,24 @@ trait PushLogic {
     receipt.add(id)
   }
 
+  /**
+    * Write Data into fs
+    * @param ds DataOutputStream
+    * @param op function for really writing
+    * @return Boolean if write OK return true, else will be false
+    */
+  @inline
+  def writeToFile(ds: DataOutputStream)(op: PrintWriter => Unit): Boolean = {
+    val pw = new PrintWriter(ds)
+    try {
+      op(pw)
+      true
+    } catch {
+      case err: Throwable =>
+        err.printStackTrace()
+        false
+    } finally {
+      pw.close()
+    }
+  }
 }

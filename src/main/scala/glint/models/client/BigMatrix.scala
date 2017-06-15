@@ -2,6 +2,7 @@ package glint.models.client
 
 import akka.util.Timeout
 import breeze.linalg.Vector
+import org.apache.hadoop.conf.Configuration
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -13,6 +14,7 @@ import scala.concurrent.{ExecutionContext, Future}
   *   matrix.pull(Array(0L, 1L, 2L)) // get full rows
   *   matrix.pull(Array(0L, 1L, 2L), Array(3, 100, 234)) // get values corresponding to row column indices
   *   matrix.push(Array(0L, 1L, 2L), Array(3, 100, 234), Array(0.5, 3.14, 9.9)) // add values to matrix
+  *   matrix.save(path, conf) // save data into HDFS
   *   matrix.destroy() // Destroy matrix, freeing up memory on the parameter server
   * }}}
   *
@@ -68,5 +70,14 @@ trait BigMatrix[V] extends Serializable {
     * @return A future whether the matrix was successfully destroyed
     */
   def destroy()(implicit ec: ExecutionContext): Future[Boolean]
+
+  /**
+    * Save the Matrix to HDFS Path
+    *
+    * @param ec The implicit execution context in which to execute the request
+    * @param path HDFS Path
+    * @return A future whether the matrix was successfully saved
+    */
+  def save(path: String, conf: Configuration)(implicit ec: ExecutionContext): Future[Boolean]
 
 }
