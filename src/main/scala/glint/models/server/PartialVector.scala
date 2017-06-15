@@ -64,15 +64,14 @@ private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag]
 
   /**
     * Save data to HDFS
+    *   data schema: $key:$value
     *
-    * @param path HDFS path, the full path should be hdfs://path/part-${parition.idex + 1}
+    * @param path HDFS path, the full path should be hdfs://path/part-${partition.index}
     * @return Boolean store OK
     */
   def save(path: String, conf: Configuration): Boolean = {
     val name = path + "/part-" + partition.index
-    val fds = FileSystem
-      .get(conf)
-      .create(new Path(name))
+    val fds = FileSystem.get(conf).create(new Path(name))
 
     writeToFile(fds) { printer =>
       var i = 0
@@ -87,6 +86,7 @@ private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag]
           }
           i += 1
         }
+      printer.flush()
     }
   }
 
