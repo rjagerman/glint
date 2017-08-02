@@ -8,6 +8,7 @@ import akka.util.Timeout
 import com.typesafe.config.Config
 import com.typesafe.scalalogging.slf4j.StrictLogging
 import glint.messages.master.RegisterServer
+import glint.util.terminateAndWait
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -54,11 +55,11 @@ private[glint] object Server extends StrictLogging {
     logger.info(s"Registering with master ${masterSystem}@${masterHost}:${masterPort}/user/${masterName}")
     implicit val ec = ExecutionContext.Implicits.global
     implicit val timeout = Timeout(config.getDuration("glint.server.registration-timeout", TimeUnit.MILLISECONDS) milliseconds)
-    val master = system.actorSelection(s"akka.tcp://${masterSystem}@${masterHost}:${masterPort}/user/${masterName}")
+    val master = system.actorSelection(s"akka://${masterSystem}@${masterHost}:${masterPort}/user/${masterName}")
     val registration = master ? RegisterServer(server)
 
     registration.onFailure {
-      case _ => system.shutdown()
+      case _ => terminateAndWait(system, config)
     }
     registration.map {
       case a =>

@@ -5,6 +5,7 @@ import akka.util.Timeout
 import com.typesafe.config.ConfigFactory
 import org.scalatest.concurrent.ScalaFutures
 import org.scalatest.time.{Millis, Seconds, Span}
+import glint.util.terminateAndWait
 
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
@@ -15,102 +16,6 @@ import scala.concurrent.duration._
 trait SystemTest extends ScalaFutures {
 
   val testConfig = ConfigFactory.load("glint")
-  /*val testConfig = ConfigFactory.parseString(
-    """
-      |glint {
-      |  master {
-      |    host = "127.0.0.1"
-      |    port = 13370
-      |    name = "master"
-      |    system = "glint-master"
-      |    startup-timeout = 30 seconds
-      |    akka = ${glint.default.akka}
-      |    akka.remote {
-      |      log-remote-lifecycle-events = on
-      |      netty.tcp {
-      |        hostname = ${glint.master.host}
-      |        port = ${glint.master.port}
-      |      }
-      |    }
-      |  }
-      |  server {
-      |    system = "glint-server"
-      |    name = "server"
-      |    registration-timeout = 10 seconds
-      |    akka = ${glint.default.akka}
-      |    akka.remote.netty.tcp.hostname = "127.0.0.1"
-      |    akka.remote.netty.tcp.port = 0
-      |  }
-      |  client {
-      |    host = "127.0.0.1"
-      |    port = 0
-      |    system = "glint-client"
-      |    timeout = 30 seconds
-      |    akka = ${glint.default.akka}
-      |    akka.remote.netty.tcp {
-      |      hostname = ${glint.client.host}
-      |      port = ${glint.client.port}
-      |    }
-      |  }
-      |  pull {
-      |    maximum-attempts = 10
-      |    initial-timeout = 5 seconds
-      |    maximum-timeout = 5 minutes
-      |    backoff-multiplier = 1.6
-      |  }
-      |  push {
-      |    maximum-attempts = 10
-      |    maximum-logic-attempts = 100
-      |    initial-timeout = 5 seconds
-      |    maximum-timeout = 5 minutes
-      |    backoff-multiplier = 1.6
-      |  }
-      |  default {
-      |    akka {
-      |      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
-      |      loglevel = "OFF"
-      |      stdout-loglevel = "OFF"
-      |      remote {
-      |        log-remote-lifecycle-events = off
-      |        enable-transports = ["akka.remote.netty.tcp"]
-      |        netty.tcp {
-      |          maximum-frame-size = 1280000b
-      |        }
-      |      }
-      |      actor {
-      |        provider = "akka.remote.RemoteActorRefProvider"
-      |        serializers {
-      |          java = "akka.serialization.JavaSerializer"
-      |          requestserializer = "glint.serialization.RequestSerializer"
-      |          responseserializer = "glint.serialization.ResponseSerializer"
-      |        }
-      |        serialization-bindings {
-      |          "glint.messages.server.request.PullMatrix" = requestserializer
-      |          "glint.messages.server.request.PullMatrixRows" = requestserializer
-      |          "glint.messages.server.request.PullVector" = requestserializer
-      |          "glint.messages.server.request.PushMatrixDouble" = requestserializer
-      |          "glint.messages.server.request.PushMatrixFloat" = requestserializer
-      |          "glint.messages.server.request.PushMatrixInt" = requestserializer
-      |          "glint.messages.server.request.PushMatrixLong" = requestserializer
-      |          "glint.messages.server.request.PushVectorDouble" = requestserializer
-      |          "glint.messages.server.request.PushVectorFloat" = requestserializer
-      |          "glint.messages.server.request.PushVectorInt" = requestserializer
-      |          "glint.messages.server.request.PushVectorLong" = requestserializer
-      |          "glint.messages.server.response.ResponseDouble" = responseserializer
-      |          "glint.messages.server.response.ResponseRowsDouble" = responseserializer
-      |          "glint.messages.server.response.ResponseFloat" = responseserializer
-      |          "glint.messages.server.response.ResponseRowsFloat" = responseserializer
-      |          "glint.messages.server.response.ResponseInt" = responseserializer
-      |          "glint.messages.server.response.ResponseRowsInt" = responseserializer
-      |          "glint.messages.server.response.ResponseLong" = responseserializer
-      |          "glint.messages.server.response.ResponseRowsLong" = responseserializer
-      |        }
-      |      }
-      |    }
-      |  }
-      |}
-    """.stripMargin
-  ).resolve()*/
 
   implicit val ec = ExecutionContext.Implicits.global
 
@@ -127,8 +32,7 @@ trait SystemTest extends ScalaFutures {
     try {
       testCode(masterActor)
     } finally {
-      masterSystem.shutdown()
-      masterSystem.awaitTermination()
+      terminateAndWait(masterSystem, testConfig)
     }
   }
 
@@ -142,8 +46,7 @@ trait SystemTest extends ScalaFutures {
     try {
       testCode(serverActor)
     } finally {
-      serverSystem.shutdown()
-      serverSystem.awaitTermination()
+      terminateAndWait(serverSystem, testConfig)
     }
   }
 
@@ -162,8 +65,7 @@ trait SystemTest extends ScalaFutures {
     } finally {
       servers.foreach {
         case (s, a) =>
-          s.shutdown()
-          s.awaitTermination()
+          terminateAndWait(s, testConfig)
       }
     }
 

@@ -1,37 +1,22 @@
 name := "Glint"
 
-version := "0.1-SNAPSHOT"
+version := "0.2"
 
 organization := "ch.ethz.inf.da"
 
-scalaVersion := "2.10.6"
-
-crossScalaVersions := Seq("2.10.6", "2.11.8")
+scalaVersion := "2.11.11"
 
 fork in Test := true
 
-// Spark
-
-libraryDependencies += "org.apache.spark" %% "spark-core" % "1.4.0" % "provided"
 
 // Akka
 
-libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-actor" % "2.4.12"
-  case _ => "com.typesafe.akka" %% "akka-actor" % "2.3.15"
-}
+libraryDependencies += "com.typesafe.akka" %% "akka-actor" % "2.5.3"
 
-libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-remote" % "2.4.12"
-  case _ => "com.typesafe.akka" %% "akka-remote" % "2.3.15"
-}
+libraryDependencies += "com.typesafe.akka" %% "akka-remote" % "2.5.3"
 
-libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-testkit" % "2.4.12"
-  case _ => "com.typesafe.akka" %% "akka-testkit" % "2.3.15"
-}
+libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % "2.5.3"
 
-libraryDependencies += "com.typesafe.akka" %% "akka-testkit" % akkaVersion.value
 
 // Retry
 

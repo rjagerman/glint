@@ -2,6 +2,7 @@ package glint
 
 import java.io.File
 
+import glint.util.terminateAndWait
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.slf4j.StrictLogging
 
@@ -60,15 +61,13 @@ object Main extends StrictLogging {
           case "server" => Server.run(config).onSuccess {
             case (system, ref) => sys.addShutdownHook {
               logger.info("Shutting down")
-              system.shutdown()
-              system.awaitTermination()
+              terminateAndWait(system, config)
             }
           }
           case "master" => Master.run(config).onSuccess {
             case (system, ref) => sys.addShutdownHook {
               logger.info("Shutting down")
-              system.shutdown()
-              system.awaitTermination()
+              terminateAndWait(system, config)
             }
           }
           case _ =>

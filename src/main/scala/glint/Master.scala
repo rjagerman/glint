@@ -87,7 +87,7 @@ private[glint] object Master extends StrictLogging {
     implicit val timeout = Timeout(config.getDuration("glint.master.startup-timeout", TimeUnit.MILLISECONDS) milliseconds)
     implicit val ec = ExecutionContext.Implicits.global
 
-    val address = Address("akka.tcp", config.getString("glint.master.system"), config.getString("glint.master.host"),
+    val address = Address("akka", config.getString("glint.master.system"), config.getString("glint.master.host"),
       config.getInt("glint.master.port"))
 
     system.actorSelection(master.path.toSerializationFormat).resolveOne().map {
