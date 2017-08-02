@@ -37,17 +37,6 @@ class ClientSpec extends FlatSpec with SystemTest {
     }
   }
 
-  it should "fail to create a BigMatrix when an invalid type is provided" in withMaster { _ =>
-    withServer { server =>
-      withClient { client =>
-        val thrown = intercept[ModelCreationException] {
-          client.matrix[Boolean](100, 10)
-        }
-        assert(thrown.isInstanceOf[ModelCreationException])
-      }
-    }
-  }
-
   it should "be able to create a BigMatrix with less rows than servers" in withMaster { _ =>
     withServers(3) { case _ =>
       withClient { client =>

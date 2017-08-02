@@ -6,7 +6,7 @@ import akka.actor._
 import akka.pattern.ask
 import akka.util.Timeout
 import com.typesafe.config.Config
-import com.typesafe.scalalogging.slf4j.StrictLogging
+import com.typesafe.scalalogging.StrictLogging
 import glint.messages.master.RegisterServer
 import glint.util.terminateAndWait
 

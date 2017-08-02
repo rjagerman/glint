@@ -14,6 +14,7 @@ import glint.models.client.{BigMatrix, BigVector}
 import glint.models.server._
 import glint.partitioning.range.RangePartitioner
 import glint.partitioning.{Partition, Partitioner}
+import glint.util.Numerical
 
 import scala.concurrent.duration._
 import scala.concurrent.{Await, ExecutionContext, Future}
@@ -101,7 +102,7 @@ class Client(val config: Config,
     * @tparam V The type of values to store, must be one of the following: Int, Long, Double or Float
     * @return The constructed [[glint.models.client.BigMatrix BigMatrix]]
     */
-  def matrix[V: breeze.math.Semiring : TypeTag](rows: Long, cols: Int, modelsPerServer: Int = 1): BigMatrix[V] = {
+  def matrix[V: Numerical : TypeTag](rows: Long, cols: Int, modelsPerServer: Int = 1): BigMatrix[V] = {
     matrix[V](rows, cols, modelsPerServer, (partitions: Int, keys: Long) => RangePartitioner(partitions, keys))
   }
 
@@ -116,12 +117,12 @@ class Client(val config: Config,
     * @tparam V The type of values to store, must be one of the following: Int, Long, Double or Float
     * @return The constructed [[glint.models.client.BigMatrix BigMatrix]]
     */
-  def matrix[V: breeze.math.Semiring : TypeTag](rows: Long,
-                                                cols: Int,
-                                                modelsPerServer: Int,
-                                                createPartitioner: (Int, Long) => Partitioner): BigMatrix[V] = {
+  def matrix[V: Numerical : TypeTag](rows: Long,
+                                     cols: Int,
+                                     modelsPerServer: Int,
+                                     createPartitioner: (Int, Long) => Partitioner): BigMatrix[V] = {
 
-    val propFunction = numberType[V] match {
+    val propFunction = Numerical.asString[V] match {
       case "Int" => (partition: Partition) => Props(classOf[PartialMatrixInt], partition, cols)
       case "Long" => (partition: Partition) => Props(classOf[PartialMatrixLong], partition, cols)
       case "Float" => (partition: Partition) => Props(classOf[PartialMatrixFloat], partition, cols)
@@ -129,7 +130,7 @@ class Client(val config: Config,
       case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
     }
 
-    val objFunction = numberType[V] match {
+    val objFunction = Numerical.asString[V] match {
       case "Int" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
         new AsyncBigMatrixInt(partitioner, models, config, rows, cols).asInstanceOf[BigMatrix[V]]
       case "Long" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
@@ -152,7 +153,7 @@ class Client(val config: Config,
     * @tparam V The type of values to store, must be one of the following: Int, Long, Double or Float
     * @return The constructed [[glint.models.client.BigVector BigVector]]
     */
-  def vector[V: breeze.math.Semiring : TypeTag](keys: Long, modelsPerServer: Int = 1): BigVector[V] = {
+  def vector[V: Numerical : TypeTag](keys: Long, modelsPerServer: Int = 1): BigVector[V] = {
     vector[V](keys, modelsPerServer, (partitions: Int, keys: Long) => RangePartitioner(partitions, keys))
   }
 
@@ -166,11 +167,11 @@ class Client(val config: Config,
     * @tparam V The type of values to store, must be one of the following: Int, Long, Double or Float
     * @return The constructed [[glint.models.client.BigVector BigVector]]
     */
-  def vector[V: breeze.math.Semiring : TypeTag](keys: Long,
-                                                modelsPerServer: Int,
-                                                createPartitioner: (Int, Long) => Partitioner): BigVector[V] = {
+  def vector[V: Numerical : TypeTag](keys: Long,
+                                     modelsPerServer: Int,
+                                     createPartitioner: (Int, Long) => Partitioner): BigVector[V] = {
 
-    val propFunction = numberType[V] match {
+    val propFunction = Numerical.asString[V] match {
       case "Int" => (partition: Partition) => Props(classOf[PartialVectorInt], partition)
       case "Long" => (partition: Partition) => Props(classOf[PartialVectorLong], partition)
       case "Float" => (partition: Partition) => Props(classOf[PartialVectorFloat], partition)
@@ -178,7 +179,7 @@ class Client(val config: Config,
       case x => throw new ModelCreationException(s"Cannot create model for unsupported value type $x")
     }
 
-    val objFunction = numberType[V] match {
+    val objFunction = Numerical.asString[V] match {
       case "Int" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
         new AsyncBigVectorInt(partitioner, models, config, keys).asInstanceOf[BigVector[V]]
       case "Long" => (partitioner: Partitioner, models: Array[ActorRef], config: Config) =>
@@ -199,22 +200,6 @@ class Client(val config: Config,
     */
   def serverList(): Future[Array[ActorRef]] = {
     (master ? new ServerList()).mapTo[Array[ActorRef]]
-  }
-
-  /**
-    * Determines number type at runtime of given type tag
-    *
-    * @tparam V The type to infer
-    * @return The string representation of the type
-    */
-  def numberType[V: TypeTag]: String = {
-    implicitly[TypeTag[V]].tpe match {
-      case x if x <:< typeOf[Int] => "Int"
-      case x if x <:< typeOf[Long] => "Long"
-      case x if x <:< typeOf[Float] => "Float"
-      case x if x <:< typeOf[Double] => "Double"
-      case x => s"${x.toString}"
-    }
   }
 
   /**
