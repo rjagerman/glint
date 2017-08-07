@@ -72,9 +72,15 @@ libraryDependencies <+= scalaVersion {
   case _ => "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
 }
 
-libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.1"
+libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.1" % "provided"
 
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.3"
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.3" % "provided"
+
+// Hadoop
+libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.2" % "provided"
+
+libraryDependencies += "org.apache.hadoop" % "hadoop-yarn-client" % "2.7.2" % "provided"
+
 
 // Resolvers
 
@@ -106,4 +112,3 @@ ghpages.settings
 git.remoteRepo := "git@github.com:rjagerman/glint.git"
 
 site.includeScaladoc()
-
