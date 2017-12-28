@@ -83,6 +83,20 @@ object PartitioningBenchmark extends Bench.OfflineReport {
     }
   }
 
+  performance of "CyclicPartition" in {
+    measure method "localToGlobal" config (
+      exec.benchRuns -> benchRuns
+    ) in {
+      using(singleSizes) in { size =>
+        var i = 0
+        while (i < size) {
+          cyclicPartition.localToGlobal(cyclicPartitionData(i))
+          i += 1
+        }
+      }
+    }
+  }
+
   performance of "RangePartition" in {
     measure method "globalToLocal" config (
       exec.benchRuns -> benchRuns
@@ -97,4 +111,17 @@ object PartitioningBenchmark extends Bench.OfflineReport {
     }
   }
 
+   performance of "RangePartition" in {
+    measure method "localToGlobal" config (
+      exec.benchRuns -> benchRuns
+    ) in {
+      using(singleSizes) in { size =>
+        var i = 0
+        while (i < size) {
+          rangePartition.localToGlobal(rangePartitionData(i))
+          i += 1
+        }
+      }
+    }
+  }
 }
