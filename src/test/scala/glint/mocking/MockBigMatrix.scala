@@ -11,9 +11,9 @@ import scala.reflect.ClassTag
 /**
   * A mock big matrix that stores all data internally
   *
-  * @param nrOfRows The number of rows
-  * @param cols The number of cols
-  * @param default The default value
+  * @param nrOfRows  The number of rows
+  * @param cols      The number of cols
+  * @param default   The default value
   * @param aggregate Aggregation function for combining two values (typically addition)
   * @tparam V The type of values to store
   */
@@ -42,9 +42,9 @@ class MockBigMatrix[V: ClassTag](nrOfRows: Int, val cols: Int, default: V,
   /**
     * Pulls a set of rows
     *
-    * @param rows The indices of the rows
+    * @param rows    The indices of the rows
     * @param timeout The timeout for this request
-    * @param ec The implicit execution context in which to execute the request
+    * @param ec      The implicit execution context in which to execute the request
     * @return A future containing the vectors representing the rows
     */
   override def pull(rows: Array[Long])(implicit ec: ExecutionContext): Future[Array[Vector[V]]] = {
@@ -68,22 +68,24 @@ class MockBigMatrix[V: ClassTag](nrOfRows: Int, val cols: Int, default: V,
     * Destroys the big matrix and its resources on the parameter server
     *
     * @param timeout The timeout for this request
-    * @param ec The implicit execution context in which to execute the request
+    * @param ec      The implicit execution context in which to execute the request
     * @return A future whether the matrix was successfully destroyed
     */
   override def destroy()(implicit ec: ExecutionContext): Future[Boolean] = {
     destroyed = true
-    Future { true }
+    Future {
+      true
+    }
   }
 
   /**
     * Pushes a set of values
     *
-    * @param rows The indices of the rows
-    * @param cols The indices of the columns
-    * @param values The values to update
+    * @param rows    The indices of the rows
+    * @param cols    The indices of the columns
+    * @param values  The values to update
     * @param timeout The timeout for this request
-    * @param ec The implicit execution context in which to execute the request
+    * @param ec      The implicit execution context in which to execute the request
     * @return A future containing either the success or failure of the operation
     */
   override def push(rows: Array[Long],
@@ -109,10 +111,10 @@ class MockBigMatrix[V: ClassTag](nrOfRows: Int, val cols: Int, default: V,
   /**
     * Pulls a set of elements
     *
-    * @param rows The indices of the rows
-    * @param cols The corresponding indices of the columns
+    * @param rows    The indices of the rows
+    * @param cols    The corresponding indices of the columns
     * @param timeout The timeout for this request
-    * @param ec The implicit execution context in which to execute the request
+    * @param ec      The implicit execution context in which to execute the request
     * @return A future containing the values of the elements at given rows, columns
     */
   override def pull(rows: Array[Long],
@@ -134,7 +136,17 @@ class MockBigMatrix[V: ClassTag](nrOfRows: Int, val cols: Int, default: V,
   }
 
   /**
+    * Save the big matrix to HDFS specific path with username
+    *
+    * @param ec The implicit execution context in which to execute the request
+    * @return A future whether the vector was successfully destroyed
+    */
+  override def save(path: String, user: String)(implicit ec: ExecutionContext): Future[Boolean] = ???
+
+
+  /**
     * Intentionally fails a future
+    *
     * @tparam T The return type of the future
     * @return A future that intentionally fails with an AskTimeoutException
     */
