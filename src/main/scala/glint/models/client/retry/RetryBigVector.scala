@@ -59,4 +59,16 @@ class RetryBigVector[@specialized V](underlying: BigVector[V], val attempts: Int
     }
   }
 
+  /**
+    * Save the big matrix to HDFS specific path with username
+    *
+    * @param ec The implicit execution context in which to execute the request
+    * @return A future whether the vector was successfully destroyed
+    */
+  override def save(path: String, user: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    implicit val success = Success.always
+    retry.Directly(attempts) { () =>
+      underlying.save(path, user)
+    }
+  }
 }

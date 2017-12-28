@@ -68,6 +68,17 @@ class BufferedBigMatrix[@specialized V: ClassTag](underlying: BigMatrix[V], buff
   }
 
   /**
+    * Save the big vector to HDFS specific path with username
+    *
+    * @param ec The implicit execution context in which to execute the request
+    * @return A future whether the vector was successfully destroyed
+    */
+  override def save(path: String, user: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    underlying.save(path, user)
+  }
+
+
+    /**
     * Pushes a value into the buffer as long as there is space.
     *
     * @param row The row

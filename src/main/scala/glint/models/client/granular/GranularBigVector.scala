@@ -79,4 +79,14 @@ class GranularBigVector[V: ClassTag](underlying: BigVector[V],
     Future.sequence(ab.toIterator).transform(x => x.forall(y => y), err => err)
   }
 
-}
+  /**
+    * Save the big vector to HDFS specific path with username
+    *
+    * @param ec The implicit execution context in which to execute the request
+    * @return A future whether the vector was successfully destroyed
+    */
+  override def save(path: String, user: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    underlying.save(path, user)
+  }
+
+  }

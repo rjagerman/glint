@@ -11,7 +11,7 @@ import scala.concurrent.{Future, ExecutionContext}
   * A big matrix that can retry failed requests automatically
   *
   * @param underlying The underlying big matrix
-  * @param attempts The number of attempts (default: 3)
+  * @param attempts   The number of attempts (default: 3)
   */
 class RetryBigMatrix[@specialized V](underlying: BigMatrix[V], val attempts: Int = 3) extends BigMatrix[V] {
 
@@ -22,7 +22,7 @@ class RetryBigMatrix[@specialized V](underlying: BigMatrix[V], val attempts: Int
     * Pulls a set of rows
     *
     * @param rows The indices of the rows
-    * @param ec The implicit execution context in which to execute the request
+    * @param ec   The implicit execution context in which to execute the request
     * @return A future containing the vectors representing the rows
     */
   override def pull(rows: Array[Long])(implicit ec: ExecutionContext): Future[Array[Vector[V]]] = {
@@ -48,10 +48,10 @@ class RetryBigMatrix[@specialized V](underlying: BigMatrix[V], val attempts: Int
   /**
     * Pushes a set of values
     *
-    * @param rows The indices of the rows
-    * @param cols The indices of the columns
+    * @param rows   The indices of the rows
+    * @param cols   The indices of the columns
     * @param values The values to update
-    * @param ec The implicit execution context in which to execute the request
+    * @param ec     The implicit execution context in which to execute the request
     * @return A future containing either the success or failure of the operation
     */
   override def push(rows: Array[Long],
@@ -68,7 +68,7 @@ class RetryBigMatrix[@specialized V](underlying: BigMatrix[V], val attempts: Int
     *
     * @param rows The indices of the rows
     * @param cols The corresponding indices of the columns
-    * @param ec The implicit execution context in which to execute the request
+    * @param ec   The implicit execution context in which to execute the request
     * @return A future containing the values of the elements at given rows, columns
     */
   override def pull(rows: Array[Long],
@@ -79,4 +79,16 @@ class RetryBigMatrix[@specialized V](underlying: BigMatrix[V], val attempts: Int
     }
   }
 
+  /**
+    * Save the big matrix to HDFS specific path with username
+    *
+    * @param ec The implicit execution context in which to execute the request
+    * @return A future whether the vector was successfully destroyed
+    */
+  override def save(path: String, user: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    implicit val success = Success.always
+    retry.Directly(attempts) { () =>
+      underlying.save(path, user)
+    }
+  }
 }

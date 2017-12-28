@@ -8,7 +8,7 @@ import akka.serialization.JavaSerializer
 import breeze.linalg.{DenseVector, Vector}
 import breeze.math.Semiring
 import com.typesafe.config.Config
-import glint.messages.server.request.{PullMatrix, PullMatrixRows}
+import glint.messages.server.request.{PullMatrix, PullMatrixRows, Save}
 import glint.models.client.BigMatrix
 import glint.partitioning.{Partition, Partitioner}
 import spire.implicits.cforRange
@@ -153,6 +153,27 @@ abstract class AsyncBigMatrix[@specialized V: Semiring : ClassTag, R: ClassTag, 
     // Combine and aggregate futures
     Future.sequence(pushes).transform(results => true, err => err)
 
+  }
+
+  /**
+    * Save the big matrix to HDFS specific path with username
+    *
+    * @param ec The implicit execution context in which to execute the request
+    * @return A future whether the vector was successfully destroyed
+    */
+  override def save(path: String, user: String)(implicit ec: ExecutionContext): Future[Boolean] = {
+    val saves = partitioner.all().map { partition =>
+      val save = Save(path, user)
+      val fsm = PushFSM[Save]((_) => save, matrices(partition.index))
+      fsm.run()
+    }.toList
+
+    def success(responses: List[Boolean]): Boolean = {
+      ! responses.contains(false)
+    }
+
+    // Combine and aggregate futures
+    Future.sequence(saves).transform(success, err => err)
   }
 
   /**
