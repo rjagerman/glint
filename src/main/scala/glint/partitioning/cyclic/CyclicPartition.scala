@@ -46,4 +46,15 @@ class CyclicPartition(index: Int, val numberOfPartitions: Int, numberOfKeys: Lon
     ((key - index) / numberOfPartitions).toInt
   }
 
+  /**
+    * Converts given local key to a global index
+    *
+    * @param index The local index
+    * @return The global index
+    */
+  @inline
+  override def localToGlobal(index: Long): Long = {
+    index * numberOfPartitions + index
+  }
+
 }
