@@ -1,8 +1,8 @@
 package glint.models.server
 
 import breeze.linalg.{DenseMatrix, Matrix}
-import glint.messages.server.request.{PullMatrix, PullMatrixRows, PushMatrixInt}
-import glint.messages.server.response.{ResponseRowsInt, ResponseInt}
+import glint.messages.server.request.{PullMatrix, PullMatrixRows, PushMatrixInt, Save}
+import glint.messages.server.response.{ResponseInt, ResponseRowsInt}
 import glint.partitioning.Partition
 import spire.implicits._
 
@@ -24,6 +24,7 @@ private[glint] class PartialMatrixInt(partition: Partition,
     case push: PushMatrixInt =>
       update(push.rows, push.cols, push.values)
       updateFinished(push.id)
+    case save: Save => sender ! write(save.path, save.user)
     case x => handleLogic(x, sender)
   }
 

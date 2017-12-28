@@ -2,6 +2,7 @@ package glint.models.server
 
 import akka.actor.{Actor, ActorLogging}
 import glint.partitioning.Partition
+import glint.utils.HadoopUtils._
 import spire.algebra.Semiring
 import spire.implicits._
 
@@ -57,6 +58,31 @@ private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag]
       i += 1
     }
     a
+  }
+
+  /**
+    * Write Vector into HDFS specific path with username
+    *
+    * @param path HDFS path
+    * @param user Specific user
+    * @return
+    */
+  def write(path: String, user: String): Boolean = {
+    writeHDFS(getStream(path, user, partition.index)) { printer =>
+      var count = 0
+      (0 until size) foreach { i =>
+        if (data(i) != 0.0) {
+          count += 1
+          printer.write(s"${partition.localToGlobal(i)}:${data(i)}\n")
+        }
+        if (count > partition.flushNumber()) {
+          printer.flush()
+          count = 0
+        }
+      }
+      printer.flush()
+      true
+    }
   }
 
   log.info(s"Constructed PartialVector[${implicitly[ClassTag[V]]}] of size $size (partition id: ${partition.index})")

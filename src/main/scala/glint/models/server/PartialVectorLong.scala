@@ -1,6 +1,6 @@
 package glint.models.server
 
-import glint.messages.server.request.{PullVector, PushVectorLong}
+import glint.messages.server.request.{PullVector, PushVectorLong, Save}
 import glint.messages.server.response.ResponseLong
 import glint.partitioning.Partition
 import spire.implicits._
@@ -19,6 +19,7 @@ private[glint] class PartialVectorLong(partition: Partition) extends PartialVect
     case push: PushVectorLong =>
       update(push.keys, push.values)
       updateFinished(push.id)
+    case save: Save => sender ! write(save.path, save.user)
     case x => handleLogic(x, sender)
   }
 
