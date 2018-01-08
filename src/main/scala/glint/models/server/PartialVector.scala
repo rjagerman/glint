@@ -2,6 +2,8 @@ package glint.models.server
 
 import akka.actor.{Actor, ActorLogging}
 import glint.partitioning.Partition
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
 import spire.algebra.Semiring
 import spire.implicits._
 
@@ -16,6 +18,7 @@ import scala.reflect.ClassTag
 private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag](partition: Partition) extends Actor
   with ActorLogging with PushLogic {
 
+  val numberOfFlush: Int = 1000
   /**
     * The size of this partial vector
     */
@@ -57,6 +60,34 @@ private[glint] abstract class PartialVector[@specialized V: Semiring : ClassTag]
       i += 1
     }
     a
+  }
+
+  /**
+    * Save data to HDFS
+    *   data schema: $key:$value
+    *
+    * @param path HDFS path, the full path should be hdfs://path/part-${partition.index}
+    * @return Boolean store OK
+    */
+  def save(path: String, conf: Configuration): Boolean = {
+    val name = path + "/part-" + partition.index
+    val fds = FileSystem.get(conf).create(new Path(name))
+
+    writeToFile(fds) { printer =>
+      var i = 0
+      (data.indices zip data)
+        .filter { case (index, value: V) => value != 0.0 }
+        .map { case (index: Int, value) => (partition.localToGlobal(index), value) }
+        .foreach { case (key: Long, value) =>
+          printer.println(s"$key:$value")
+          if (i > numberOfFlush) {
+            i = 0
+            printer.flush()
+          }
+          i += 1
+        }
+      printer.flush()
+    }
   }
 
   log.info(s"Constructed PartialVector[${implicitly[ClassTag[V]]}] of size $size (partition id: ${partition.index})")

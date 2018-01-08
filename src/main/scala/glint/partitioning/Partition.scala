@@ -26,6 +26,15 @@ abstract class Partition(val index: Int) extends Serializable {
   def globalToLocal(key: Long): Int
 
   /**
+    * Converts given local index to global key
+    *
+    * @param index The local index
+    * @return The Global key
+    */
+  @inline
+  def localToGlobal(index: Int): Long
+
+  /**
     * Computes the size of this partition
     *
     * @return The size of this partition

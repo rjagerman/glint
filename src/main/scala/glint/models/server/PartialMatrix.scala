@@ -4,6 +4,8 @@ import akka.actor.{Actor, ActorLogging}
 import spire.algebra.Semiring
 import spire.implicits._
 import glint.partitioning.Partition
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.fs.{FileSystem, Path}
 
 import scala.reflect.ClassTag
 
@@ -17,6 +19,11 @@ import scala.reflect.ClassTag
 private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag](val partition: Partition,
                                                                                  val cols: Int) extends Actor
   with ActorLogging with PushLogic {
+
+  /**
+    * Number Of data will trigger one flush operation to write data
+    */
+  val numberOfFlush: Int = 1000
 
   /**
     * The size of this partial matrix in number of rows
@@ -80,6 +87,38 @@ private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag]
       i += 1
     }
     true
+  }
+
+  /**
+    * Save data to HDFS
+    *   data schema $row:$col:$value
+    *
+    * @param path HDFS path, the full path should be hdfs://path/part-${partition.index}
+    * @return Boolean store OK
+    */
+  def save(path: String, conf: Configuration): Boolean = {
+    val name = path + "/part-" + partition.index
+    val fds = FileSystem.get(conf).create(new Path(name))
+
+    writeToFile(fds) { printer =>
+      (0 until rows) foreach { rindex =>
+        var i = 0
+        val dd = data(rindex)
+        val row = partition.localToGlobal(rindex)
+        (dd.indices zip dd)
+          .filter { case (col, value: V) => value != 0.0 }
+          .foreach { case (col, value) =>
+              printer.println(s"$row:$col:$value")
+              if (i > numberOfFlush) {
+                i = 0
+                printer.flush()
+              }
+              i += 1
+          }
+        printer.flush()
+      }
+      printer.flush()
+    }
   }
 
   log.info(s"Constructed PartialMatrix[${implicitly[ClassTag[V]]}] with $rows rows and $cols columns (partition id: ${partition.index})")

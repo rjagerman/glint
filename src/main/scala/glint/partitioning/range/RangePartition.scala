@@ -32,4 +32,12 @@ class RangePartition(index: Int, val start: Long, val end: Long) extends Partiti
   @inline
   override def globalToLocal(key: Long): Int = (key - start).toInt
 
+  /**
+    * Converts given local index to global key
+    *
+    * @param index The local index
+    * @return The Global key
+    */
+  @inline
+  override def localToGlobal(index: Int): Long = index.toLong + start
 }

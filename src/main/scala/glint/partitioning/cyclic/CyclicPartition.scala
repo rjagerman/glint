@@ -5,9 +5,9 @@ import glint.partitioning.Partition
 /**
   * A cyclic partitioner
   *
-  * @param index The index of this partition
+  * @param index              The index of this partition
   * @param numberOfPartitions The total number of partitions
-  * @param numberOfKeys The total number of keys
+  * @param numberOfKeys       The total number of keys
   */
 class CyclicPartition(index: Int, val numberOfPartitions: Int, numberOfKeys: Long) extends Partition(index) {
 
@@ -44,6 +44,17 @@ class CyclicPartition(index: Int, val numberOfPartitions: Int, numberOfKeys: Lon
   @inline
   override def globalToLocal(key: Long): Int = {
     ((key - index) / numberOfPartitions).toInt
+  }
+
+  /**
+    * Converts given local index to global key
+    *
+    * @param index The local index
+    * @return The Global key
+    */
+  @inline
+  override def localToGlobal(index: Int): Long = {
+    index.toLong * numberOfPartitions + index
   }
 
 }
