@@ -32,4 +32,19 @@ abstract class Partition(val index: Int) extends Serializable {
     */
   def size: Int
 
+  /**
+    * Converts give local key to a global key
+    *
+    * @param index The local index
+    * @return The global index
+    */
+  @inline
+  def localToGlobal(index: Long): Long
+
+  /**
+    * Line number to operate flush()
+    * @return
+    */
+  def flushNumber(): Int = 10000
+
 }

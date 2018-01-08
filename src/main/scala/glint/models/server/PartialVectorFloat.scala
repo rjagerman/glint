@@ -1,6 +1,6 @@
 package glint.models.server
 
-import glint.messages.server.request.{PullVector, PushVectorFloat}
+import glint.messages.server.request.{PullVector, PushVectorFloat, Save}
 import glint.messages.server.response.ResponseFloat
 import glint.partitioning.Partition
 import spire.implicits._
@@ -19,6 +19,7 @@ private[glint] class PartialVectorFloat(partition: Partition) extends PartialVec
     case push: PushVectorFloat =>
       update(push.keys, push.values)
       updateFinished(push.id)
+    case save: Save => sender ! write(save.path, save.user)
     case x => handleLogic(x, sender)
   }
 

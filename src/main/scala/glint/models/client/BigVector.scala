@@ -47,4 +47,11 @@ trait BigVector[V] extends Serializable {
     */
   def destroy()(implicit ec: ExecutionContext): Future[Boolean]
 
+  /**
+    * Save the big vector to HDFS specific path with username
+    *
+    * @param ec The implicit execution context in which to execute the request
+    * @return A future whether the vector was successfully destroyed
+    */
+  def save(path: String, user: String)(implicit ec: ExecutionContext): Future[Boolean]
 }

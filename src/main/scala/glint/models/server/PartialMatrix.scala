@@ -4,6 +4,7 @@ import akka.actor.{Actor, ActorLogging}
 import spire.algebra.Semiring
 import spire.implicits._
 import glint.partitioning.Partition
+import glint.utils.HadoopUtils.{getStream, writeHDFS}
 
 import scala.reflect.ClassTag
 
@@ -80,6 +81,37 @@ private[glint] abstract class PartialMatrix[@specialized V: Semiring : ClassTag]
       i += 1
     }
     true
+  }
+
+  /**
+    * Write Matrix into HDFS specific path with username
+    *
+    * @param path HDFS path
+    * @param user Specific user
+    * @return
+    */
+  def write(path: String, user: String): Boolean = {
+    writeHDFS(getStream(path, user, partition.index)) { printer =>
+      var count = 0
+      (0 until rows) foreach { rowIndex =>
+        val rowData = data(rowIndex)
+        val row = partition.localToGlobal(rowIndex)
+        rowData.indices foreach { col =>
+          if (rowData(col) != 0.0) {
+            count += 1
+            printer.write(s"$row:$col:${rowData(col)}\n")
+          }
+
+          if (count > 10000) {
+            printer.flush()
+            count = 0
+          }
+        }
+        printer.flush()
+      }
+      printer.flush()
+      true
+    }
   }
 
   log.info(s"Constructed PartialMatrix[${implicitly[ClassTag[V]]}] with $rows rows and $cols columns (partition id: ${partition.index})")
