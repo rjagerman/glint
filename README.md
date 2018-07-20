@@ -21,11 +21,12 @@ Refer to the [documentation](http://rjagerman.github.io/glint/) for instructions
 
 If you find this project useful in your research, please cite the following paper in your publication(s):
 
-Rolf Jagerman, Carsten Eickhoff. **"Web-scale Topic Models in Spark: An Asynchronous Parameter Server"** *arXiv preprint 	arXiv:1605.07422 (2016).*
+Rolf Jagerman, Carsten Eickhoff and Maarten de Rijke. **"Computing Web-scale Topic Models using an Asynchronous Parameter Server."** *(2017)*
 
-    @article{jagerman2016web,
-      title={Web-scale Topic Models in Spark: An Asynchronous Parameter Server},
-      author={Jagerman, Rolf and Eickhoff, Carsten},
-      journal={arXiv preprint arXiv:1605.07422},
-      year={2016}
+    @inproceedings{jagerman2017computing,
+      title={Computing Web-scale Topic Models using an Asynchronous Parameter Server},
+      author={Jagerman, Rolf and Eickhoff, Carsten and de Rijke, Maarten},
+      booktitle={Proceedings of the 40th International ACM SIGIR Conference on Research and Development in Information Retrieval},
+      year={2017},
+      organization={ACM}
     }
