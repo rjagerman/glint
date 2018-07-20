@@ -60,15 +60,13 @@ object Main extends StrictLogging {
           case "server" => Server.run(config).onSuccess {
             case (system, ref) => sys.addShutdownHook {
               logger.info("Shutting down")
-              system.shutdown()
-              system.awaitTermination()
+              system.terminate()
             }
           }
           case "master" => Master.run(config).onSuccess {
             case (system, ref) => sys.addShutdownHook {
               logger.info("Shutting down")
-              system.shutdown()
-              system.awaitTermination()
+              system.terminate()
             }
           }
           case _ =>

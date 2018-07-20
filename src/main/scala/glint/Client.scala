@@ -222,7 +222,7 @@ class Client(val config: Config,
     * Stops the glint client
     */
   def stop(): Unit = {
-    system.shutdown()
+    system.terminate()
   }
 
 }

@@ -6,7 +6,6 @@ glint {
 
     # The master host name
     host = "127.0.0.1"
-
     # The master port
     port = 13370
 
@@ -128,7 +127,7 @@ glint {
     am-memory-overhead = 1024
 
     # Vcore for container
-    container-vcores = 2
+    container-vcores = 1
 
     # Memory for container
     container-memory = 10240
@@ -137,7 +136,7 @@ glint {
     container-memory-overhead = 2048
 
     # Minium Glint server number
-    minimum-server-number = 10
+    minimum-server-number = 2
 
     # Monitor Interval
     monitor-interval = 60
@@ -163,7 +162,7 @@ glint {
       event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
 
       # Akka log level
-      loglevel = "ERROR"
+      loglevel = "INFO"
 
       # Akka remoting configuration
       remote {

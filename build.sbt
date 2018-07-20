@@ -4,26 +4,26 @@ version := "0.1-SNAPSHOT"
 
 organization := "ch.ethz.inf.da"
 
-scalaVersion := "2.10.6"
+scalaVersion := "2.11.12"
 
-crossScalaVersions := Seq("2.10.6", "2.11.8")
+crossScalaVersions := Seq("2.10.6", "2.11.12")
 
 fork in Test := true
 
 // Akka
 
 libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-actor" % "2.4.12"
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-actor" % "2.5.14"
   case _ => "com.typesafe.akka" %% "akka-actor" % "2.3.15"
 }
 
 libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-remote" % "2.4.12"
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-remote" % "2.5.14"
   case _ => "com.typesafe.akka" %% "akka-remote" % "2.3.15"
 }
 
 libraryDependencies <+= scalaVersion {
-  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-testkit" % "2.4.12"
+  case x if x.startsWith("2.11") && System.getProperty("java.version") > "1.8" => "com.typesafe.akka" %% "akka-testkit" % "2.5.14"
   case _ => "com.typesafe.akka" %% "akka-testkit" % "2.3.15"
 }
 
@@ -72,9 +72,15 @@ libraryDependencies <+= scalaVersion {
   case _ => "com.typesafe.scala-logging" %% "scala-logging-slf4j" % "2.1.2"
 }
 
-libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.1"
+libraryDependencies += "org.slf4j" % "slf4j-api" % "1.7.1" % "provided"
 
-libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.3"
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.3" % "provided"
+
+// Hadoop
+libraryDependencies += "org.apache.hadoop" % "hadoop-common" % "2.7.2" % "provided"
+
+libraryDependencies += "org.apache.hadoop" % "hadoop-yarn-client" % "2.7.2" % "provided"
+
 
 // Resolvers
 
@@ -106,4 +112,3 @@ ghpages.settings
 git.remoteRepo := "git@github.com:rjagerman/glint.git"
 
 site.includeScaladoc()
-
