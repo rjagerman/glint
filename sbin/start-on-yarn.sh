@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+export HADOOP_HOME=/usr/hdp/current/hadoop-client
+export YARN_HOME=$HADOOP_HOME
 
 function usage {
     echo "usage: -c <config file> -n <number Glint Instance> -H <hdfs://hdfs-addresss:port>"

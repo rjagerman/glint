@@ -1,0 +1,224 @@
+# This is the reference config file that contains all the default settings.
+glint {
+
+  # Master configuration section
+  master {
+
+    # The master host name
+    host = "127.0.0.1"
+    # The master port
+    port = 13370
+
+    # The master actor name
+    name = "master"
+
+    # The master actor system name
+    system = "glint-master"
+
+    # The timeout during startup of the master
+    startup-timeout = 30 seconds
+
+    # Use our default akka configuration for the master
+    akka = ${glint.default.akka}
+
+    # We wish to change some of the default akka remoting configuration for the master node
+    # Here we make sure lifecycle events are logged and make sure that netty tcp uses the appropriate hostname and port
+    akka.remote {
+      log-remote-lifecycle-events = off
+      netty.tcp {
+        hostname = ${glint.master.host}
+        port = ${glint.master.port}
+      }
+    }
+  }
+
+  # Server configuration section
+  server {
+
+    # The server actor system name
+    system = "glint-server"
+
+    # The server name
+    name = "server"
+
+    # Timeout when a parameter server registers with the master
+    registration-timeout = 10 seconds
+
+    # Use the default akka configuration for the server
+    akka = ${glint.default.akka}
+
+    # The parameter server port is set to 0 to automatically choose an available one during runtime
+    # This makes it possible to run multiple parameter servers on the same machine without conflicting ports
+    akka.remote.netty.tcp.port = 0
+  }
+
+  # Client configuration section
+  client {
+
+    # The client hostname, set to empty string to automatically detect
+    host = ""
+
+    # The client port is set to 0 to automatically choose an available one during runtime
+    # This means we can run multiple clients on the same machine without conflicting ports
+    port = 0
+
+    # The client actor system name
+    system = "glint-client"
+
+    # The client timeout for registration and constructing BigMatrix and BigVector objects
+    timeout = 30 seconds
+
+    # Use the default akka configuration for the client
+    akka = ${glint.default.akka}
+
+    # Set the client's akka remoting hostname and port accordingly
+    akka.remote.netty.tcp {
+      hostname = ${glint.client.host}
+      port = ${glint.client.port}
+    }
+  }
+
+  # Configuration for pull requests
+  pull {
+
+    # Number of pull attempts before giving up and failing the request
+    maximum-attempts = 10
+
+    # Initial timeout of the pull request
+    initial-timeout = 5 seconds
+
+    # Maximum timeout
+    maximum-timeout = 5 minutes
+
+    # Exponential backoff multiplier, the timeout gets multiplied by this value every failed attempt
+    backoff-multiplier = 1.6
+
+  }
+
+  # Configuration for push requests
+  push {
+
+    # Number of push attempts before giving up and failing the request
+    maximum-attempts = 10
+
+    # Number of logic communication attempts before giving up and failing the request
+    maximum-logic-attempts = 100
+
+    # Initial timeout of the push request
+    initial-timeout = 5 seconds
+
+    # Maximum timeout
+    maximum-timeout = 5 minutes
+
+    # Exponential backoff multiplier, the timeout gets multiplied by this value every failed attempt
+    backoff-multiplier = 1.6
+
+  }
+
+  # Configuration for Yarn Container
+  yarn {
+    # Memory for AM
+    am-memory = 1024
+
+    # vCore for AM
+    am-vcores = 2
+
+    # Memory OverHead for AM
+    am-memory-overhead = 1024
+
+    # Vcore for container
+    container-vcores = 1
+
+    # Memory for container
+    container-memory = 10240
+
+    # OverHead Memory for container
+    container-memory-overhead = 2048
+
+    # Minium Glint server number
+    minimum-server-number = 2
+
+    # Monitor Interval
+    monitor-interval = 60
+
+    # Number Of Max Container Failure
+    max-number-container-failures = 10
+
+    # HeartBeat Interval
+    heartbeat-interval = 10
+
+    # Initial Allcation Interval
+    initial-allocation-interval = 60
+  }
+
+
+  # Default configuration setting
+  default {
+
+    # Default akka settings
+    akka {
+
+      # Akka event log handler
+      event-handlers = ["akka.event.slf4j.Slf4jEventHandler"]
+
+      # Akka log level
+      loglevel = "INFO"
+
+      # Akka remoting configuration
+      remote {
+
+        # Remote lifecycle events logging has been turned off to prevent akka from cluttering the logs with unnecessary
+        # info
+        log-remote-lifecycle-events = off
+
+        # Use netty tcp transport
+        enable-transports = ["akka.remote.netty.tcp"]
+
+        # Set netty maximum frame size
+        netty.tcp {
+          maximum-frame-size = 1280000b
+        }
+      }
+
+      # Akka actor configuration
+      actor {
+
+        # Enable remoting
+        provider = "akka.remote.RemoteActorRefProvider"
+
+        # We wish to use custom serializers for performance. These might not be portable accross different JVMs.
+        # If you have trouble with serialization deactivate the requestserializer and responseserializer and remove the
+        # bindings below to always use the default JavaSerializer.
+        serializers {
+          java = "akka.serialization.JavaSerializer"
+          requestserializer = "glint.serialization.RequestSerializer"
+          responseserializer = "glint.serialization.ResponseSerializer"
+        }
+
+        # Serialization bindings to enable.
+        serialization-bindings {
+          "glint.messages.server.request.PullMatrix" = requestserializer
+          "glint.messages.server.request.PullMatrixRows" = requestserializer
+          "glint.messages.server.request.PullVector" = requestserializer
+          "glint.messages.server.request.PushMatrixDouble" = requestserializer
+          "glint.messages.server.request.PushMatrixFloat" = requestserializer
+          "glint.messages.server.request.PushMatrixInt" = requestserializer
+          "glint.messages.server.request.PushMatrixLong" = requestserializer
+          "glint.messages.server.request.PushVectorDouble" = requestserializer
+          "glint.messages.server.request.PushVectorFloat" = requestserializer
+          "glint.messages.server.request.PushVectorInt" = requestserializer
+          "glint.messages.server.request.PushVectorLong" = requestserializer
+          "glint.messages.server.response.ResponseDouble" = responseserializer
+          "glint.messages.server.response.ResponseRowsDouble" = responseserializer
+          "glint.messages.server.response.ResponseFloat" = responseserializer
+          "glint.messages.server.response.ResponseRowsFloat" = responseserializer
+          "glint.messages.server.response.ResponseInt" = responseserializer
+          "glint.messages.server.response.ResponseRowsInt" = responseserializer
+          "glint.messages.server.response.ResponseLong" = responseserializer
+          "glint.messages.server.response.ResponseRowsLong" = responseserializer
+        }
+      }
+    }
+  }
+
+}

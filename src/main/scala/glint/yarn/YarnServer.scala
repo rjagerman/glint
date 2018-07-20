@@ -31,8 +31,7 @@ object YarnServer {
       case (system, ref) =>
         println(s"Start Glint Server on Node $master Successfully")
         sys.addShutdownHook {
-          system.shutdown()
-          system.awaitTermination()
+          system.terminate()
         }
     }
 

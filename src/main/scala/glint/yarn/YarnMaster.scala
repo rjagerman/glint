@@ -34,8 +34,7 @@ object YarnMaster {
       case (system, ref) =>
         println(s"Start Glint Master on Node $master Successfully")
         sys.addShutdownHook {
-          system.shutdown()
-          system.awaitTermination()
+          system.terminate()
         }
     }
 
